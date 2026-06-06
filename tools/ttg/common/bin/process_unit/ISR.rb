@@ -82,7 +82,13 @@ module CommonModule
       check_class(IMCodeElement, cElement) # エレメント
 
       # 重複したCFG_INTは中間コード側でユニークにされる
-      cElement.set_config("#{API_CFG_INT}(#{@hState[TSR_PRM_INTNO]}, {#{@hState[TSR_PRM_ATR]}, #{@hState[TSR_PRM_INTPRI]}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+      sAtr = @hState[TSR_PRM_ATR]
+      # [改変] 2026-06-07: ターゲット指定のトリガ属性をORする（int_trigger_atr）
+      sTrigAtr = @cConf.get_int_trigger_atr()
+      if (sTrigAtr != KER_TA_NULL)
+        sAtr = (sAtr == KER_TA_NULL) ? sTrigAtr : "#{sAtr}|#{sTrigAtr}"
+      end
+      cElement.set_config("#{API_CFG_INT}(#{@hState[TSR_PRM_INTNO]}, {#{sAtr}, #{@hState[TSR_PRM_INTPRI]}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
       cElement.set_config("#{API_CRE_ISR}(#{@sObjectID.upcase}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@hState[TSR_PRM_INTNO]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ISRPRI]}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
     end
 

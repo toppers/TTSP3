@@ -9,7 +9,7 @@ ASP_staticAPI_DEF_INH_e:
 
     INH1:
       type   : INTHDR
-      intatr : TA_NULL
+      intatr : ANY_ATT_INH  # 2026-06-07 エッジ専用ターゲット対応(既定TA_NULL)
       intno  : INTNO_SELF_INH_A
       intpri : INT_PRI_MID
       inhno  : INHNO_SELF_A

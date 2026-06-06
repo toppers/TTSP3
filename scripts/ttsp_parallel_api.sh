@@ -124,16 +124,25 @@ if [ "${SKIP_RUN:-0}" != "1" ]; then
 		local i="$1"
 		local dir="$API_DIR/auto_code_$i"
 		[ -f "$dir/$KERNEL_NAME" ] || { echo "RUN SKIP: auto_code_$i (no binary)"; return 0; }
-		( cd "$dir" && rm -f objs/*.gcda && \
-			timeout "$QEMU_TIMEOUT" qemu-system-arm -M xilinx-zynq-a9 -semihosting \
-				-m 512M -serial null -serial mon:stdio -nographic $QEMU_SMP \
-				-kernel "$KERNEL_NAME" < /dev/null > execute.log 2>&1 )
+		if [ "$RUN_NATIVE" = "1" ]; then
+			# POSIXターゲット: ネイティブ実行
+			( cd "$dir" && rm -f objs/*.gcda && \
+				timeout "$QEMU_TIMEOUT" "./$KERNEL_NAME" < /dev/null > execute.log 2>&1 )
+		else
+			( cd "$dir" && rm -f objs/*.gcda && \
+				timeout "$QEMU_TIMEOUT" qemu-system-arm -M xilinx-zynq-a9 -semihosting \
+					-m 512M -serial null -serial mon:stdio -nographic $QEMU_SMP \
+					-kernel "$KERNEL_NAME" < /dev/null > execute.log 2>&1 )
+		fi
 		local fin
 		fin=$(tr -d '\r' < "$dir/execute.log" | grep -c 'All check points passed')
 		echo "RUN auto_code_$i: finish=$fin"
 	}
 	export -f run_group
-	export KERNEL_NAME QEMU_SMP QEMU_TIMEOUT
+	# POSIXターゲット（linux_gcc）はネイティブ実行
+	RUN_NATIVE=0
+	[ "$TARGET_NAME" = "linux_gcc" ] && RUN_NATIVE=1
+	export KERNEL_NAME QEMU_SMP QEMU_TIMEOUT RUN_NATIVE
 
 	echo "===== phase 3: parallel QEMU (P=$PAR_GROUPS) ====="
 	t2=$(date +%s)

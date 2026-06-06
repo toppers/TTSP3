@@ -57,6 +57,11 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `scripts/ttsp_parallel_api.sh` | NEW | APIオートコードのグループ並列ドライバ（TTG＋make -j＋QEMUを並列化。ビルド約160分→約2分@32コア）。初回計測: FMP kernel/ 行96.4%・分岐81.5% | 済（2026-06-06） |
 | `scripts/ttsp_parallel_cfgerr.sh` | NEW | コンフィグエラーテストの並列ドライバ（テストディレクトリ毎に独立のmake→期待エラーgrepを xargs -P 実行） | 済（2026-06-06） |
 | `scripts/ci_run.sh`（並列化） | 改変 | ステージ2/4を並列ドライバへ置換。ローカルfull実行 約50分→34秒@32コア（PASS=141維持） | 済（2026-06-06） |
+| `library/FMP/target/linux_gcc/`（4ファイル＋configure.yaml） | NEW | FMP3 POSIXターゲット依存部（FUNC_TIME=false・グローバルIRC・SIGFPE例外・ネイティブ実行） | 済（2026-06-07） |
+| `tools/ttg`（TA_EDGE/int_trigger_atr） | 改変 | intatr許容値にTA_EDGE追加／設定キー`int_trigger_atr`新設（生成する全CFG_INTにOR。エッジ専用ターゲット用・既定は付加なし） | 済（2026-06-07） |
+| `api_test/ASP/staticAPI/{DEF_INH/DEF_INH_e,CFG_INT/CFG_INT_d-1}.yaml` | 改変 | `intatr: TA_NULL`直書きを`ANY_ATT_INH`マクロ化（既定TA_NULLで従来ターゲット不変） | 済（2026-06-07） |
+| `library/FMP/check_library/interrupt/out.cfg`＋zyboヘッダ | 改変 | CFG_INTトリガ属性を`TTSP_INT_TRIGGER_ATTR`マクロ化（zybo=TA_NULL，linux=TA_EDGE） | 済（2026-06-07） |
+| `configure.sh`／`scripts/ttsp_parallel_api.sh` | 改変 | `TTSP_TARGET_NAME`環境変数でターゲット切替／linux_gccのネイティブ実行対応 | 済（2026-06-07） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
@@ -83,6 +88,26 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `sta_alm_d` 系テストのレース失敗 | **原因（実測で特定）**: `GTC_CTRL` は全体イネーブル（bit0・全PE共有）とコンペア/割込みイネーブル（PE毎バンク）が同居するレジスタ。TTSPの `ttsp_target_stop_tick()` が**ジャイアントロック無しの生RMW**で bit0 を落とすと、他PEのカーネル側RMW（`mpcore_gtc_set_cvr`/`target_hrt_clear_event`、glock下）が**読み置きした古い bit0=1 を書き戻し、停止したはずのGTCが再イネーブル**される。以後テスト全体で時刻が密かに進行し、`sta_alm(3µs)` が実時間3µs後に発火 → `almstat`/`lefttim` 検査と競争（フレーク）。HRTハンドラ発火カウンタと `GTC_CTRL=0x4207`（bit0=1）の事後ダンプで実証。**解決**: `ttsp_target_stop_tick`/`start_tick` のRMWを glock 保護（`library/FMP/target/zybo_z7_gcc/ttsp_target_test.c`）。検証: 単体40回＋全20グループ×10周（200ブート）全パス | **解決**（2026-06-06） |
 
 > カーネル側への示唆（メンテナ向け）: `mpcore_gtc_set_cvr` のコメント「プロセッサ間排他制御をせずに呼び出して良い」は、**glock外からGTC_CTRLを触るコードが存在しない**ことが前提。bit0（共有）とバンクビットが同一レジスタに同居する構造上、ターゲット依存テストコード等がCTRLを触る場合は同じレースを踏むため、コメントへの前提条件の明記を推奨。
+
+---
+
+## E. FMP3 POSIXターゲット（linux_gcc）対応の状況（2026-06-07）
+
+TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
+**FUNC_TIME="false"**（実時間駆動・時刻停止不可），IRC=グローバル，例外=シグナル（SIGFPE）．
+
+| 項目 | 状態 |
+|---|---|
+| check_library 例外/割込み | ✅ 2/2 All check points passed（timerはFUNC_TIME=false対象外） |
+| API TTG生成・cfg・ビルド | ✅ 20/20グループ（TTGにTA_EDGE対応・`int_trigger_atr` 追加で解消） |
+| API 実行 | 🔶 4〜5/20グループ緑．**残失敗はカーネルPOSIXポートのシェイクアウト項目**（下記） |
+
+カーネル側（fmp3メンテナ向け）残課題：
+1. `arch/posix_gcc/thread_ctrl.c:125 Assertion 'false'`（resume対象スレッドの不正状態）— 再現例: FMP_pridataq_snd_pdq_F_f_2_1, FMP_dataqueue_rcv_dtq_F_f_1_1_3
+2. `kernel/task.c:126 Assertion 'bitmap != 0U'`（レディキュー不整合）— 再現例: FMP_task_manage_mact_tsk_F_h_2_6_4（マイグレーション系）
+3. clr_int/prb_int の異常系戻り値差（FMP_interrupt_clr_int_F_a: E_OK，prb_int_F_a: E_OBJ(-41) vs 期待E_PAR）
+4. ASP_staticAPI_CRE_TSK_h_1: `rtsk.stk==指定スタック` 期待 — USE_TSKINICTXBターゲット（stk未保持）では成立せず（TTG/TESRYの除外条件追加が将来課題）
+5. adj_tim系・tloc_mtx系の実時間タイミング依存（時間マクロのネイティブ粒度チューニング継続）
 
 ---
 

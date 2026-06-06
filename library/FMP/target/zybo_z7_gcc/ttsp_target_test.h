@@ -100,6 +100,11 @@
 #define TTSP_TMIN_INTPRI  TMIN_INTPRI
 
 /*
+ *  CFG_INTのトリガ属性（[改変] 2026-06-07: check_library共通cfgから参照）
+ */
+#define TTSP_INT_TRIGGER_ATTR  TA_NULL
+
+/*
  *  割込み優先度定義
  */
 #define TTSP_GE_TIMER_INTPRI  TMIN_INTPRI /* タイマ割込みの割込み優先度より高い割込み優先度 */

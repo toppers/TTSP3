@@ -98,6 +98,7 @@ module CommonModule
       case sKey
       # 文字列
       when CFG_FILE, CFG_DEFAULT_CLASS, CFG_OUT_FILE, CFG_EXCEPT_ARG_NAME,
+           CFG_INT_TRIGGER_ATR,
            CFG_OVERRUN_ARG1_NAME, CFG_OVERRUN_ARG2_NAME, CFG_SVC_ARG1_NAME, CFG_SVC_ARG2_NAME,
            CFG_SVC_ARG3_NAME, CFG_SVC_ARG4_NAME, CFG_SVC_ARG5_NAME, CFG_SVC_ARG6_NAME
         ### T0_002: configureの設定値が指定された型と異なる
@@ -524,6 +525,12 @@ module CommonModule
     #=================================================================
     # 概　要: デフォルトクラス名を取得
     #=================================================================
+    # [改変] 2026-06-07: CFG_INTに付加するトリガ属性（未指定はTA_NULL＝付加なし）
+    def get_int_trigger_atr()
+      val = @@hConf[CFG_INT_TRIGGER_ATR]
+      return (val.nil?()) ? KER_TA_NULL : val
+    end
+
     def get_default_class()
       return @@hConf[CFG_DEFAULT_CLASS] # [String]デフォルトクラス名
     end

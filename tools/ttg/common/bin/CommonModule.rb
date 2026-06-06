@@ -538,6 +538,9 @@ module CommonModule
   CFG_DEBUG_MODE        = "debug_mode"                  # デバッグモード
   CFG_NO_PROGRESS_BAR   = "no progress bar"             # プログレスバー非表示モード
   CFG_ENABLE_TTJ        = "enable_ttj"                  # TTJを有効化
+  # [改変] 2026-06-07: 生成する全CFG_INTにORするトリガ属性（任意キー．
+  # エッジトリガのみサポートするターゲット用．例: TA_EDGE）
+  CFG_INT_TRIGGER_ATR   = "int_trigger_atr"
 
   # configureに指定必須な項目
   GRP_CFG_NECESSARY_KEYS = [
@@ -1175,6 +1178,8 @@ module CommonModule
   KER_TTEX_ENA  = "TTEX_ENA"
   KER_TTEX_DIS  = "TTEX_DIS"
   KER_TA_ENAINT = "TA_ENAINT"
+  # [改変] 2026-06-07: エッジトリガ属性（第3世代カーネルのターゲット定義属性）
+  KER_TA_EDGE   = "TA_EDGE"
   KER_TA_DISINT = "TA_DISINT"
 
   # 待ちオブジェクトの待ち状態のマクロ定義
@@ -1430,8 +1435,8 @@ module CommonModule
     TSR_OBJ_P_DATAQUEUE     => [KER_TA_NULL, KER_TA_TPRI],
     TSR_OBJ_MAILBOX         => [KER_TA_NULL, KER_TA_TPRI, KER_TA_MPRI],
     TSR_OBJ_MEMORYPOOL      => [KER_TA_NULL, KER_TA_TPRI],
-    TSR_OBJ_INTHDR          => [KER_TA_NULL, KER_TA_ENAINT],
-    TSR_OBJ_ISR             => [KER_TA_NULL, KER_TA_ENAINT],
+    TSR_OBJ_INTHDR          => [KER_TA_NULL, KER_TA_ENAINT, KER_TA_EDGE],
+    TSR_OBJ_ISR             => [KER_TA_NULL, KER_TA_ENAINT, KER_TA_EDGE],
     TSR_OBJ_MUTEX           => [KER_TA_NULL, KER_TA_TPRI, KER_TA_CEILING],
     TSR_OBJ_MEMORY_REGION   => [KER_TA_NULL, KER_TA_NOWRITE, KER_TA_NOREAD, KER_TA_EXEC, KER_TA_MEMINI, KER_TA_MEMPRSV, KER_TA_SDATA, KER_TA_UNCACHE, KER_TA_IODEV, KER_TA_WTHROUGH],
     TSR_OBJ_MEMORY_SECTION  => [KER_TA_NULL, KER_TA_NOWRITE, KER_TA_NOREAD, KER_TA_EXEC, KER_TA_MEMINI, KER_TA_MEMPRSV, KER_TA_SDATA, KER_TA_UNCACHE, KER_TA_IODEV, KER_TA_WTHROUGH],

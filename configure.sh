@@ -53,7 +53,10 @@ OS_PATH="../asp3/"
 #
 # ターゲット略称の定義
 #
-TARGET_NAME="zybo_z7_gcc"
+# [改変] 2026-06-07: 環境変数 TTSP_TARGET_NAME で上書き可能にした．
+# 例) TTSP_TARGET_NAME=linux_gcc bash ttb.sh ../fmp3/ FMP obj_fmp_posix
+#
+TARGET_NAME="${TTSP_TARGET_NAME:-zybo_z7_gcc}"
 
 #
 # プロファイル設定
