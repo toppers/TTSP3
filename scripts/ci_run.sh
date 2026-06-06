@@ -24,6 +24,7 @@ set -u
 cd "$(dirname "$0")/.."
 
 test -d ../asp3 || { echo "ERROR: ../asp3 (sibling kernel) not found"; exit 1; }
+mkdir -p sil_test   # ttb.shの存在チェック対策（SILテストはTTSP3未サポートで空）
 grep -q 'OS_PATH="../asp3/"' configure.sh || { echo "ERROR: OS_PATH != ../asp3/"; exit 1; }
 grep -q '^USE_QEMU=true' library/ASP/target/zybo_z7_gcc/ttsp_target.sh \
 	|| { echo "ERROR: USE_QEMU != true (zybo_z7_gcc)"; exit 1; }
