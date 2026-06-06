@@ -39,6 +39,10 @@
 # 
 #  $Id: ttsp_target.sh 82 2020-07-10 08:13:20Z nces-mtakada $
 #
+#  [改変] 2026-06-06: ASP3 3.7.2対応のため KERNEL_COBJS_TARGET から
+#  objs/arm.o を削除（ASP3 3.7.0で arm.c が廃止され arm.h に統合されたため．
+#  asp3/doc/version.txt 3.6.0→3.7.0 の変更点を参照）．
+#
 
 #
 # 実機(ZYBOボード) or QEMU
@@ -100,7 +104,7 @@ fi
 #
 # ターゲット依存部でKERNEL_COBJS/APPL_COBJSへ追加するオブジェクトファイル
 #
-KERNEL_COBJS_TARGET="objs/arm.o objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
+KERNEL_COBJS_TARGET="objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
 APPL_COBJS_TARGET="objs/ttsp_target_test.o"
 
 #

@@ -20,6 +20,7 @@ ASP3変更履歴から、TTSP3のテスト/TTG/TESRYに影響しうる項目。�
 | `CRE_XXX` のID衝突をエラー化 | 3.6→3.7 | 静的APIテスト（CRE_*のTESRY期待値） | 未確認 |
 | objdumpダンプ形式対応 | 3.6→3.7 | cfg/ビルド（影響小） | 未確認 |
 | macOS/Linux POSIXシミュ追加 | 3.6→3.7 | 後段 host ターゲットで活用 | 後段 |
+| ARMコア依存部見直し：`arm.c` 廃止（`arm.h`に統合） | 3.6→3.7 | `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` の `KERNEL_COBJS_TARGET`（`objs/arm.o` 参照でリンク前に make が停止） | **対応済**（arm.o削除・改変明記。check_library 3モジュールのビルド成功を確認） |
 
 > 3.5→3.6 の項目は `asp3/doc/version.txt` を確認して追記すること。
 > 着手前に、3.7対応済みの公式TTSP3が無いか確認（重複作業回避）。
@@ -36,9 +37,23 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 |---|---|---|---|
 | TTSP3 R3.1.0（SVN由来） | 取り込み | git初期コミット（provenance。`docs/MIGRATION.md`） | 移行時 |
 | （scaffold追加） | NEW | AGENTS/START/CI 等のgit管理基盤 | 済 |
+| `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | ASP3 3.7.0で廃止された `arm.c` 由来の `objs/arm.o` を `KERNEL_COBJS_TARGET` から削除 | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
+
+---
+
+## C. 実行環境（QEMU）起因の課題
+
+仕様差分でもTTSP3改変でもない、QEMUデバイスモデルと実機の挙動差。
+
+| 課題 | 内容 | 対応 | 状態 |
+|---|---|---|---|
+| a9gtimer がENABLEビット無視でカウンタ前進 | QEMU 11.0.0 `hw/timer/a9gtimer.c` の `a9_gtimer_get_update()` がタイマ無効時もカウンタ読出し値を仮想時刻から計算するため、`ttsp_target_stop_tick()`（GTC停止）・`ttsp_target_gain_tick()`（COUNT書込み）が効かず timer チェックが失敗 | QEMU側にパッチ（`docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch`）。無効時は保持値 `s->counter` を返す＝実機準拠 | **対応済**（2026-06-06、timer チェック全パス確認） |
+
+> パッチ適用手順：`cd ~/qemu/qemu-11.0.0 && patch -p1 < <ttsp3>/docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch && cd build && ninja qemu-system-arm`
+> CIでQEMUを取得する場合も同パッチの適用が必要。
 
 ---
 

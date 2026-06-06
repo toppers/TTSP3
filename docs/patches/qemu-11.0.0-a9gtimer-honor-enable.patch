@@ -1,0 +1,22 @@
+--- a/hw/timer/a9gtimer.c
++++ b/hw/timer/a9gtimer.c
+@@ -73,8 +73,17 @@
+     A9GTimerUpdate ret;
+ 
+     ret.now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+-    ret.new = s->ref_counter +
+-              (ret.now - s->cpu_ref_time) / a9_gtimer_get_conv(s);
++    if (s->control & R_CONTROL_TIMER_ENABLE) {
++        ret.new = s->ref_counter +
++                  (ret.now - s->cpu_ref_time) / a9_gtimer_get_conv(s);
++    } else {
++        /*
++         * Real hardware holds the counter value while the timer is
++         * disabled; counter reads must return the held value (which
++         * also makes counter writes done while disabled visible).
++         */
++        ret.new = s->counter;
++    }
+     return ret;
+ }
+ 
