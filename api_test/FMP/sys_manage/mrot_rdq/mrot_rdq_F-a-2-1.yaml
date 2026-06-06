@@ -1,0 +1,21 @@
+version: "$Id: mrot_rdq_F-a-2-1.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_sys_manage_mrot_rdq_F_a_2_1:
+  note: 【NGKI2695】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: mrot_rdq(PRC_OTHER, TSK_PRI_MID)
+    ercd   : E_CTX
+
+  post_condition:

@@ -1,0 +1,17 @@
+version: "$Id: T3_INI002.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T3_INI002_temp:
+  pre_condition:
+    TASK1:
+      type     : TASK
+      tskstat  : running
+
+    INI1:
+      type   : INIRTN
+      do     :
+        code : sns_ker()
+      global : true
+      prcid  : PRC_SELF
+
+  do:
+
+  post_condition:

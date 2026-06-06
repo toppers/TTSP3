@@ -1,0 +1,311 @@
+version: "$Id: rel_wai_F-f-1-5_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_sync_rel_wai_F_f_1_5_HM1:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    SEM1:
+      wtsklist:
+
+FMP_task_sync_rel_wai_F_f_1_5_HM2:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    SEM1:
+      wtsklist:
+
+FMP_task_sync_rel_wai_F_f_1_5_HM3:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    SEM1:
+      wtsklist:
+
+FMP_task_sync_rel_wai_F_f_1_5_HM4:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM2
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    SEM1:
+      wtsklist:
+
+FMP_task_sync_rel_wai_F_f_1_5_HM5:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_REL_WAI(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    SEM1:
+      wtsklist:

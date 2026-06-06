@@ -1,0 +1,435 @@
+version: "$Id: tget_mpf_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_tget_mpf_e_H1:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H2:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H3:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H4:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H5:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_TGET_MPF(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H6:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : NONE
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:
+
+ASP_mempfix_tget_mpf_e_H7:
+  note: 【NGKI2300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 0
+      domain : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_REL_WAI(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      wtsklist:

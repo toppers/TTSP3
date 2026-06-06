@@ -1,0 +1,44 @@
+version: "$Id: sus_tsk_g_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_sus_tsk_g_H1:
+  note: 【NGKI3606】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: sus_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: suspended
+
+    TASK2:
+      tskstat: running
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready

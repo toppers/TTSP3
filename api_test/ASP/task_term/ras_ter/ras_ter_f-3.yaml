@@ -1,0 +1,25 @@
+version: "$Id: ras_ter_f-3.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ras_ter_f_3:
+  note: 【NGKI3478】【NGKI3479】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : DELAY
+      lefttmo: RELATIVE_TIME_A
+      dister : true
+
+  do:
+    id     : TASK1
+    syscall: ras_ter(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      raster : true

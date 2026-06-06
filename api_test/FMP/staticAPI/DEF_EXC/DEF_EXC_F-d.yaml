@@ -1,0 +1,23 @@
+version: "$Id: DEF_EXC_F-d.yaml 68 2020-02-04 09:19:44Z fujisft-shigihara $"
+FMP_staticAPI_DEF_EXC_F_d:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      class  : CLS_OTHER_ALL
+
+    EXC1:
+      type   : EXCEPTION
+      excno  : EXCNO_OTHER_A
+      hdlstat: STP
+      prcid  : PRC_OTHER
+      class  : CLS_OTHER_ALL
+
+  do:
+    id  : TASK1
+    code: ttsp_cpuexc_raise(EXCNO_OTHER_A)
+
+  post_condition:
+    EXC1:
+      hdlstat: ACTIVATE

@@ -1,0 +1,21 @@
+version: "$Id: sns_ker_b.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_sns_ker_b:
+  note: 【NGKI2761】
+
+  pre_condition:
+    TER1:
+      type: TERRTN
+      do  :
+        syscall: sns_ker()
+        bool   : true
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+
+  post_condition:

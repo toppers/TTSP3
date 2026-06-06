@@ -1,0 +1,34 @@
+version: "$Id: rot_rdq_c-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_sys_manage_rot_rdq_c_2:
+  note: 【NGKI2687】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      porder : 1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 1
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+
+  do:
+    id     : TASK1
+    syscall: rot_rdq(TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      porder: 2
+
+    TASK3:
+      porder: 1

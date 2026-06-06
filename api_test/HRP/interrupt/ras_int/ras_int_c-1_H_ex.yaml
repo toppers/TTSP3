@@ -1,0 +1,96 @@
+version: "$Id: ras_int_c-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_interrupt_ras_int_c_1_H3:
+  note: 【NGKI3936】
+  variation:
+    api_support_ras_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM_SYS_ACP2
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+      access1: TACP_KERNEL
+      access2: TACP(DOM_SYS_ACP2)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM_SYS_ACP2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: ras_int(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      intreq : false
+
+  do_1:
+    id  : INH1
+    code: return
+
+  post_condition_1:
+    INH1:
+      hdlstat: STP
+
+ASP_interrupt_ras_int_c_1_H5:
+  note: 【NGKI3936】
+  variation:
+    api_support_ras_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_RAS_INT(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      intreq : false
+
+  do_1:
+    id  : INH1
+    code: return
+
+  post_condition_1:
+    INH1:
+      hdlstat: STP

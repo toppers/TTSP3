@@ -1,0 +1,32 @@
+version: "$Id: xsns_dpn_F-a.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_exception_xsns_dpn_F_a:
+  note: 【NGKI3151】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    EXC1:
+      type   : EXCEPTION
+      excno  : EXCNO_SELF_A
+      hdlstat: ACTIVATE
+      prcid  : PRC_SELF
+
+  do:
+    id     : EXC1
+    syscall: xsns_dpn(p_excinf)
+    bool   : false
+
+  post_condition:

@@ -1,0 +1,34 @@
+version: "$Id: get_tst_c-3-4.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_manage_get_tst_c_3_4:
+  note: 【NGKI3620】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        tskstat:
+          type: STAT
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: get_tst(TASK2, &tskstat)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        tskstat:
+          value: TTS_WAI

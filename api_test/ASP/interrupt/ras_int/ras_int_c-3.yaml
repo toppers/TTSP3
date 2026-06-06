@@ -1,0 +1,52 @@
+version: "$Id: ras_int_c-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_ras_int_c_3:
+  note: 【NGKI3936】
+  variation:
+    api_support_ras_int: true
+    api_support_ena_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_DISINT
+      hdlstat: STP
+      intreq : false
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+  do_0:
+    id     : TASK1
+    syscall: ras_int(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intreq: true
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_ENA_INT(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_1:
+    INH1:
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      intreq : false
+
+  do_2:
+    id  : INH1
+    code: return
+
+  post_condition_2:
+    INH1:
+      hdlstat: STP

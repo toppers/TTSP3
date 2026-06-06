@@ -1,0 +1,463 @@
+version: "$Id: twai_flg_m-1-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_twai_flg_m_1_2_H1:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H2:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H3:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H4:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H5:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TWAI_FLG(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H6:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+
+ASP_eventflag_twai_flg_m_1_2_H7:
+  note: 【NGKI1638】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+
+    FLG1:
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+        - TASK3:
+            waiptn: BIT_PATTERN_C
+            wfmode: WAIT_FLG_MODE_C
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A

@@ -1,0 +1,26 @@
+version: "$Id: chg_pri_f-1-1-2-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_manage_chg_pri_f_1_1_2_1_H1:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】【NGKI1198】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TSK_SELF, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:

@@ -1,0 +1,38 @@
+version: "$Id: fch_hrt_a-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_time_manage_fch_hrt_a_1_H3:
+  note: 【NGKI3571】【NGKI3572】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        hrtcnt1:
+          type: HRTCNT
+        hrtcnt2:
+          type: HRTCNT
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    0:
+      id  : TASK1
+      code: hrtcnt1 = fch_hrt()
+
+  post_condition_0:
+    0:
+    ANY_ELAPSED_TIME:
+
+  do_1:
+    ANY_ELAPSED_TIME:
+      id  : TASK1
+      code: hrtcnt2 = fch_hrt()
+
+  post_condition_1:
+    ANY_ELAPSED_TIME:
+      TASK1:
+        var:
+          hrtcnt2:
+            value: hrtcnt1+(ANY_ELAPSED_TIME*TTSP_MOD_FCH_CNT)

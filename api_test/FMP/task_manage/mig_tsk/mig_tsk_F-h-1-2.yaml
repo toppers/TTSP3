@@ -1,0 +1,19 @@
+version: "$Id: mig_tsk_F-h-1-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_h_1_2:
+  note: 【NGKI1158】【NGKI1161】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      class  : CLS_OTHER_ALL
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TSK_SELF, TPRC_INI)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      prcid: PRC_OTHER

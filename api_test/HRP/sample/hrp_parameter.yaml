@@ -1,0 +1,133 @@
+version: "$Id: hrp_parameter.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+hrp_parameter:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    ALM1:
+      type     : ALARM
+      almstat  : TALM_STP
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      hdlstat  : STP
+      access1  : TACP_KERNEL
+      access2  : TACP_KERNEL
+      access3  : TACP_KERNEL
+      access4  : TACP_KERNEL
+
+    CYC1:
+      type     : CYCLE
+      cycstat  : TCYC_STP
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      hdlstat  : STP
+      cyctim   : RELATIVE_TIME_B
+      cycphs   : RELATIVE_TIME_A
+      access1  : TACP_KERNEL
+      access2  : TACP_KERNEL
+      access3  : TACP_KERNEL
+      access4  : TACP_KERNEL
+
+    SEM1:
+      type   : SEMAPHORE
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    FLG1:
+      type   : EVENTFLAG
+      domain : KERNEL
+      access1: DOM1
+      access2: DOM1
+      access3: DOM1
+      access4: DOM1
+
+    DTQ1:
+      type   : DATAQUEUE
+      domain : KERNEL
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+
+    PDQ1:
+      type   : P_DATAQUEUE
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MPF1:
+      type   : MEMORYPOOL
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MEM_SEC1:
+      type   : MEMORY_SECTION
+      section: ".sec_name1"
+      region : DDR
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MEM_MOD1:
+      type   : MEMORY_MODULE
+      file   : ttsp_mem_obj_kernel1.o
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MEM_ARE1:
+      type   : MEMORY_AREA
+      base   : 67108864
+      size   : 4096
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    PHY_MEM1:
+      type   : PHYSICAL_MEMORY
+      base   : 67117056
+      size   : 4096
+      paddr  : 67117056
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt: 1

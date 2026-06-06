@@ -1,0 +1,48 @@
+version: "$Id: adj_tim_F-c-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_time_manage_adj_tim_F_c_2:
+  note: 【NGKI3587】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    ALM1:
+      type     : ALARM
+      almstat  : TALM_STA
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      lefttim  : RELATIVE_TIME_C
+      hdlstat  : STP
+      prcid    : PRC_OTHER
+
+  do_0:
+    id     : TASK1
+    syscall: adj_tim(ANY_ADJUST_MINUS_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        lefttim: RELATIVE_TIME_C-ANY_ADJUST_MINUS_TIME
+
+    RELATIVE_TIME_C-ANY_ADJUST_MINUS_TIME:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_C-ANY_ADJUST_MINUS_TIME+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+  do_1:
+    RELATIVE_TIME_C-ANY_ADJUST_MINUS_TIME+1:
+      id  : ALM1
+      code: return
+
+  post_condition_1:
+    RELATIVE_TIME_C-ANY_ADJUST_MINUS_TIME+1:
+      ALM1:
+        hdlstat: STP

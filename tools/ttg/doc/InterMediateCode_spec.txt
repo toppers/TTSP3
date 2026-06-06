@@ -1,0 +1,263 @@
+#
+# $Id: InterMediateCode_spec.txt 29 2019-02-15 01:56:21Z fujisft-shigihara $
+#
+
+#------------------------------------------------#
+#           中間コードクラス仕様書               #
+#------------------------------------------------#
+
+(1)用語定義
+
+(2)変数
+  (2.1) aCode
+  (2.2) hProcUnitInfo(Processing Unit Information)
+  (2.3) hGlobalVar
+  (2.4) aHeader
+  (2.5) hConfig
+  (2.6) nStack
+
+(3)属性まとめ
+  (3.1) 属性とは
+  (3.2) コメントのフォーマット（仮）
+  (3.2.1):start-cmt
+  (3.2.2):sync-cmt
+  (3.2.3):activate-cmtと:inactivate-cmt
+  (3.2.4):detail-cmt
+  
+--------------------------------------------------
+(1)用語定義
+・コード情報
+インスタンス変数aCodeが保持する情報
+
+・テストIDレベル
+テストIDをキーとするaCodeにおける最上位の階層の呼び方
+
+・コンディションレベル
+aCodeにおける上位階層の呼び方
+（pre_condition, do, post_condition，ConditionSync）
+
+・ブロックレベル
+aCodeにおける下位階層の呼び方
+（Block, Check, ActiveSync, RunningWaitSync, StateSync, FinishSync）
+
+・単位コード情報
+aCodeの最下層のデータ組の呼び方
+[“処理単位ID”，“出力するコード”，起動回数，プロセッサID，:属性 ]
+
+
+--------------------------------------------------
+(2)変数
+
+(2.1) aCode
+【概要】
+時系列情報を含めて構造的にコード情報を保持する変数．
+
+【データ構造】
+[{“Common”=>
+    [{“TTG_Main”=>
+         [[“ttg_main_check”，“TTG_ercd = ref_tsk(MAIN_TASK,&TTG_rtsk);”，1，1，:etc ]，…]}]}，
+ {“fmp_xxx_xxx_x”=>
+     [{“pre_condition”=>
+         [{Block_1 => …}], …}]}，
+ {“fmp_yyy_yyy_y”=>
+     [{“pre_condition”=>
+         [{Block_YY => …}], …}]}，
+ {“fmp_zzz_zzz_z”=>
+     [{“pre_condition”=>
+         [{Block_ZZ => …}], …}]}]
+
+
+＊全テストシナリオで共通の部分の詳細
+[{ "Common" =>
+    [{ "TTG_Main" =>
+          [[“ttg_main_check”，“TTG_ercd = ref_tsk(MAIN_TASK,&TTG_rtsk);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_ercd(TTG_ercd,E_OK);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.tskstat == TTS_RUN);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.tskpri == TTG_MAIN_PRI);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.tskbpri == TTG_MAIN_PRI);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.actcnt == 0);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.wupcnt == 0);”，1，1，:etc ]，
+           [“ttg_main_check”，“check_assert(TTG_rtsk.prcid == 1);”，1，1，:etc ]，
+           [“MAIN_TASK”，“ttsp_target_stop_tick();”，1，1，:etc ]，
+           ＊＊＊以下の２行はテストシナリオの数だけ繰り返し＊＊＊
+           ＊＊＊時間を止める判断をテストシナリオごとに行う場合はさらに１行＊＊＊
+           [“MAIN_TASK”，“fmp_zzz_zzz_z_main();”，1，1，:etc ]，
+           [“MAIN_TASK”，“ttg_main_check();\n”，1，1，:etc ]，
+           ＊＊＊以下の１行は最後に追加する＊＊＊
+           [“MAIN_TASK”，“finish_cp_mp(1,X);”，1，1，:etc ]]}]}]}
+]
+
+＊テストシナリオごとにつくられる部分のデータ構造の詳細
+[{“pre_condition_X” or “do_X_Y” or “post_condition_X_Y”or “condition_sync”=>
+    [{“Block_X ”=>
+       [[“処理単位ID”，“出力するコード”，起動回数，プロセッサID，:属性 ]，…}]}，…]
+
+※ Xは通し番号，Yはタイムティック
+※ 属性については(3)を参照のこと
+
+
+
+---------------共通部分のサンプル（.c）------------------------------
+void main_task(intptr_t exinf){
+
+	ttsp_target_stop_tick();
+
+	fmp_zzz_zzz_z_main();
+	ttg_main_check();
+	
+	finish_cp_mp(1,X);
+}
+
+void ttg_main_check(){
+	T_RTSK TTG_rtsk;
+	ER TTG_ercd;
+
+	TTG_ercd = ref_tsk(MAIN_TASK,&TTG_rtsk);
+	check_ercd(TTG_ercd,E_OK);
+
+	check_assert(TTG_rtsk.tskstat == TTS_RUN);
+	check_assert(TTG_rtsk.tskpri == TTG_MAIN_PRI);
+	check_assert(TTG_rtsk.tskbpri == TTG_MAIN_PRI);
+	check_assert(TTG_rtsk.actcnt == 0);
+	check_assert(TTG_rtsk.wupcnt == 0);
+	check_assert(TTG_rtsk.prcid == 1);
+}
+--------------------------------------------------------------
+
+
+(2.2) hProcUnitInfo
+【概要】
+処理単位（関数）ごとに以下の情報を一括して保持する変数．
+・ローカル変数宣言
+・最終的な起動回数
+・実行コードの最初に出力するコード（プレコード）
+・実行コードの最後に出力するコード（ポストコード）
+
+この変数は，ttg2.0のhFuncHashをベースにした．
+:localvarは:varからリネームをしたものである．hGlobalVarとの対応を考慮
+して変更した．:codeは処理単位をまたがる時系列情報を保持させるために
+aCodeとして切り出し，拡張を行った．
+
+また，最終的な起動回数である:fbootcntがないと，CCodeBuilderが起動回数
+変更の有無をチェックする際に複雑なロジックが必要になってしまう．
+（コード出力の先頭で判断する必要があるが，aCodeから処理単位ごとに取得，
+確認しなければならない）
+
+【データ構造】
+{“処理単位ID” => {
+    :localvar => {“変数名” => {:type=>“変数の型”, :value=>“変数の初期値”}, …}
+    :fbootcnt => 最終的な起動回数
+    :precode  => [出力するコード，出力するコード，…]
+    :postcode => [出力するコード，出力するコード，…]
+  },
+  …
+}
+
+
+(2.3) aGlobalVar
+【概要】
+グローバル変数宣言を保持する変数．
+この変数は，ttg2.0のhGlobalVarと同じであるが，順序保持のために配列に
+変更した．
+
+【データ構造】
+[“変数名" => {:type =>“変数の型”, :value => 変数の初期値 }, … ]
+
+
+(2.4) aHeader
+【概要】
+ヘッダファイルに出力する情報を保持する変数．
+この変数は，ttg2.0のhHをリネームして，配列に変更したものである．
+変数名を変更したのは，Headerを省略しない方が意図が分かりやすいと判断し
+たためである．
+配列に変更したのは，出力時の順序を保って欲しいためである．
+
+【データ構造】
+[“関数名” => [ 引数 ] , … ]
+
+
+(2.5) hConfig
+【概要】
+コンフィグファイルに出力する情報を保持する変数．
+この変数は，ttg2.0のhCfgをリネームし，ASP3/FMP3でデータ構造を合わせたも
+のである．
+変数名を変更したのは，Headerとの命名規則の統一をしたほうがよいと判断し
+たためであり，データ構造を合わせたのは，プロファイルによる分岐をできる
+限り減らしたかったためである．
+
+【データ構造】
+＊FMP3の場合
+{“クラス名”=> [“出力するコード”, … ]}
+
+※ASP3の場合はクラス名がIMC_NO_CLASS
+
+(2.6) nStack
+【概要】
+スタック共有時に必要なスタック数を保持する変数．
+この変数は，ttg2.0のnStackと同じである．
+
+
+--------------------------------------------------
+(3)属性まとめ
+
+(3.1)属性とは
+コードに属性をつけることによって出力のON/OFFを切り替えることができる．
+主にhtml出力のための機能ではあるが，check系やコメントなどはc出力にも
+利用できる．
+
+特にコメントは細かい切り替えができた方が良いと思われるため，タイプに
+よって属性を分ける（予定である）．
+
+なお，IntermediateCodeクラスは，属性によって生成する文字列を決めている．
+このため当初の想定よりも属性が細分化されてしまっている．文字列生成時に
+複数の属性をグループとしてまとめるかもしれない．（:checkと:check_mpを
+どちらも:checkにするなど）
+
+その場合には，統合後の属性をIntermediateCodeの属性として，統合前の属性
+はIMCodeElementの属性と言い分ける．
+
+
+(3.2)コメントのフォーマット（仮）
+(3.2.1):start_cmt
+コンディションやブロックの開始
+
+・コンディションの開始
+/* pre_condition */
+/* do_0_0 */
+/* post_condition_0_0 */
+
+・ブロックの開始
+/* block_1 */
+
+
+(3.2.2):sync_cmt
+同期メカニズムごとに同期種別の名称
+
+・BarrierSyncFunc系の同期
+/* ConditionSync */
+
+・WaitCheckSyncFunc系の同期
+/* ActiveSync */
+
+・StateSyncFunc系の同期
+/* StateSync */
+
+
+(3.2.3):activate_cmtと:inactivate_cmt
+処理単位の起動・終了．
+htmlでは色付け区間にも採用する（activate～inacitvateの間）
+
+・処理単位の実行開始(:activate_cmt)
+/* activate from task1 in prc1 */
+/* dispatch from task1 in prc1 */
+
+・処理単位の実行終了(:inactivate_cmt)
+/* inactivate */
+/* dispatch to task1 in prc1 */
+
+
+(3.2.4):detail_cmt
+その他の，より詳細なコメント
+
+・変数チェック
+/* variable check */

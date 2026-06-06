@@ -1,0 +1,33 @@
+version: "$Id: ref_cyc_c-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_cyclic_ref_cyc_c_2:
+  note: 【NGKI2470】【NGKI2471】【NGKI2472】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rcyc:
+          type: T_RCYC
+
+    CYC1:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycatr   : TA_NULL
+      cycstat  : TCYC_STA
+      hdlstat  : STP
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B
+
+  do:
+    id     : TASK1
+    syscall: ref_cyc(CYC1, &rcyc)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rcyc:
+          cycstat: TCYC_STA
+          lefttim: RELATIVE_TIME_A

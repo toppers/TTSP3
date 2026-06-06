@@ -1,0 +1,151 @@
+version: "$Id: act_tsk_e-1-2-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_manage_act_tsk_e_1_2_1_H1:
+  note: 【NGKI3527】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      actcnt : 0
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt: 1
+
+ASP_task_manage_act_tsk_e_1_2_1_H2:
+  note: 【NGKI3527】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      actcnt : 0
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt: 1
+
+ASP_task_manage_act_tsk_e_1_2_1_H3:
+  note: 【NGKI3527】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      actcnt : 0
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt: 1
+
+ASP_task_manage_act_tsk_e_1_2_1_H4:
+  note: 【NGKI3527】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      actcnt : 0
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt: 1
+
+ASP_task_manage_act_tsk_e_1_2_1_H5:
+  note: 【NGKI3527】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      actcnt : 0
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_ACT_TSK(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt: 1

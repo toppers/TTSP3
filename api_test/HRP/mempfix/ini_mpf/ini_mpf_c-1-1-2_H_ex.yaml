@@ -1,0 +1,344 @@
+version: "$Id: ini_mpf_c-1-1-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_ini_mpf_c_1_1_2_H1:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H2:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H3:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H4:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H5:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_MPF(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H6:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:
+
+ASP_mempfix_ini_mpf_c_1_1_2_H7:
+  note: 【NGKI2320】【NGKI2321】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    MPF1:
+      fblkcnt : ANY_INI_BLKCNT
+      wtsklist:

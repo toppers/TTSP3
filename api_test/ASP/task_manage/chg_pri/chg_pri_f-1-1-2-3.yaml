@@ -1,0 +1,26 @@
+version: "$Id: chg_pri_f-1-1-2-3.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_manage_chg_pri_f_1_1_2_3:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】【NGKI1198】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TSK_SELF, TSK_PRI_LOW)
+
+  post_condition:
+    TASK1:
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+
+    TASK2:
+      tskstat: running

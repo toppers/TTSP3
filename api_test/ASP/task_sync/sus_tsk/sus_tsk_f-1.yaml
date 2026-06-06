@@ -1,0 +1,17 @@
+version: "$Id: sus_tsk_f-1.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_sync_sus_tsk_f_1:
+  note: 【NGKI3605】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+
+  do:
+    id     : TASK1
+    syscall: sus_tsk(TSK_SELF)
+    ercd   : E_RASTER
+
+  post_condition:

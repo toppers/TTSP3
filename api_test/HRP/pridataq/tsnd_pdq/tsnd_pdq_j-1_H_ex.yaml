@@ -1,0 +1,218 @@
+version: "$Id: tsnd_pdq_j-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_pridataq_tsnd_pdq_j_1_H1:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H2:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H3:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H4:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H5:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TSND_PDQ(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H6:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+
+ASP_pridataq_tsnd_pdq_j_1_H7:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+      datalist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, TMO_POL)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH

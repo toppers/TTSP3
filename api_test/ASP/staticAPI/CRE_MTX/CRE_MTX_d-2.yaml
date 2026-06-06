@@ -1,0 +1,18 @@
+version: "$Id: CRE_MTX_d-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_staticAPI_CRE_MTX_d_2:
+  note: 【NGKI2033】【NGKI2035】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_UNL
+      mtxatr  : ANY_ATT_MTX
+      wtsklist:
+
+  do:
+
+  post_condition:

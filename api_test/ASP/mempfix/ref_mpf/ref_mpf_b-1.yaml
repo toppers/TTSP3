@@ -1,0 +1,24 @@
+version: "$Id: ref_mpf_b-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_mempfix_ref_mpf_b_1:
+  note: 【NGKI2326】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rmpf:
+          type   : T_RMPF
+          wtskid : ANY_OBJECT_ID
+          fblkcnt: ANY_NOW_BLKCNT
+
+    MPF1:
+      type  : MEMORYPOOL
+      blkcnt: ANY_INI_BLKCNT
+
+  do:
+    id     : TASK1
+    syscall: ref_mpf(0, &rmpf)
+    ercd   : E_ID
+
+  post_condition:

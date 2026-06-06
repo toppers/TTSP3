@@ -1,0 +1,26 @@
+version: "$Id: get_nth_a-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_get_nth_a_1:
+  note: 【NGKI3642】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        p_tskid:
+          type: ID
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+  do:
+    id     : ALM1
+    syscall: get_nth(TSK_PRI_MID, 0, &p_tskid)
+    ercd   : E_CTX
+
+  post_condition:

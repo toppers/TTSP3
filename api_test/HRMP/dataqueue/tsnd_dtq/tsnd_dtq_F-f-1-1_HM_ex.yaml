@@ -1,0 +1,435 @@
+version: "$Id: tsnd_dtq_F-f-1-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM1:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM2:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM3:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM4:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM5:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TSND_DTQ(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM6:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C
+
+FMP_dataqueue_tsnd_dtq_F_f_1_1_HM7:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_C, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+        - TASK1:
+            data: DATA_C

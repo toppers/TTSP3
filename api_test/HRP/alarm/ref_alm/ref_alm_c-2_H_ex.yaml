@@ -1,0 +1,76 @@
+version: "$Id: ref_alm_c-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_alarm_ref_alm_c_2_H3:
+  note: 【NGKI2579】【NGKI2580】【NGKI2581】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        ralm:
+          type: T_RALM
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STA
+      hdlstat  : STP
+      lefttim  : RELATIVE_TIME_A
+      domain   : KERNEL
+      access1  : TACP_KERNEL
+      access2  : TACP_KERNEL
+      access3  : TACP_KERNEL
+      access4  : TACP(DOM1)
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_alm(ALM1, &ralm)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        ralm:
+          almstat: TALM_STA
+          lefttim: RELATIVE_TIME_A
+
+ASP_alarm_ref_alm_c_2_H5:
+  note: 【NGKI2579】【NGKI2580】【NGKI2581】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        ralm:
+          type: T_RALM
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STA
+      hdlstat  : STP
+      lefttim  : RELATIVE_TIME_A
+      domain   : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_REF_ALM(ALM1, &ralm)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        ralm:
+          almstat: TALM_STA
+          lefttim: RELATIVE_TIME_A

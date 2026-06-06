@@ -1,0 +1,21 @@
+version: "$Id: mig_tsk_F-a-10.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_a_10:
+  note: 【NGKI1159】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      dis_dsp: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TSK_SELF, PRC_SELF)
+    ercd   : E_CTX
+
+  post_condition:

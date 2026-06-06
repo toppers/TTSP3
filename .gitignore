@@ -1,0 +1,24 @@
+# テスト作業フォルダ（OBJECT_DIR。ビルド産物・TTG/tecsgen生成物はすべてこの下）
+/obj/
+
+# ビルド産物
+*.o
+*.elf
+*.srec
+*.bin
+execute.log
+
+# 注意：`out` `out.c` `out.h` `out.cfg` `**/gen/` をグローバルに無視してはならない。
+# library/*/check_library/*/out.{c,h,cfg} はテストスイートのソース本体。
+# 生成物は /obj/ 配下に限られるため、/obj/ の無視で十分。
+
+# 兄弟ディレクトリのカーネル（万一ネストされても無視）
+/asp3/
+/fmp3/
+/hrp3/
+/hrmp3/
+
+# エディタ・OS
+.DS_Store
+*.swp
+.vscode/

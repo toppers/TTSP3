@@ -1,0 +1,38 @@
+version: "$Id: T5_F003-defined_running-waitspin_post_condition.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_spin_lock_loc_spn_F_d:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_OTHER
+
+  do_0:
+    id     : TASK2
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+    gcov   : true
+
+  post_condition_0:
+    TASK2:
+      tskstat: running-waitspin
+      spinid : SPN1

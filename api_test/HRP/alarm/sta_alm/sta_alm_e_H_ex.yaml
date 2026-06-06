@@ -1,0 +1,90 @@
+version: "$Id: sta_alm_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_alarm_sta_alm_e_H3:
+  note: TESRY_001，【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      domain   : KERNEL
+      access1  : TACP(DOM1)
+      access2  : TACP_KERNEL
+      access3  : TACP_KERNEL
+      access4  : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      TASK1:
+        tskstat: running
+
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+ASP_alarm_sta_alm_e_H5:
+  note: TESRY_001，【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      domain   : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      TASK1:
+        tskstat: running
+
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE

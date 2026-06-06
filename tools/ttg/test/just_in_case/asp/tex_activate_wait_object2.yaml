@@ -1,0 +1,42 @@
+version: "$Id: tex_activate_wait_object2.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+TEX_ACTIVATE_wait_eventflag:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TEX1:
+      type   : TASK_EXC
+      task   : TASK1
+      texstat: TTEX_ENA
+      hdlstat: ACTIVATE
+      texptn : 0x01
+      pndptn : 0
+      var:
+        flgptn:
+          type: FLGPTN
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+
+  do:
+    id     : TEX1
+    syscall: wai_flg(FLG1, BIT_PATTERN_A, WAIT_FLG_MODE_A, &flgptn)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : FLG1
+
+    TEX1:
+      texstat: TTEX_ENA
+      hdlstat: STP
+      texptn : 0x01
+      pndptn : 0
+
+    FLG1:
+      wtsklist:
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A

@@ -1,0 +1,59 @@
+version: "$Id: CRE_CYC_F-c-2.yaml 68 2020-02-04 09:19:44Z fujisft-shigihara $"
+FMP_staticAPI_CRE_CYC_F_c_2:
+  note: 【NGKI2393】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    CYC1:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycatr   : TA_STA
+      cycstat  : TCYC_STA
+      hdlstat  : STP
+      cycphs   : CYC_PHASE_TIME
+      cyctim   : CYC_CYCLE_TIME
+      prcid    : PRC_OTHER
+      class    : CLS_OTHER_ALL
+
+  do:
+
+  post_condition:
+    0:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: STP
+
+    CYC_PHASE_TIME+(CYC_CYCLE_TIME*0)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+        bootcnt: 0
+
+    CYC_PHASE_TIME+(CYC_CYCLE_TIME*1)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+        bootcnt: 1
+
+    CYC_PHASE_TIME+(CYC_CYCLE_TIME*2)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+        bootcnt: 2
+
+    CYC_PHASE_TIME+(CYC_CYCLE_TIME*3)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+        bootcnt: 3
+
+    CYC_PHASE_TIME+(CYC_CYCLE_TIME*4)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+        bootcnt: 4

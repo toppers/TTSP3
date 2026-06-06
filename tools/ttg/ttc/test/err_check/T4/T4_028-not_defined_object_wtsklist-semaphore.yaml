@@ -1,0 +1,24 @@
+version: "$Id: T4_028-not_defined_object_wtsklist-semaphore.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_semaphore_sig_sem_e_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: sig_sem(SEM1)
+
+  post_condition:

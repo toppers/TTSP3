@@ -1,0 +1,87 @@
+version: "$Id: get_tim_b_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_time_manage_get_tim_b_H3:
+  note: 【NGKI2354】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        systim1:
+          type: SYSTIM
+        systim2:
+          type: SYSTIM
+      domain : DOM_SYS_ACP4
+
+    CPU_STATE:
+      type   : CPU_STATE
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP(DOM_SYS_ACP4)
+
+    DOM_SYS_ACP4:
+      type: DOMAIN
+
+  do_0:
+    0:
+      id     : TASK1
+      syscall: get_tim(&systim1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+    ANY_ELAPSED_TIME:
+
+  do_1:
+    ANY_ELAPSED_TIME:
+      id     : TASK1
+      syscall: get_tim(&systim2)
+      ercd   : E_OK
+
+  post_condition_1:
+    ANY_ELAPSED_TIME:
+      TASK1:
+        var:
+          systim2:
+            value: systim1+ANY_ELAPSED_TIME
+
+ASP_time_manage_get_tim_b_H5:
+  note: 【NGKI2354】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        systim1:
+          type: SYSTIM
+        systim2:
+          type: SYSTIM
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    0:
+      id     : TASK1
+      syscall: TTSP_GET_TIM(&systim1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+    ANY_ELAPSED_TIME:
+
+  do_1:
+    ANY_ELAPSED_TIME:
+      id     : TASK1
+      syscall: TTSP_GET_TIM(&systim2)
+      ercd   : E_OK
+
+  post_condition_1:
+    ANY_ELAPSED_TIME:
+      TASK1:
+        var:
+          systim2:
+            value: systim1+ANY_ELAPSED_TIME

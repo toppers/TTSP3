@@ -1,0 +1,17 @@
+version: "$Id: T1_022-semaphore_class_defined.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_semaphore_ini_sem_b_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type : SEMAPHORE
+      class: defined
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(TNUM_SEMID+1)
+    ercd   : E_ID
+
+  post_condition:

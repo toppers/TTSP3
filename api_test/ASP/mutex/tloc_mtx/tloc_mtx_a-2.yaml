@@ -1,0 +1,23 @@
+version: "$Id: tloc_mtx_a-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_mutex_tloc_mtx_a_2:
+  note: 【NGKI2071】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: tloc_mtx(MTX1, ANY_ELAPSED_TIME)
+    ercd   : E_CTX
+
+  post_condition:

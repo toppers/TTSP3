@@ -1,0 +1,33 @@
+version: "$Id: get_lod_c.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_get_lod_c:
+  note: 【NGKI3629】【NGKI3631】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_load:
+          type: uint_t
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: get_lod(TPRI_SELF, &p_load)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_load:
+          value: 3

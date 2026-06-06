@@ -1,0 +1,94 @@
+version: "$Id: mig_tsk_F-g-2-2-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_g_2_2_1_HM1:
+  note: 【NGKI1155】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TASK2, PRC_OTHER)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      prcid  : PRC_OTHER
+
+FMP_task_manage_mig_tsk_F_g_2_2_1_HM2:
+  note: 【NGKI1155】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TASK2, PRC_OTHER)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      prcid  : PRC_OTHER
+
+FMP_task_manage_mig_tsk_F_g_2_2_1_HM4:
+  note: 【NGKI1155】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      prcid  : PRC_SELF
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TASK2, PRC_OTHER)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      prcid  : PRC_OTHER

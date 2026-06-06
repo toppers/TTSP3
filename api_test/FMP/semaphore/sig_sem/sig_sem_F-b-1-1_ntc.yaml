@@ -1,0 +1,108 @@
+version: "$Id: sig_sem_F-b-1-1_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_semaphore_sig_sem_F_b_1_1_ai:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_ALM
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    SEM1:
+      wtsklist:
+
+FMP_semaphore_sig_sem_F_b_1_1_ci:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_CYC
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    SEM1:
+      wtsklist:

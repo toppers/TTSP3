@@ -1,0 +1,241 @@
+version: "$Id: chg_pri_F-g-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_chg_pri_F_g_1_HM1:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_task_manage_chg_pri_F_g_1_HM2:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_task_manage_chg_pri_F_g_1_HM3:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+      domain : DOM1
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_task_manage_chg_pri_F_g_1_HM4:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : DOM2
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+      domain : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_task_manage_chg_pri_F_g_1_HM5:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CHG_PRI(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:

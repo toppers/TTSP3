@@ -1,0 +1,31 @@
+version: "$Id: tsnd_dtq_k-2-1-1-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_tsnd_dtq_k_2_1_1_1:
+  note: 【NGKI1737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqatr  : TA_NULL
+      dtqcnt  : 0
+      rtsklist:
+      stsklist:
+      datalist:
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A

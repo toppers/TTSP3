@@ -1,0 +1,167 @@
+version: "$Id: set_flg_e-5_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_set_flg_e_5_H2:
+  note: TESRY_003，【NGKI1608】【NGKI1609】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: TTSP_STA_ALM(ALM1, ACTIVATE_ALARM_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      almstat: TALM_STA
+
+  do_1:
+    id     : TASK2
+    syscall: slp_tsk()
+
+  post_condition_1:
+    TASK2:
+      tskstat: waiting
+      wobjid : SLEEP
+
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+  do_2:
+    id     : ALM1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition_2:
+    TASK1:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+
+  do_3:
+    id  : ALM1
+    code: return
+
+  post_condition_3:
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: STP
+
+    TASK1:
+      tskstat: running
+
+ASP_eventflag_set_flg_e_5_H6:
+  note: TESRY_003，【NGKI1608】【NGKI1609】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK1:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+  do_0:
+    id     : TASK2
+    syscall: TTSP_STA_ALM(ALM1, ACTIVATE_ALARM_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      almstat: TALM_STA
+
+  do_1:
+    id     : TASK2
+    syscall: slp_tsk()
+
+  post_condition_1:
+    TASK2:
+      tskstat: waiting
+      wobjid : SLEEP
+
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+  do_2:
+    id     : ALM1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition_2:
+    TASK1:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+
+  do_3:
+    id  : ALM1
+    code: return
+
+  post_condition_3:
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: STP
+
+    TASK1:
+      tskstat: running

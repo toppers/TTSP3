@@ -1,0 +1,14 @@
+version: "$Id: invalid_expression.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+invalid_expression:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition:
+    RELATIVE_TIME_A++:

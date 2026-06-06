@@ -1,0 +1,45 @@
+version: "$Id: ref_tsk_F-e-11-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_task_refer_ref_tsk_F_e_11_2:
+  note: 【NGKI1224】【NGKI1225】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_SUS
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE

@@ -1,0 +1,22 @@
+version: "$Id: operate_time_unnecessary_false.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+time_operate_unnecessary_false:
+  variation:
+    gain_time: false
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready

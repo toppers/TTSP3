@@ -1,0 +1,28 @@
+import(<kernel.cdl>);
+import("syssvc/tSerialPort.cdl");
+import("syssvc/tSerialAdapter.cdl");
+import("syssvc/tSysLog.cdl");
+import("syssvc/tSysLogAdapter.cdl");
+import("target.cdl");
+
+cell tSysLogAdapter SysLogAdapter {
+	cSysLog = SysLog.eSysLog;
+};
+
+cell tSerialAdapter SerialAdapter {
+	cSerialPort[0] = SerialPort1.eSerialPort;
+};
+
+cell tSysLog SysLog {
+	logBufferSize = 32;
+	initLogMask = C_EXP("LOG_UPTO(LOG_NOTICE)");
+	initLowMask = C_EXP("LOG_UPTO(LOG_NOTICE)");
+	cPutLog = PutLogTarget.ePutLog;
+};
+
+cell tSerialPort SerialPort1 {
+	receiveBufferSize = 256;
+	sendBufferSize = 256;
+	cSIOPort = SIOPortTarget1.eSIOPort;
+	eiSIOCBR <= SIOPortTarget1.ciSIOCBR;
+};

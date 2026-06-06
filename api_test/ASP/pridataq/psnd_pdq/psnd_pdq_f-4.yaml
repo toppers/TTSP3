@@ -1,0 +1,34 @@
+version: "$Id: psnd_pdq_f-4.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_psnd_pdq_f_4:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_B
+          datapri: DATA_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: psnd_pdq(PDQ1, DATA_C, DATA_PRI_LOW)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_B
+          datapri: DATA_PRI_MID
+        - data   : DATA_C
+          datapri: DATA_PRI_LOW

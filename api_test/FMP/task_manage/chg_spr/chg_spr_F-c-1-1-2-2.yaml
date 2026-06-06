@@ -1,0 +1,32 @@
+version: "$Id: chg_spr_F-c-1-1-2-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_chg_spr_F_c_1_1_2_2:
+  note: 【NGKI3672】【NGKI3673】【NGKI3674】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: running
+      subpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: ready
+      subpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: chg_spr(TSK_SELF, TSK_PRI_MID)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      subpri : TSK_PRI_MID
+
+    TASK2:
+      tskstat: running

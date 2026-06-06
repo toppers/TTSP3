@@ -1,0 +1,69 @@
+version: "$Id: inthdr_global_timer.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+inthdr_global_timer:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      class  : CLS_SELF_ONLY_SELF
+
+    INH2:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_INVALID_SELF
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_B
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      class  : CLS_SELF_ONLY_SELF
+
+    INH3:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_NOT_SET_SELF
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_C
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      class  : CLS_SELF_ONLY_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var:
+        var1:
+          type : int
+          value: INHNO_SELF_A
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: STP
+      prcid  : PRC_OTHER
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: TIPM_ENAALL
+      prcid  : PRC_SELF
+
+  do:
+    id   : TASK1
+    code : ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition:
+    INH1:
+      hdlstat: ACTIVATE
+
+    CPU_STATE:
+      chg_ipm: INT_PRI_MID

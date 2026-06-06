@@ -1,0 +1,24 @@
+version: "$Id: prcv_mbf_R-4.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRMP_prcv_mbf_4:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      class : CLS_OTHER_ALL
+
+  do:
+    id     : TASK1
+    syscall: prcv_mbf(MBF1, (void*)&message1)
+    eruint : E_TMOUT
+
+  post_condition:

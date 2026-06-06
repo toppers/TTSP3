@@ -1,0 +1,24 @@
+version: "$Id: mact_tsk_F-g-2-2-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_mact_tsk_F_g_2_2_1_HM1:
+  note: 【NGKI3557】【NGKI1135】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      actcnt : 0
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mact_tsk(TSK_SELF, PRC_OTHER)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt: 1
+      actprc: PRC_OTHER

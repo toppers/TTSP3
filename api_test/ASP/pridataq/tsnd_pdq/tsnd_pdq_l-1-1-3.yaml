@@ -1,0 +1,39 @@
+version: "$Id: tsnd_pdq_l-1-1-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_tsnd_pdq_l_1_1_3:
+  note: 【NGKI1871】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : PDQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+        ttg_pri :
+          type: PRI
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      rtsklist:
+        - TASK2:
+            vardata: ttg_data
+            varpri : ttg_pri
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+
+    PDQ1:
+      rtsklist:

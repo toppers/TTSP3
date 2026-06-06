@@ -1,0 +1,22 @@
+version: "$Id: tsnd_dtq_a-3.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_dataqueue_tsnd_dtq_a_3:
+  note: 【NGKI1725】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    DTQ1:
+      type: DATAQUEUE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_CTX
+
+  post_condition:

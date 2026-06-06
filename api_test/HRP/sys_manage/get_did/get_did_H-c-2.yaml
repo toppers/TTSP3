@@ -1,0 +1,24 @@
+version: "$Id: get_did_H-c-2.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_sys_manage_get_did_H_c_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+      var    :
+        domid:
+          type: ID
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_did(&domid)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        domid:
+          value: DOM1

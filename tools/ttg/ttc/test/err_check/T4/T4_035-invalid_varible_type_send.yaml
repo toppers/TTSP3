@@ -1,0 +1,25 @@
+version: "$Id: T4_035-invalid_varible_type_send.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_mailbox_snd_mbx_e_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        msg:
+          type: intptr_t
+
+    MBX1:
+      type    : MAILBOX
+      mbxatr  : TA_NULL
+      wtsklist:
+      msglist :
+
+  do:
+    id     : TASK1
+    syscall: snd_mbx(MBX1, &msg)
+    ercd   : E_OK
+
+  post_condition:
+    MBX1:
+      msglist:
+        - msg: msg

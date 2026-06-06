@@ -1,0 +1,83 @@
+version: "$Id: wait_all_object.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+wait_all_object:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: 3
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: 3
+
+    TASK4:
+      type   : TASK
+      tskstat: waiting
+      wobjid : PDQ1
+      lefttmo: 3
+
+    TASK5:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MBX1
+      lefttmo: 3
+
+    TASK6:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: 3
+
+    TASK7:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      lefttmo: 3
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+       - TASK3:
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      maxdpri : DATA_PRI_MAX
+      rtsklist : 
+        - TASK4 :
+
+    MBX1:
+      type   : MAILBOX
+      wtsklist : 
+        - TASK5:
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_NULL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK6:
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+
+  post_condition:

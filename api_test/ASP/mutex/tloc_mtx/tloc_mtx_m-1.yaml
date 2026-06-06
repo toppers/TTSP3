@@ -1,0 +1,26 @@
+version: "$Id: tloc_mtx_m-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_mutex_tloc_mtx_m_1:
+  note: 【NGKI2081】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+
+  do:
+    id     : TASK1
+    syscall: tloc_mtx(MTX1, TMO_FEVR)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+        - MTX1
+
+    MTX1:
+      mtxstat: TMTX_LOC
+      htskid : TASK1

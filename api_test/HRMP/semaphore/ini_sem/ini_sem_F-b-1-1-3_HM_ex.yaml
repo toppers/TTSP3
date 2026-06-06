@@ -1,0 +1,400 @@
+version: "$Id: ini_sem_F-b-1-1-3_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_semaphore_ini_sem_F_b_1_1_3_HM1:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM2:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM3:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM4:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM5:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_SEM(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM6:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:
+
+FMP_semaphore_ini_sem_F_b_1_1_3_HM7:
+  note: 【NGKI1532】【NGKI1533】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      isemcnt : ANY_INI_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    SEM1:
+      semcnt  : ANY_INI_SEMCNT
+      wtsklist:

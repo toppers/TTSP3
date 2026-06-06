@@ -1,0 +1,25 @@
+version: "$Id: sequence_sync1.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_sequence_sync1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+      prcid  : PRC_OTHER
+
+  do:
+    id     : ALM1
+    syscall: iunl_cpu()
+    ercd   : E_OK
+
+  post_condition:

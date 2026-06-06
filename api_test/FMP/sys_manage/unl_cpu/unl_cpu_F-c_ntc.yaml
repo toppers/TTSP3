@@ -1,0 +1,90 @@
+version: "$Id: unl_cpu_F-c_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_unl_cpu_F_c_ai:
+  note: 【NGKI2739】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : DUMMY_ALM
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do:
+    id     : DUMMY_ALM
+    syscall: unl_cpu()
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_sys_manage_unl_cpu_F_c_ci:
+  note: 【NGKI2739】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : DUMMY_CYC
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do:
+    id     : DUMMY_CYC
+    syscall: unl_cpu()
+    ercd   : E_OK
+
+  post_condition:

@@ -1,0 +1,27 @@
+version: "$Id: msta_cyc_F-b-1-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_cyclic_msta_cyc_F_b_1_2:
+  note: 【NGKI2443】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    CYC1:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycatr   : TA_NULL
+      cycstat  : TCYC_STP
+      hdlstat  : STP
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B
+      prcid    : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: msta_cyc(0, PRC_OTHER)
+    ercd   : E_ID
+
+  post_condition:

@@ -1,0 +1,24 @@
+version: "$Id: tsnd_dtq_H-a-2.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_dataqueue_tsnd_dtq_H_a_2:
+  pre_condition:
+    DTQ1:
+      type  : DATAQUEUE
+      domain: DOM2
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OACV
+
+  post_condition:

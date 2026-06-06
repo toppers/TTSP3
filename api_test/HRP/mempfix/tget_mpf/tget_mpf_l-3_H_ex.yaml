@@ -1,0 +1,246 @@
+version: "$Id: tget_mpf_l-3_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_tget_mpf_l_3_H1:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H2:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H3:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H4:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H5:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TGET_MPF(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H6:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_mempfix_tget_mpf_l_3_H7:
+  note: 【NGKI2303】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1,&blk,ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:

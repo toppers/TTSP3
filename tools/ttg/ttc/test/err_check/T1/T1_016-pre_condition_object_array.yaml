@@ -1,0 +1,24 @@
+version: "$Id: T1_016-pre_condition_object_array.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_task_manage_act_tsk_d_1_1:
+  pre_condition:
+    TASK1:
+      - type   : TASK
+      - tskpri : TSK_PRI_MID
+      - tskstat: running
+
+    TASK2:
+      - type   : TASK
+      - itskpri: TSK_PRI_HIGH
+      - tskstat: dormant
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      tskpri : TSK_PRI_HIGH

@@ -1,0 +1,57 @@
+version: "$Id: tsnd_pdq_i-2-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_tsnd_pdq_i_2_1:
+  note: 【NGKI1900】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+
+  do_0:
+    id     : TASK2
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    PDQ1:
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RCV_PDQ(PDQ1, &data, &datapri)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    PDQ1:
+      stsklist:

@@ -1,0 +1,29 @@
+version: "$Id: prb_mem_H-e.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_memory_prb_mem_H_e:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    MEMORY_MODULE1:
+      type   : MEMORY_MODULE
+      file   : ttsp_mem_obj_user2.o
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prb_mem((const void *)&ttsp_mem_obj_user2, 0x10000000, TASK1, TPM_WRITE)
+    ercd   : E_OBJ
+
+  post_condition:

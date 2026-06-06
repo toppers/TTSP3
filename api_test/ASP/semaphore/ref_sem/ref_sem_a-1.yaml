@@ -1,0 +1,31 @@
+version: "$Id: ref_sem_a-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_semaphore_ref_sem_a_1:
+  note: 【NGKI1536】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        rsem:
+          type  : T_RSEM
+          wtskid: ANY_OBJECT_ID
+          semcnt: ANY_INI_SEMCNT
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type  : SEMAPHORE
+      semcnt: ANY_NOW_SEMCNT
+
+  do:
+    id     : ALM1
+    syscall: ref_sem(SEM1,&rsem)
+    ercd   : E_CTX
+
+  post_condition:

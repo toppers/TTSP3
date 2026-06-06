@@ -1,0 +1,24 @@
+version: "$Id: T7_003-intpri-multipleA.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_2:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intno  : INTNO_SELF_ISR_B
+      intpri : ANY_INT_PRI
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      isrpri : ISR_PRI_MID
+      exinf  : 0x03
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : ISR1
+    syscall: iact_tsk(TASK1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt : 1

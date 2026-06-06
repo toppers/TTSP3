@@ -1,0 +1,89 @@
+version: "$Id: hrp_alarm_cycle_domain.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+hrp_alarm_domain:
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_ACTTSK
+      nfy_info1: TASK2
+      almstat  : TALM_STP
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK1:
+        tskstat: ready
+
+      TASK2:
+        tskstat: running
+        tskpri : TSK_PRI_HIGH
+
+hrp_cycle_domain:
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_ACTTSK
+      nfy_info1: TASK2
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_cyc(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK1:
+        tskstat: ready
+
+      TASK2:
+        tskstat: running
+        tskpri : TSK_PRI_HIGH

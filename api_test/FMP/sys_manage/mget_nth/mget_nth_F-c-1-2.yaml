@@ -1,0 +1,28 @@
+version: "$Id: mget_nth_F-c-1-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_mget_nth_F_c_1_2:
+  note: 【NGKI3655】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      porder : 1
+      var    :
+        p_tskid:
+          type: ID
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      porder : 1
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: mget_nth(PRC_SELF, TMAX_TPRI+1, 0, &p_tskid)
+    ercd   : E_PAR
+
+  post_condition:

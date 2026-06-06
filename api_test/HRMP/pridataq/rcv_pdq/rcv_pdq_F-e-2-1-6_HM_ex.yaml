@@ -1,0 +1,701 @@
+version: "$Id: rcv_pdq_F-e-2-1-6_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM1:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM2:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM3:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM4:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM5:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_RCV_PDQ(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM6:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+
+FMP_pridataq_rcv_pdq_F_e_2_1_6_HM7:
+  note: 【NGKI1894】【NGKI1893】【NGKI1895】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_C
+          datapri: DATA_PRI_MID
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_C
+        datapri:
+          value: DATA_PRI_MID
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_D
+          datapri: DATA_PRI_MID
+        - data   : DATA_E
+          datapri: DATA_PRI_LOW

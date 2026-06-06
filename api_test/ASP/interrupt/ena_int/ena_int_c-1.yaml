@@ -1,0 +1,42 @@
+version: "$Id: ena_int_c-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_ena_int_c_1:
+  note: TESRY_006，【NGKI3099】
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_DISINT
+      hdlstat: STP
+      intreq : true
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+  do_0:
+    id     : TASK1
+    syscall: ena_int(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      intreq : false
+
+  do_1:
+    id  : INH1
+    code: return
+
+  post_condition_1:
+    INH1:
+      hdlstat: STP

@@ -1,0 +1,32 @@
+version: "$Id: complement_isr.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+complement_isr:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_A
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: TIPM_ENAALL
+
+  do:
+    id   : TASK1
+    code : ttsp_int_raise(INTNO_SELF_ISR_A)
+
+  post_condition:
+    ISR1:
+      hdlstat: ACTIVATE
+
+    CPU_STATE:
+      chg_ipm: INT_PRI_MID

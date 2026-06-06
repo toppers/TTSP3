@@ -1,0 +1,218 @@
+version: "$Id: get_mpf_h_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_get_mpf_h_H1:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H2:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H3:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H4:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H5:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H6:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : NONE
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+ASP_mempfix_get_mpf_h_H7:
+  note: 【NGKI2302】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: ANY_NOW_BLKCNT
+      domain : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+    ercd   : E_OK
+
+  post_condition:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1

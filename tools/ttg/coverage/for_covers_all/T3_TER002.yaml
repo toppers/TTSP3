@@ -1,0 +1,17 @@
+version: "$Id: T3_TER002.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T3_TER002_temp:
+  pre_condition:
+    TASK1:
+      type     : TASK
+      tskstat  : running
+
+    TER1:
+      type   : TERRTN
+      do     :
+        code : sns_ker()
+      global : true
+      prcid  : PRC_SELF
+
+  do:
+
+  post_condition:

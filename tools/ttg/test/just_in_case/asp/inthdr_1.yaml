@@ -1,0 +1,33 @@
+version: "$Id: inthdr_1.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+INTHDR_sample_1:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: TIPM_ENAALL
+
+  do:
+    id   : TASK1
+    code : ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition:
+    INH1:
+      hdlstat: ACTIVATE
+
+    CPU_STATE:
+      chg_ipm: INT_PRI_MID

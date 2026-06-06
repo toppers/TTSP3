@@ -1,0 +1,22 @@
+version: "$Id: ext_tsk_a.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ext_tsk_a:
+  note: 【NGKI1164】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : ALM1
+    syscall: ext_tsk()
+    ercd   : E_CTX
+
+  post_condition:

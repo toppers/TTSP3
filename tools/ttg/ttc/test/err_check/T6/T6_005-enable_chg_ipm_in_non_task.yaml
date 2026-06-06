@@ -1,0 +1,28 @@
+version: "$Id: T6_005-enable_chg_ipm_in_non_task.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_interrupt_chg_ipm_W_a:
+  variation:
+    enable_chg_ipm_in_non_task: true
+
+  pre_condition:
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: false
+      chg_ipm: ANY_IPM
+
+  do:
+    id     : ALM1
+    syscall: chg_ipm(ANY_IPM)
+    ercd   : E_OK
+
+  post_condition:
+    CPU_STATE:
+      chg_ipm: ANY_IPM

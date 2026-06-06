@@ -1,0 +1,47 @@
+version: "$Id: ref_tsk_c-4-4.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_refer_ref_tsk_c_4_4:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rtsk:
+          type: T_RTSK
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      var    :
+        flgptn:
+          type: FLGPTN
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_MID
+          tskbpri: TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0

@@ -1,0 +1,35 @@
+version: "$Id: get_lod_F-a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_get_lod_F_a:
+  note: 【NGKI3625】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_load:
+          type: uint_t
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: get_lod(TSK_PRI_MID, &p_load)
+    ercd   : E_CTX
+
+  post_condition:

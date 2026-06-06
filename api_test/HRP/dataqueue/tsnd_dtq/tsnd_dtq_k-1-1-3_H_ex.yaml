@@ -1,0 +1,316 @@
+version: "$Id: tsnd_dtq_k-1-1-3_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H1:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H2:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H3:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H4:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H5:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TSND_DTQ(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H6:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_tsnd_dtq_k_1_1_3_H7:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:

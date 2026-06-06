@@ -1,0 +1,21 @@
+version: "$Id: loc_mtx_e.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_mutex_loc_mtx_e:
+  note: 【NGKI3463】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+
+  do:
+    id     : TASK1
+    syscall: loc_mtx(MTX1)
+    ercd   : E_RASTER
+
+  post_condition:

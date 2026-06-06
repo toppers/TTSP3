@@ -1,0 +1,25 @@
+version: "$Id: get_ipm_H-b.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_interrupt_get_ipm_H_b:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM_SAC_SYS
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: TIPM_ENAALL
+      access1: TACP(DOM_SAC_SYS)
+      access2: TACP(DOM_SAC_SYS)
+      access3: TACP(DOM_SAC_SYS)
+      access4: TACP(DOM_SAC_SYS)
+
+    DOM_SAC_SYS:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_ipm((PRI*)TTSP_MACV_ADDRESS)
+    ercd   : E_MACV
+
+  post_condition:

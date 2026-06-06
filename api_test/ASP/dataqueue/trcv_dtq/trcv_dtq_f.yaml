@@ -1,0 +1,57 @@
+version: "$Id: trcv_dtq_f.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_trcv_dtq_f:
+  note: 【NGKI3460】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        p_data:
+          type : intptr_t
+          value: DATA_A
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+
+  do_0:
+    id     : TASK2
+    syscall: trcv_dtq(DTQ1, &p_data, ANY_ELAPSED_TIME)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK2:
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    DTQ1:
+      rtsklist:

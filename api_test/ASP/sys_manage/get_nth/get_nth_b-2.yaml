@@ -1,0 +1,20 @@
+version: "$Id: get_nth_b-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_get_nth_b_2:
+  note: 【NGKI3644】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      porder : 1
+      var    :
+        p_tskid:
+          type: ID
+
+  do:
+    id     : TASK1
+    syscall: get_nth(TMAX_TPRI+1, 0, &p_tskid)
+    ercd   : E_PAR
+
+  post_condition:

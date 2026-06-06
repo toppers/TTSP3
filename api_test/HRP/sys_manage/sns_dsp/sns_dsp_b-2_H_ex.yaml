@@ -1,0 +1,23 @@
+version: "$Id: sns_dsp_b-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_sys_manage_sns_dsp_b_2_H3:
+  note: 【NGKI2757】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: false
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sns_dsp()
+    bool   : false
+
+  post_condition:

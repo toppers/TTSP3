@@ -1,0 +1,39 @@
+version: "$Id: rcv_pdq_h-1-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_rcv_pdq_h_1_1:
+  note: 【NGKI1894】【NGKI1893】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_A
+        datapri:
+          value: DATA_PRI_MID
+
+    PDQ1:
+      datalist:

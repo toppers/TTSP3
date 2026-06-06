@@ -1,0 +1,58 @@
+version: "$Id: snd_dtq_g-1-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_snd_dtq_g_1_2:
+  note: 【NGKI1768】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      var    :
+        data:
+          type: intptr_t
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 1
+      stsklist:
+      datalist:
+        - data: DATA_B
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_PRCV_DTQ(DTQ1, &data)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+      datalist:
+        - data: DATA_A

@@ -1,0 +1,31 @@
+version: "$Id: ref_alm_a-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_alarm_ref_alm_a_2:
+  note: 【NGKI2574】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        ralm:
+          type   : T_RALM
+          almstat: ANY_ALARM_STAT
+          lefttim: RELATIVE_TIME_A
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: ref_alm(ALM1, &ralm)
+    ercd   : E_CTX
+
+  post_condition:

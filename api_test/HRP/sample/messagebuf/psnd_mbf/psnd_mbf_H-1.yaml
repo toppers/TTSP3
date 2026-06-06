@@ -1,0 +1,53 @@
+version: "$Id: psnd_mbf_H-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_psnd_mbf_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+          value  : MBF_MSG_A
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      tskpri : TSK_PRI_HIGH
+      wobjid : MBF1
+      var    :
+        msg1  :
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+        msgsz1:
+          type: uint_t
+
+    MBF1:
+      type    : MESSAGEBUF
+      maxmsz  : ANY_MAX_MSIZE
+      mbfsz   : ANY_MBF_SIZE
+      fmbfsz  : ANY_MBF_SIZE
+      rtsklist:
+        - TASK2:
+            v_msg  : msg1
+            v_msgsz: msgsz1
+
+  do:
+    id     : TASK1
+    syscall: psnd_mbf(MBF1, (void*)&message1, MBF_MSGSZ_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        msg1  :
+          value: MBF_MSG_A
+        msgsz1:
+          value: MBF_MSGSZ_A
+
+    MBF1:
+      rtsklist:

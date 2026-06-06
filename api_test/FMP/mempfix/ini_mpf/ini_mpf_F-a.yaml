@@ -1,0 +1,29 @@
+version: "$Id: ini_mpf_F-a.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_mempfix_ini_mpf_F_a:
+  note: 【NGKI2316】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    MPF1:
+      type: MEMORYPOOL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: ini_mpf(MPF1)
+    ercd   : E_CTX
+
+  post_condition:

@@ -1,0 +1,118 @@
+version: "$Id: mact_tsk_F-j-1-1-1-6_ntc_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_mact_tsk_F_j_1_1_1_6_ai_HM2:
+  note: 【NGKI1132】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER_2
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      itskpri: TSK_PRI_HIGH
+      actcnt : 0
+      prcid  : PRC_OTHER_1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER_2
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: mact_tsk(TASK2, PRC_OTHER_2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER_2
+
+FMP_task_manage_mact_tsk_F_j_1_1_1_6_ci_HM2:
+  note: 【NGKI1132】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER_2
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      itskpri: TSK_PRI_HIGH
+      actcnt : 0
+      prcid  : PRC_OTHER_1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER_2
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: mact_tsk(TASK2, PRC_OTHER_2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER_2

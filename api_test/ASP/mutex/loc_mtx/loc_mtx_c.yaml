@@ -1,0 +1,23 @@
+version: "$Id: loc_mtx_c.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_mutex_loc_mtx_c:
+  note: 【NGKI2085】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      tskbpri: TSK_PRI_HIGH
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      mtxatr : TA_CEILING
+      ceilpri: TSK_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: loc_mtx(MTX1)
+    ercd   : E_ILUSE
+
+  post_condition:

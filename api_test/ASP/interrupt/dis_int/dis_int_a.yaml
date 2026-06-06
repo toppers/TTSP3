@@ -1,0 +1,17 @@
+version: "$Id: dis_int_a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_dis_int_a:
+  note: 【NGKI3083】
+  variation:
+    api_support_dis_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: dis_int(INTNO_INVALID_SELF)
+    ercd   : E_PAR
+
+  post_condition:

@@ -1,0 +1,30 @@
+version: "$Id: tloc_mtx_n-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_mutex_tloc_mtx_n_3:
+  note: 【NGKI2083】【NGKI2078】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SLEEP
+      locmtx :
+        - MTX1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      mtxatr : ANY_ATT_MTX_NOT_CEILING
+      htskid : TASK2
+
+  do:
+    id     : TASK1
+    syscall: tloc_mtx(MTX1, ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:

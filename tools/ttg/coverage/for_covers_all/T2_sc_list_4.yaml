@@ -1,0 +1,25 @@
+version: "$Id: T2_sc_list_4.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T2_sc_list_4:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      stsklist:
+        - TASK1:
+            data     : 1
+            datapri  : 1
+            undefined: 1
+      rtsklist:
+        - TASK1:
+            undefined: 1
+      datalist:
+        - data     : 1
+          datapri  : 1
+          undefined: 1
+
+  do:
+
+  post_condition:

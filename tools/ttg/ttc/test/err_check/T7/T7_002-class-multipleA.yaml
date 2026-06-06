@@ -1,0 +1,28 @@
+version: "$Id: T7_002-class-multipleA.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_interrupt_dis_int_F_b_1:
+  variation:
+    irc_arch: local
+    api_support_dis_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : ANY_INT_PRI
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      class  : CLS_SELF_ONLY_SELF
+
+  do:
+    id     : TASK1
+    syscall: dis_int(TTSP_GLOBAL_IRC_INTNO)
+    ercd   : E_PAR
+
+  post_condition:

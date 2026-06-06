@@ -1,0 +1,33 @@
+version: "$Id: T3_SCO001-wtsklist_duplicate-mailbox.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_mailbox_ini_mbx_c_1_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MBX1
+
+    MBX1:
+      type    : MAILBOX
+      wtsklist:
+        - TASK2:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: ini_mbx(MBX1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    MBX1:
+      wtsklist:

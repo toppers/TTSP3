@@ -1,0 +1,393 @@
+version: "$Id: trcv_dtq_F-c_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_dataqueue_trcv_dtq_F_c_HM1:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM2:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM3:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type   : DATAQUEUE
+      dtqcnt : 0
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM4:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type   : DATAQUEUE
+      dtqcnt : 0
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM5:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+      domain: KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_TRCV_DTQ(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM6:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+      domain: NONE
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_trcv_dtq_F_c_HM7:
+  note: 【NGKI1765】【NGKI1780】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data:
+          type : intptr_t
+          value: DATA_A
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+      domain: NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: trcv_dtq(DTQ1, &data, ANY_ELAPSED_TIME)
+    ercd   : E_DLT
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    DTQ1:
+      rtsklist:
+        - TASK1:
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_INI_DTQ(DTQ1)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:

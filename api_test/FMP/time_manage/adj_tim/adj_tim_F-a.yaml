@@ -1,0 +1,26 @@
+version: "$Id: adj_tim_F-a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_time_manage_adj_tim_F_a:
+  note: 【NGKI3583】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: adj_tim(ANY_ADJUST_PLUS_TIME)
+    ercd   : E_CTX
+
+  post_condition:

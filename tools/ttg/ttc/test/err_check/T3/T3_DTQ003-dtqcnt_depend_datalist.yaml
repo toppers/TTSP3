@@ -1,0 +1,31 @@
+version: "$Id: T3_DTQ003-dtqcnt_depend_datalist.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_dataqueue_rcv_dtq_f_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type: intptr_t 
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      datalist:
+        - data : DATA_A
+
+  do:
+    id     : TASK1
+    syscall: rcv_dtq(DTQ1, &data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        data:
+          value: DATA_A
+
+    DTQ1:
+      datalist:

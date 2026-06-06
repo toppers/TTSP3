@@ -1,0 +1,28 @@
+version: "$Id: ena_int_H-a.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_interrupt_ena_int_H_a:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_DISINT
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ena_int(INTNO_SELF_INH_A)
+    ercd   : E_OACV
+
+  post_condition:

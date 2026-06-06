@@ -1,0 +1,19 @@
+version: "$Id: T6_010-api_support_ena_int_TA_NULL_inthdr_pre_condition.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_interrupt_ena_int_d_1:
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_INH_A
+      intpri : ANY_INT_PRI
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+
+  post_condition:

@@ -1,0 +1,31 @@
+version: "$Id: trcv_pdq_H-a-2.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_pridataq_trcv_pdq_H_a_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      domain: DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: trcv_pdq(PDQ1, &data, &datapri, ANY_ELAPSED_TIME)
+    ercd   : E_OACV
+
+  post_condition:

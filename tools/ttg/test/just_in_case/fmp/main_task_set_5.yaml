@@ -1,0 +1,33 @@
+version: "$Id: main_task_set_5.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+main_task_set_5:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      itskpri: 16
+      tskpri : 16
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      itskpri: 16
+      tskpri : 16
+
+    TEX1:
+      type   : TASK_EXC
+      task   : TASK1
+      texstat: TTEX_DIS
+      hdlstat: ACTIVATE
+      texptn : 0x01
+      pndptn : 0
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TEX1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_CTX
+
+  post_condition:

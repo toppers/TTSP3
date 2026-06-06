@@ -1,0 +1,512 @@
+version: "$Id: prcv_dtq_d-2-2-1-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H1:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H2:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H3:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H4:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H5:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_PRCV_DTQ(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H6:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A
+
+ASP_dataqueue_prcv_dtq_d_2_2_1_2_H7:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_data:
+          type: intptr_t
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_dtq(DTQ1, &p_data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        p_data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A

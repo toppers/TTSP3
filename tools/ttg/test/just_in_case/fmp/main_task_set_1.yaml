@@ -1,0 +1,43 @@
+version: "$Id: main_task_set_1.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+main_task_set_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: dormant
+      itskpri: 16
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskpri : 16
+      itskpri: 16
+      prcid  : PRC_OTHER
+
+    CYC1:
+      type    : CYCLE
+      cycstat : TCYC_STA
+      hdlstat : STP
+      cycphs  : RELATIVE_TIME_A
+      cyctim  : RELATIVE_TIME_B
+
+  do_0:
+    0:
+      id     : TASK2
+      syscall: sta_cyc(CYC1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+      CYC1:
+        cycstat : TCYC_STA
+        hdlstat : STP
+
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      CYC1:
+        hdlstat : ACTIVATE
+        bootcnt : 0
+
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*1)+1:
+      CYC1:
+        bootcnt : 1

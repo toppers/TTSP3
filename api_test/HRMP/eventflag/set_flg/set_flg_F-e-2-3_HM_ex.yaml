@@ -1,0 +1,575 @@
+version: "$Id: set_flg_F-e-2-3_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_eventflag_set_flg_F_e_2_3_HM1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM5:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_SET_FLG(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_2_3_HM7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskstat: ready
+      porder : 1
+
+    TASK4:
+      tskstat: ready
+      porder : 2
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW

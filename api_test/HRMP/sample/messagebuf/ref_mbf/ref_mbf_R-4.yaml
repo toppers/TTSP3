@@ -1,0 +1,66 @@
+version: "$Id: ref_mbf_R-4.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRMP_ref_mbf_4:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      var    :
+        pk_rmbf:
+          type: T_RMBF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MBF1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MBF1
+      prcid  : PRC_OTHER
+
+    MBF1:
+      type    : MESSAGEBUF
+      maxmsz  : ANY_MAX_MSIZE
+      mbfsz   : ANY_MBF_SIZE
+      fmbfsz  : "(ANY_MBF_SIZE - TSZ_MBFMB(1, MBF_MSGSZ_A) - TSZ_MBFMB(5, 10) - TSZ_MBFMB(1, 4))"
+      class   : CLS_OTHER_ALL
+      msglist :
+        - msg  : MBF_MSG_A
+          msgsz: MBF_MSGSZ_A
+        - msg  : "{1,2,3,4,5,6,7,8,9,10}"
+          msgsz: 10
+        - msg  : "{10,9,8,7,6,5,4,3,2,1}"
+          msgsz: 10
+        - msg  : "{1,2,3,4,5,6,7,8,9,10}"
+          msgsz: 10
+        - msg  : "{10,9,8,7,6,5,4,3,2,1}"
+          msgsz: 10
+        - msg  : "{1,2,3,4,5,6,7,8,9,10}"
+          msgsz: 10
+        - msg  : "{1,2,3,4}"
+          msgsz: 4
+      stsklist:
+        - TASK2:
+            msg  : MBF_MSG_B
+            msgsz: MBF_MSGSZ_B
+        - TASK3:
+            msg  : MBF_MSG_C
+            msgsz: MBF_MSGSZ_C
+
+  do:
+    id     : TASK1
+    syscall: ref_mbf(MBF1, &pk_rmbf)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      var    :
+        pk_rmbf:
+          stskid : TASK2
+          rtskid : TSK_NONE
+          smbfcnt: 7
+          fmbfsz : "(ANY_MBF_SIZE - TSZ_MBFMB(1, MBF_MSGSZ_A) - TSZ_MBFMB(5, 10) - TSZ_MBFMB(1, 4))"

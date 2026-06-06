@@ -1,0 +1,35 @@
+version: "$Id: ref_mpf_F-a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_mempfix_ref_mpf_F_a:
+  note: 【NGKI2325】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rmpf:
+          type   : T_RMPF
+          wtskid : ANY_OBJECT_ID
+          fblkcnt: ANY_NOW_BLKCNT
+
+    MPF1:
+      type  : MEMORYPOOL
+      blkcnt: ANY_INI_BLKCNT
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: ref_mpf(MPF1, &rmpf)
+    ercd   : E_CTX
+
+  post_condition:

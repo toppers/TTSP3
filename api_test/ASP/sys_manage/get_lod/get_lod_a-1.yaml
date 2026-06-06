@@ -1,0 +1,26 @@
+version: "$Id: get_lod_a-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_get_lod_a_1:
+  note: 【NGKI3624】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        p_load:
+          type: uint_t
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+  do:
+    id     : ALM1
+    syscall: get_lod(TSK_PRI_MID, &p_load)
+    ercd   : E_CTX
+
+  post_condition:

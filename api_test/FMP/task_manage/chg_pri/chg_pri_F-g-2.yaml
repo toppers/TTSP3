@@ -1,0 +1,39 @@
+version: "$Id: chg_pri_F-g-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_task_manage_chg_pri_F_g_2:
+  note: 【NGKI1197】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskbpri: TSK_PRI_LOW
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      locmtx :
+        - MTX1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      ceilpri: TSK_PRI_MID
+      mtxatr : TA_CEILING
+      htskid : TASK3
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_LOW)
+    ercd   : E_OK
+
+  post_condition:

@@ -1,0 +1,30 @@
+version: "$Id: T3_MBX002-not_TA_MPRI_defined_msgpri.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_mailbox_snd_mbx_e_1_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        msg:
+          type: T_MSG
+
+    MBX1:
+      type    : MAILBOX
+      mbxatr  : TA_NULL
+      wtsklist:
+      msglist :
+        - msg   : msg1
+          msgpri: MSG_PRI_MID
+        - msg   : msg3
+
+  do:
+    id     : TASK1
+    syscall: snd_mbx(MBX1, &msg)
+    ercd   : E_OK
+
+  post_condition:
+    MBX1:
+      msglist:
+        - msg: msg1
+        - msg: msg3
+        - msg: msg

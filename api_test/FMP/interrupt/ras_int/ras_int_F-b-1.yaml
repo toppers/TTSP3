@@ -1,0 +1,29 @@
+version: "$Id: ras_int_F-b-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_interrupt_ras_int_F_b_1:
+  note: 【NGKI3942】
+  variation:
+    irc_arch: local
+    api_support_ras_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      intreq : false
+
+  do:
+    id     : TASK1
+    syscall: ras_int(TTSP_GLOBAL_IRC_INTNO_A)
+    ercd   : E_PAR
+
+  post_condition:

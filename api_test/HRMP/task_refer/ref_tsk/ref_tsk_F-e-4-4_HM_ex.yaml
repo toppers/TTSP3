@@ -1,0 +1,326 @@
+version: "$Id: ref_tsk_F-e-4-4_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_refer_ref_tsk_F_e_4_4_HM1:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE
+
+FMP_task_refer_ref_tsk_F_e_4_4_HM2:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE
+
+FMP_task_refer_ref_tsk_F_e_4_4_HM3:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP(DOM1)
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE
+
+FMP_task_refer_ref_tsk_F_e_4_4_HM4:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP(DOM1)
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+      domain  : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_tsk(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE
+
+FMP_task_refer_ref_tsk_F_e_4_4_HM5:
+  note: 【NGKI1224】【NGKI1225】【NGKI1229】【NGKI1235】【NGKI1227】【NGKI1233】【NGKI1231】【NGKI3662】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        rtsk:
+          type: T_RTSK
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      lefttmo: ANY_ELAPSED_TIME
+      tskpri : TSK_PRI_SUBPRI
+      tskbpri: TSK_PRI_SUBPRI
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_A
+            var   : flgptn
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_REF_TSK(TASK2,&rtsk)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rtsk:
+          tskstat: TTS_WAI
+          tskwait: TTW_FLG
+          wobjid : FLG1
+          lefttmo: ANY_ELAPSED_TIME
+          tskpri : TSK_PRI_SUBPRI
+          tskbpri: TSK_PRI_SUBPRI
+          subpri : TSK_PRI_MID
+          actcnt : 0
+          wupcnt : 0
+          prcid  : PRC_OTHER
+          actprc : TPRC_NONE

@@ -1,0 +1,34 @@
+version: "$Id: T4_007-non-running_process_unit_defined_value.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_task_manage_get_inf_b:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      exinf: EXINF_A
+      var:
+        exinf:
+          type: intptr_t
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      exinf  : EXINF_B
+      var    :
+        data:
+          type: intptr_t
+
+  do:
+    id     : TASK1
+    syscall: get_inf(&exinf)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        exinf:
+          value: EXINF_A
+
+    TASK2:
+      var:
+        data:
+          value: EXINF_B

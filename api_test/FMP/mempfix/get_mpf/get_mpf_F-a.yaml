@@ -1,0 +1,33 @@
+version: "$Id: get_mpf_F-a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_mempfix_get_mpf_F_a:
+  note: 【NGKI2291】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        blk:
+          type : void*
+          value: "(void*)ANY_ADDRESS"
+
+    MPF1:
+      type: MEMORYPOOL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1, &blk)
+    ercd   : E_CTX
+
+  post_condition:

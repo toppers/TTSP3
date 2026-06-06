@@ -1,0 +1,57 @@
+version: "$Id: mempfix_3.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+mempfix_sample_3_defined_var:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk1:
+          type: void*
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      var    :
+        blk2:
+          type: void*
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      var    :
+        blk3:
+          type: void*
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_NULL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+            var: blk2
+        - TASK3:
+            var: blk3
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1, &blk1)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK2:
+            var: blk2
+        - TASK3:
+            var: blk3
+        - TASK1:
+            var: blk1

@@ -1,0 +1,1496 @@
+version: "$Id: set_flg_e-3_ten_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_set_flg_e_3_at_H1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_at_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_at_H3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_at_H4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_at_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_at_H7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      almstat  : TALM_STP
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : KERNEL
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : KERNEL
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ae_H7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ct_H7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SETFLG
+      nfy_info1: FLG1
+      nfy_info2: BIT_PATTERN_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      domain   : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : KERNEL
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : KERNEL
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:
+
+ASP_eventflag_set_flg_e_3_ce_H7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SETFLG
+      enfy_info1: FLG1
+      enfy_info2: BIT_PATTERN_A
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      domain    : DOM1
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      domain : DOM1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_NULL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      FLG1:
+        flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+        wtsklist:

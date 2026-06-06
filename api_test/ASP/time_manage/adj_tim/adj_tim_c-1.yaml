@@ -1,0 +1,75 @@
+version: "$Id: adj_tim_c-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_time_manage_adj_tim_c_1:
+  note: 【NGKI3588】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      almstat  : TALM_STA
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      lefttim  : 10
+      hdlstat  : STP
+
+    ALM2:
+      type     : ALARM
+      almstat  : TALM_STA
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      lefttim  : 20
+      hdlstat  : STP
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_ADJ_TIM(30)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+    ALM2:
+      lefttim: 0
+
+  do_1:
+    id     : ALM1
+    syscall: TTSP_ADJ_TIM(TMAX_ADJTIM-9)
+    ercd   : E_OK
+
+  post_condition_1:
+
+  do_2:
+    id     : ALM1
+    syscall: adj_tim(1)
+    ercd   : E_OBJ
+
+  post_condition_2:
+
+  do_3:
+    id  : ALM1
+    code: return
+
+  post_condition_3:
+    ALM1:
+      hdlstat: STP
+
+    ALM2:
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+  do_4:
+    id  : ALM2
+    code: return
+
+  post_condition_4:
+    ALM2:
+      hdlstat: STP
+
+    TASK1:
+      tskstat: running

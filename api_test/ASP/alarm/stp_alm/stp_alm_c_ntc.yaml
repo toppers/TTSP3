@@ -1,0 +1,72 @@
+version: "$Id: stp_alm_c_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_alarm_stp_alm_c_ai:
+  note: 【NGKI2570】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_INCVAR
+      nfy_info1: "&data"
+      almstat  : TALM_STA
+      lefttim  : RELATIVE_TIME_A
+
+  do:
+    id     : DUMMY_ALM
+    syscall: stp_alm(ALM1)
+    ercd   : E_OK
+
+  post_condition:
+    ALM1:
+      almstat: TALM_STP
+
+ASP_alarm_stp_alm_c_ci:
+  note: 【NGKI2570】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      var      :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_INCVAR
+      nfy_info1: "&data"
+      almstat  : TALM_STA
+      lefttim  : RELATIVE_TIME_A
+
+  do:
+    id     : DUMMY_CYC
+    syscall: stp_alm(ALM1)
+    ercd   : E_OK
+
+  post_condition:
+    ALM1:
+      almstat: TALM_STP

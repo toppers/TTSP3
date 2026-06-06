@@ -1,0 +1,21 @@
+version: "$Id: T1_022-cycle_prcid_defined.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_cyclic_stp_cyc_c:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CYC1:
+      type   : CYCLE
+      cycstat: TCYC_STP
+      hdlstat: STP
+      cyctim : RELATIVE_TIME_B
+      cycphs : RELATIVE_TIME_A
+      prcid  : defined
+
+  do:
+    id     : TASK1
+    syscall: stp_cyc(CYC1)
+    ercd   : E_OK
+
+  post_condition:

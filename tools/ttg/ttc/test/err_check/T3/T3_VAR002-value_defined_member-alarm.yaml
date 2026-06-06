@@ -1,0 +1,27 @@
+version: "$Id: T3_VAR002-value_defined_member-alarm.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_alarm_ref_alm_c_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var:
+        ralm:
+          type: intptr_t
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STA
+      hdlstat: STP
+      lefttim: RELATIVE_TIME_A
+
+  do:
+    id     : TASK1
+    syscall: ref_alm(ALM1, &ralm)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        ralm:
+          almstat: TALM_STA
+          lefttim: RELATIVE_TIME_A

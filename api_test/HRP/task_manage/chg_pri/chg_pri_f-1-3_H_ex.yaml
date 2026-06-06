@@ -1,0 +1,171 @@
+version: "$Id: chg_pri_f-1-3_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_manage_chg_pri_f_1_3_H1:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK2, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri: TSK_PRI_HIGH
+
+ASP_task_manage_chg_pri_f_1_3_H2:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK2, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri: TSK_PRI_HIGH
+
+ASP_task_manage_chg_pri_f_1_3_H3:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK2, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri: TSK_PRI_HIGH
+
+ASP_task_manage_chg_pri_f_1_3_H4:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK2, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri: TSK_PRI_HIGH
+
+ASP_task_manage_chg_pri_f_1_3_H5:
+  note: 【NGKI1192】【NGKI1193】【NGKI1194】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CHG_PRI(TASK2, TSK_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri: TSK_PRI_HIGH

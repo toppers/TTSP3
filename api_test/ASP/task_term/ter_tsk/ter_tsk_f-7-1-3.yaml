@@ -1,0 +1,33 @@
+version: "$Id: ter_tsk_f-7-1-3.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ter_tsk_f_7_1_3:
+  note: 【NGKI3450】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_LOW
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_MID
+      tskstat: waiting-suspended
+      wobjid : SLEEP
+      actcnt : 1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      actcnt : 0
+      bootcnt: 1

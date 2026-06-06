@@ -1,0 +1,108 @@
+version: "$Id: ena_dsp_F-b-2_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_sys_manage_ena_dsp_F_b_2_HM3:
+  note: 【NGKI2750】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+      domain : DOM_SYS_ACP1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+      domain : DOM_SYS_ACP1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM_SYS_ACP1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      dis_dsp: true
+      chg_ipm: TIPM_ENAALL
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      dis_dsp: true
+      prcid  : PRC_OTHER
+      access1: TACP(DOM_SYS_ACP1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM_SYS_ACP1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ena_dsp()
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE1:
+      dis_dsp: false
+
+FMP_sys_manage_ena_dsp_F_b_2_HM5:
+  note: 【NGKI2750】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      dis_dsp: true
+      chg_ipm: TIPM_ENAALL
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      dis_dsp: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_ENA_DSP()
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE1:
+      dis_dsp: false

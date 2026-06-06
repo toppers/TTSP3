@@ -1,0 +1,34 @@
+version: "$Id: mget_lod_F-a-1-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_mget_lod_F_a_1_1:
+  note: 【NGKI3633】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        p_load:
+          type: uint_t
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+  do:
+    id     : ALM1
+    syscall: mget_lod(PRC_SELF, TSK_PRI_MID, &p_load)
+    ercd   : E_CTX
+
+  post_condition:

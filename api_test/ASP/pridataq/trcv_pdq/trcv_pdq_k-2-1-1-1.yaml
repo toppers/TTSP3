@@ -1,0 +1,32 @@
+version: "$Id: trcv_pdq_k-2-1-1-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_trcv_pdq_k_2_1_1_1:
+  note: 【NGKI1901】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      rtsklist:
+
+  do:
+    id     : TASK1
+    syscall: trcv_pdq(PDQ1, &data, &datapri, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : PDQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    PDQ1:
+      rtsklist:
+        - TASK1:

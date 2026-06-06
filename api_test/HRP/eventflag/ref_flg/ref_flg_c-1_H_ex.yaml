@@ -1,0 +1,239 @@
+version: "$Id: ref_flg_c-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_ref_flg_c_1_H1:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H2:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H3:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP(DOM1)
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H4:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP(DOM1)
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H5:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_REF_FLG(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H6:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A
+
+ASP_eventflag_ref_flg_c_1_H7:
+  note: 【NGKI1655】【NGKI1656】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        rflg:
+          type: T_RFLG
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_flg(FLG1, &rflg)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rflg:
+          wtskid: TSK_NONE
+          flgptn: BIT_PATTERN_0A

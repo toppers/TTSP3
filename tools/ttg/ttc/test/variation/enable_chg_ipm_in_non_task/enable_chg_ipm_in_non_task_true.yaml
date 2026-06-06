@@ -1,0 +1,22 @@
+version: "$Id: enable_chg_ipm_in_non_task_true.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+enable_chg_ipm_in_non_task_true:
+  variation:
+    enable_chg_ipm_in_non_task: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready

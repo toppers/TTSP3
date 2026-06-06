@@ -1,0 +1,34 @@
+version: "$Id: T6_003-func_exception.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_exception_xsns_dpn_b_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+    EXC1:
+      type   : EXCEPTION
+      excno  : EXCNO_SELF_A
+      hdlstat: STP
+
+  do_0:
+    id     : ALM1
+    code   : ttsp_cpuexc_raise(EXCNO_SELF_A)
+
+  post_condition_0:
+    ALM1:
+      hdlstat: STP
+
+    EXC1:
+      hdlstat: ACTIVATE
+
+  do_1:
+    id     : EXC1
+    syscall: xsns_dpn(p_excinf)
+    bool   : true
+
+  post_condition_1:

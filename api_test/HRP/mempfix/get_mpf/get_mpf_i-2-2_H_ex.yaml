@@ -1,0 +1,393 @@
+version: "$Id: get_mpf_i-2-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_get_mpf_i_2_2_H1:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H2:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H3:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H4:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H5:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H6:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:
+
+ASP_mempfix_get_mpf_i_2_2_H7:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_TPRI
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_mpf(MPF1,&blk)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+
+    MPF1:
+      wtsklist:
+        - TASK1:
+        - TASK2:
+        - TASK3:

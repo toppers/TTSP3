@@ -1,0 +1,191 @@
+version: "$Id: rel_wai_d-1-3_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_rel_wai_d_1_3_H1:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+ASP_task_sync_rel_wai_d_1_3_H2:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+ASP_task_sync_rel_wai_d_1_3_H3:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+ASP_task_sync_rel_wai_d_1_3_H4:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+ASP_task_sync_rel_wai_d_1_3_H5:
+  note: 【NGKI1296】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_REL_WAI(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready

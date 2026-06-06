@@ -1,0 +1,33 @@
+# $Id: undefined_configure.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $
+
+undefined: 1
+
+prc_num: 4
+main_prcid: 1
+main_class: TCL_1
+timer_arch: local
+time_manage_prcid: 1
+time_manage_class: TCL_SYSTIM_PRC
+timer_int_pri: -6
+spinlock_num: 0
+irc_arch: local
+api_support_get_utm: true
+api_support_ena_int: true
+api_support_dis_int: true
+own_ipi_raise: true
+enable_exc_in_cpulock: true
+enable_chg_ipm_in_non_task: false
+func_time: true
+func_interrupt: true
+func_exception: true
+all_gain_time: false
+stack_size: 2048
+stack_share: true
+out_file_name: out
+wait_spin_loop: 0xFFFFF
+exception_arg_name: p_excinf
+yaml_lib: kwalify
+enable_gcov: false
+enable_log: false
+
+macro:

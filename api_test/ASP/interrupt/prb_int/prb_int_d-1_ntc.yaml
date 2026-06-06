@@ -1,0 +1,80 @@
+version: "$Id: prb_int_d-1_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_prb_int_d_1_ai:
+  note: 【NGKI3948】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+  do:
+    id     : DUMMY_ALM
+    syscall: prb_int(INTNO_SELF_INH_A)
+    erbool : false
+
+  post_condition:
+    INH1:
+      intreq: false
+
+ASP_interrupt_prb_int_d_1_ci:
+  note: 【NGKI3948】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+  do:
+    id     : DUMMY_CYC
+    syscall: prb_int(INTNO_SELF_INH_A)
+    erbool : false
+
+  post_condition:
+    INH1:
+      intreq: false

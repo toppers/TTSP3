@@ -1,0 +1,16 @@
+version: "$Id: sns_ter_a-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_sns_ter_a_2:
+  note: 【NGKI3495】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : false
+
+  do:
+    id     : TASK1
+    syscall: sns_ter()
+    bool   : false
+
+  post_condition:

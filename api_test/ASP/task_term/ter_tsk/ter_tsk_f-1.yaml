@@ -1,0 +1,29 @@
+version: "$Id: ter_tsk_f-1.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ter_tsk_f_1:
+  note: 【NGKI3450】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      itskpri: TSK_PRI_LOW
+      tskpri : TSK_PRI_MID
+      actcnt : 1
+      wupcnt : 1
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskpri : TSK_PRI_LOW
+      actcnt : 0
+      wupcnt : 0
+      bootcnt: 1

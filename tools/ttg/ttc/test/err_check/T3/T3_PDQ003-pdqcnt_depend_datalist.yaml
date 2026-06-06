@@ -1,0 +1,37 @@
+version: "$Id: T3_PDQ003-pdqcnt_depend_datalist.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_pridataq_rcv_pdq_f_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t 
+        datapri:
+          type: PRI
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var: 
+        data   :
+          value: DATA_A
+        datapri:
+          value: DATA_PRI_MID
+
+    PDQ1:
+      datalist:

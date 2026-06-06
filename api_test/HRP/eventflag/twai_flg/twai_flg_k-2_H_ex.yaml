@@ -1,0 +1,204 @@
+version: "$Id: twai_flg_k-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_twai_flg_k_2_H1:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : DOM1
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H2:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : KERNEL
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H3:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      flgptn : BIT_PATTERN_0A
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H4:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      flgptn : BIT_PATTERN_0A
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H5:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : DOM1
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+      domain: KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TWAI_FLG(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H6:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : KERNEL
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+      domain: NONE
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:
+
+ASP_eventflag_twai_flg_k_2_H7:
+  note: 【NGKI1633】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        flgptn:
+          type : FLGPTN
+          value: BIT_PATTERN_A
+      domain : DOM1
+
+    FLG1:
+      type  : EVENTFLAG
+      flgptn: BIT_PATTERN_0A
+      domain: NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: twai_flg(FLG1, BIT_PATTERN_B, WAIT_FLG_MODE_A, &flgptn, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:

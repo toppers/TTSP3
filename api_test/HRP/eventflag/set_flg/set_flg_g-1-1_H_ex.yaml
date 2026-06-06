@@ -1,0 +1,554 @@
+version: "$Id: set_flg_g-1-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_set_flg_g_1_1_H1:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H3:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H4:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H5:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_SET_FLG(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+ASP_eventflag_set_flg_g_1_1_H7:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      domain : DOM1
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW

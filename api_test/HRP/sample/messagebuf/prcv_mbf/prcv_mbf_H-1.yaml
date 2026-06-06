@@ -1,0 +1,42 @@
+version: "$Id: prcv_mbf_H-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_prcv_mbf_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    MBF1:
+      type   : MESSAGEBUF
+      maxmsz : ANY_MAX_MSIZE
+      mbfsz  : ANY_MBF_SIZE
+      fmbfsz : "(ANY_MBF_SIZE - TSZ_MBFMB(1, MBF_MSGSZ_A) - TSZ_MBFMB(1, MBF_MSGSZ_B) - TSZ_MBFMB(1, MBF_MSGSZ_C))"
+      msglist:
+        - msg  : MBF_MSG_A
+          msgsz: MBF_MSGSZ_A
+        - msg  : MBF_MSG_B
+          msgsz: MBF_MSGSZ_B
+        - msg  : MBF_MSG_C
+          msgsz: MBF_MSGSZ_C
+
+  do:
+    id     : TASK1
+    syscall: prcv_mbf(MBF1, (void*)&message1)
+    eruint : MBF_MSGSZ_A
+
+  post_condition:
+    MBF1:
+      fmbfsz : "(ANY_MBF_SIZE - TSZ_MBFMB(1, MBF_MSGSZ_B) - TSZ_MBFMB(1, MBF_MSGSZ_C))"
+      msglist:
+        - msg  : MBF_MSG_B
+          msgsz: MBF_MSGSZ_B
+        - msg  : MBF_MSG_C
+          msgsz: MBF_MSGSZ_C
+
+    TASK1:
+      var:
+        message1:
+          value: MBF_MSG_A

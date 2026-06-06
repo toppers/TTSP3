@@ -1,0 +1,390 @@
+version: "$Id: set_flg_F-e-1-3_ntc_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_eventflag_set_flg_F_e_1_3_ai_HM2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK4:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    TASK5:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_1_3_ai_HM6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+      domain  : NONE
+
+  do:
+    id     : DUMMY_ALM
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK4:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    TASK5:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_1_3_ci_HM2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK4:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    TASK5:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+
+FMP_eventflag_set_flg_F_e_1_3_ci_HM6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : FLG1
+      var    :
+        flgptn:
+          type: FLGPTN
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK4:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ORW
+            var   : flgptn
+      domain  : NONE
+
+  do:
+    id     : DUMMY_CYC
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK4:
+      tskstat: running
+      var    :
+        flgptn:
+          value: BIT_PATTERN_0A|BIT_PATTERN_A
+
+    TASK5:
+      tskstat: ready
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW
+        - TASK3:
+            waiptn: BIT_PATTERN_A|BIT_PATTERN_B
+            wfmode: TWF_ANDW

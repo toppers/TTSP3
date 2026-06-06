@@ -1,0 +1,43 @@
+version: "$Id: slp_tsk_c_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_slp_tsk_c_H3:
+  note: 【NGKI1258】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: slp_tsk()
+    ercd   : E_RLWAI
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : SLEEP
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_REL_WAI(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running

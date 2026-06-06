@@ -1,0 +1,17 @@
+version: "$Id: ena_int_b.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_ena_int_b:
+  note: 【NGKI3098】
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: ena_int(INTNO_NOT_SET_SELF)
+    ercd   : E_OBJ
+
+  post_condition:

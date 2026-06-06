@@ -1,0 +1,32 @@
+version: "$Id: prb_int_d-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_prb_int_d_3:
+  note: 【NGKI3948】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_DISINT
+      hdlstat: STP
+      intreq : false
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+  do:
+    id     : TASK1
+    syscall: prb_int(INTNO_SELF_INH_A)
+    erbool : false
+
+  post_condition:
+    INH1:
+      intreq: false

@@ -1,0 +1,20 @@
+version: "$Id: non_var_info_in_post_condition.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+non_var_info_in_post_condition:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        var1:
+          type : int
+          value: 1
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        var1:

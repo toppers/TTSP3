@@ -1,0 +1,78 @@
+version: "$Id: chg_ipm_d_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_interrupt_chg_ipm_d_H3:
+  note: 【NGKI3111】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM_SYS_ACP2
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      domain : DOM_SYS_ACP2
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      access1: TACP_KERNEL
+      access2: TACP(DOM_SYS_ACP2)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM_SYS_ACP2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_ipm(TIPM_ENAALL)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE:
+      chg_ipm: TIPM_ENAALL
+
+ASP_interrupt_chg_ipm_d_H5:
+  note: 【NGKI3111】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CHG_IPM(TIPM_ENAALL)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE:
+      chg_ipm: TIPM_ENAALL

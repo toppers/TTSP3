@@ -1,0 +1,15 @@
+version: "$Id: ras_ter_b-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ras_ter_b_2:
+  note: 【NGKI3472】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: ras_ter(TNUM_TSKID+1)
+    eruint : E_ID
+
+  post_condition:

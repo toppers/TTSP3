@@ -1,0 +1,82 @@
+version: "$Id: isr_3.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_3:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_C
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+
+    ISR2:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_C
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      isrpri : ISR_PRI_HIGH
+
+    ISR3:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_C
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_LOW
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: INT_PRI_MID
+
+  do_0:
+    id     : ISR2
+    syscall: iact_tsk(TASK1)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      actcnt : 1
+
+  do_1:
+    id  : ISR2
+    code: return
+
+  post_condition_1:
+    ISR1:
+      hdlstat: ACTIVATE
+
+    ISR2:
+      hdlstat: STP
+
+  do_2:
+    id  : ISR1
+    code: return
+
+  post_condition_2:
+    ISR1:
+      hdlstat: STP
+
+    ISR3:
+      hdlstat: ACTIVATE
+
+  do_3:
+    id  : ISR3
+    code: return
+
+  post_condition_3:
+    ISR3:
+      hdlstat: STP
+
+    CPU_STATE:
+      chg_ipm: TIPM_ENAALL

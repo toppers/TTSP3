@@ -1,0 +1,23 @@
+version: "$Id: loc_mtx_a-4.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_mutex_loc_mtx_a_4:
+  note: 【NGKI2072】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : TASK1
+    syscall: loc_mtx(MTX1)
+    ercd   : E_CTX
+
+  post_condition:

@@ -1,0 +1,78 @@
+version: "$Id: wup_tsk_f-8_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_sync_wup_tsk_f_8_ai:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_ALM
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1
+
+ASP_task_sync_wup_tsk_f_8_ci:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_CYC
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1

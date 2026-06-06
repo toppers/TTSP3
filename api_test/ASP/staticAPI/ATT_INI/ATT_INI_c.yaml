@@ -1,0 +1,33 @@
+version: "$Id: ATT_INI_c.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_staticAPI_ATT_INI_c:
+  note: 【NGKI3244】
+
+  pre_condition:
+    INI1:
+      type : INIRTN
+      exinf: EXINF_A
+      do   :
+        syscall: sns_ker()
+        bool   : true
+
+    INI2:
+      type : INIRTN
+      exinf: EXINF_B
+      do   :
+        syscall: sns_ker()
+        bool   : true
+
+    INI3:
+      type : INIRTN
+      exinf: EXINF_C
+      do   :
+        syscall: sns_ker()
+        bool   : true
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+
+  post_condition:

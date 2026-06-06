@@ -1,0 +1,81 @@
+version: "$Id: sta_cyc_F-b-5.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_cyclic_sta_cyc_F_b_5:
+  note: 【NGKI2437】【NGKI2438】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+
+    CYC1:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      cycstat   : TCYC_STP
+      cycphs    : RELATIVE_TIME_A
+      cyctim    : RELATIVE_TIME_B
+      prcid     : PRC_OTHER
+
+  do_0:
+    0:
+      id     : TASK1
+      syscall: sta_cyc(CYC1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+      CYC1:
+        cycstat: TCYC_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      CYC1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, ANY_VALUE+1)
+
+  post_condition_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      CYC1:
+        lefttim: RELATIVE_TIME_B-1
+
+  do_2:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*1)+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, ANY_VALUE+2)
+
+  post_condition_2:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*1)+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+2

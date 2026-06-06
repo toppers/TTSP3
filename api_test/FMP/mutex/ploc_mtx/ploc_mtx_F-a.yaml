@@ -1,0 +1,30 @@
+version: "$Id: ploc_mtx_F-a.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_mutex_ploc_mtx_F_a:
+  note: 【NGKI2071】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: ploc_mtx(MTX1)
+    ercd   : E_CTX
+
+  post_condition:

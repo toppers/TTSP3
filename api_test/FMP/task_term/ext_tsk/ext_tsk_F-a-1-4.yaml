@@ -1,0 +1,27 @@
+version: "$Id: ext_tsk_F-a-1-4.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_term_ext_tsk_F_a_1_4:
+  note: 【NGKI3449】【NGKI1169】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      itskpri: TSK_PRI_MID
+      tskpri : TSK_PRI_HIGH
+      actcnt : 1
+      actprc : PRC_OTHER
+      wupcnt : 1
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: ext_tsk()
+
+  post_condition:
+    TASK1:
+      tskpri : TSK_PRI_MID
+      actcnt : 0
+      actprc : TPRC_NONE
+      wupcnt : 0
+      bootcnt: 1
+      prcid  : PRC_OTHER

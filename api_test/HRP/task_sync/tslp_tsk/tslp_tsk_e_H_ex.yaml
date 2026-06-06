@@ -1,0 +1,21 @@
+version: "$Id: tslp_tsk_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_tslp_tsk_e_H3:
+  note: 【NGKI1257】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tslp_tsk(ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:

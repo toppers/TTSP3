@@ -1,0 +1,379 @@
+version: "$Id: unl_mtx_e-1-3_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mutex_unl_mtx_e_1_3_H1:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H2:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H3:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H4:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H5:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_UNL_MTX(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H6:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+ASP_mutex_unl_mtx_e_1_3_H7:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : ANY_ATT_MTX_NOT_CEILING
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:

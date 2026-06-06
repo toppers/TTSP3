@@ -1,0 +1,61 @@
+version: "$Id: rcv_pdq_g-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_pridataq_rcv_pdq_g_2:
+  note: 【NGKI1872】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 1
+
+  do_0:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    TASK2:
+      tskstat: running
+
+    PDQ1:
+      rtsklist:
+        - TASK1:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_PSND_PDQ(PDQ1, DATA_A, DATA_PRI_HIGH)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      var    :
+        data   :
+          value: DATA_A
+        datapri:
+          value: DATA_PRI_HIGH
+
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      rtsklist:

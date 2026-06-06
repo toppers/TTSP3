@@ -1,0 +1,29 @@
+version: "$Id: get_did_H-a-2.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_sys_manage_get_did_H_a_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM_SAC_SYS
+      var    :
+        domid:
+          type : ID
+          value: ANY_OBJECT_ID
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+      access1: TACP(DOM_SAC_SYS)
+      access2: TACP(DOM_SAC_SYS)
+      access3: TACP(DOM_SAC_SYS)
+      access4: TACP(DOM_SAC_SYS)
+
+    DOM_SAC_SYS:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_did(&domid)
+    ercd   : E_CTX
+
+  post_condition:

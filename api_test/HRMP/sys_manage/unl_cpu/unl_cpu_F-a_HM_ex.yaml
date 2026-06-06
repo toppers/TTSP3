@@ -1,0 +1,80 @@
+version: "$Id: unl_cpu_F-a_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_sys_manage_unl_cpu_F_a_HM3:
+  note: 【NGKI2737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM_SYS_ACP2
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM_SYS_ACP2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+      access1: TACP_KERNEL
+      access2: TACP(DOM_SYS_ACP2)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM_SYS_ACP2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_cpu()
+    ercd   : E_OK
+
+  post_condition:
+    CPU_STATE1:
+      loc_cpu: false
+
+FMP_sys_manage_unl_cpu_F_a_HM5:
+  note: 【NGKI2737】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_UNL_CPU()
+    ercd   : E_OK
+
+  post_condition:
+    CPU_STATE1:
+      loc_cpu: false

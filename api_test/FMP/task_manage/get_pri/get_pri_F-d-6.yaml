@@ -1,0 +1,29 @@
+version: "$Id: get_pri_F-d-6.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_task_manage_get_pri_F_d_6:
+  note: 【NGKI1210】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        tskpri:
+          type: PRI
+
+    TASK2:
+      type   : TASK
+      tskstat: suspended
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: get_pri(TASK2, &tskpri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        tskpri:
+          value: TSK_PRI_MID

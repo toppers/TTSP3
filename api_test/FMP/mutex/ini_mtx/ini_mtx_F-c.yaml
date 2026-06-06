@@ -1,0 +1,63 @@
+version: "$Id: ini_mtx_F-c.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_mutex_ini_mtx_F_c:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_SELF
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK3:
+        - TASK4:
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      locmtx :
+
+    TASK2:
+      tskstat: ready
+
+    TASK3:
+      tskstat: running
+
+    TASK4:
+      tskstat: running
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:

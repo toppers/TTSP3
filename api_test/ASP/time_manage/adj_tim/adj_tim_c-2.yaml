@@ -1,0 +1,29 @@
+version: "$Id: adj_tim_c-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_time_manage_adj_tim_c_2:
+  note: 【NGKI3589】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_ADJ_TIM(TMIN_ADJTIM)
+    ercd   : E_OK
+
+  post_condition_0:
+
+  do_1:
+    id     : TASK1
+    syscall: adj_tim(-1)
+    ercd   : E_OBJ
+
+  post_condition_1:
+
+  do_2:
+    id     : TASK1
+    syscall: TTSP_ADJ_TIM(TMAX_ADJTIM)
+    ercd   : E_OK
+
+  post_condition_2:

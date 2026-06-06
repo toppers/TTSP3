@@ -1,0 +1,21 @@
+version: "$Id: tsnd_pdq_H-a-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_pridataq_tsnd_pdq_H_a_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      domain: KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OACV
+
+  post_condition:

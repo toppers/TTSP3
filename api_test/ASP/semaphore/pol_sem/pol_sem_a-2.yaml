@@ -1,0 +1,22 @@
+version: "$Id: pol_sem_a-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_semaphore_pol_sem_a_2:
+  note: 【NGKI1514】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type: SEMAPHORE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: pol_sem(SEM1)
+    ercd   : E_CTX
+
+  post_condition:

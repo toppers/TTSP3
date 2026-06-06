@@ -1,0 +1,30 @@
+version: "$Id: yaml_lib_test1.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+yaml_lib_test1:
+  pre_condition:
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskstat: dormant
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      tskpri : TSK_PRI_HIGH

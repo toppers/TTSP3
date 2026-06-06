@@ -1,0 +1,27 @@
+version: "$Id: T5_004-not_process_unit.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_task_manage_act_tsk_d_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskstat: dormant
+
+    SEM1:
+      type: SEMAPHORE
+
+  do:
+    id     : SEM1
+    syscall: act_tsk(TASK2)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      tskpri : TSK_PRI_HIGH

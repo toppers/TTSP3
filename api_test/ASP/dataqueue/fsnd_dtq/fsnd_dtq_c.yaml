@@ -1,0 +1,19 @@
+version: "$Id: fsnd_dtq_c.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_dataqueue_fsnd_dtq_c:
+  note: 【NGKI1746】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    DTQ1:
+      type  : DATAQUEUE
+      dtqcnt: 0
+
+  do:
+    id     : TASK1
+    syscall: fsnd_dtq(DTQ1, DATA_A)
+    ercd   : E_ILUSE
+
+  post_condition:

@@ -1,0 +1,60 @@
+version: "$Id: rcv_dtq_h-2-2-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_rcv_dtq_h_2_2_3:
+  note: 【NGKI3421】【NGKI1766】【NGKI1767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type: intptr_t
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      stsklist:
+        - TASK2:
+            data: DATA_A
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_C
+        - data: DATA_D
+        - data: DATA_E
+
+  do:
+    id     : TASK1
+    syscall: rcv_dtq(DTQ1, &data)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data:
+          value: DATA_C
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+        - TASK3:
+            data: DATA_B
+      datalist:
+        - data: DATA_D
+        - data: DATA_E
+        - data: DATA_A

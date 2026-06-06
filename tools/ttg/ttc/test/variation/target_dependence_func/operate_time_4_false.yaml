@@ -1,0 +1,39 @@
+version: "$Id: operate_time_4_false.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+operate_time_4_false:
+  variation:
+    gain_time: false
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      wupcnt : 0
+
+  do:
+    id     : TASK1
+    syscall: tslp_tsk(ANY_ELAPSED_TIME)
+
+  post_condition:
+    0:
+      TASK1:
+        tskstat: waiting
+        wobjid : SLEEP
+        lefttmo: ANY_ELAPSED_TIME
+
+      TASK2:
+        tskstat: running
+
+    ANY_ELAPSED_TIME:
+      TASK1:
+        lefttmo: 0
+
+    ANY_ELAPSED_TIME+1:
+      TASK1:
+        tskstat: ready

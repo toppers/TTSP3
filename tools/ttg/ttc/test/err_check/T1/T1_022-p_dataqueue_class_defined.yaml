@@ -1,0 +1,17 @@
+version: "$Id: T1_022-p_dataqueue_class_defined.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_pridataq_ini_pdq_b_1:
+  pre_condition:
+    PDQ1:
+      type : P_DATAQUEUE
+      class: defined
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(0)
+    ercd   : E_ID
+
+  post_condition:

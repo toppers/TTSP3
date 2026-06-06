@@ -1,0 +1,253 @@
+version: "$Id: tsnd_pdq_l-2-2-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_pridataq_tsnd_pdq_l_2_2_2_H1:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H2:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H3:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H4:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H5:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_TSND_PDQ(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H6:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+
+ASP_pridataq_tsnd_pdq_l_2_2_2_H7:
+  note: 【NGKI1873】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 2
+      maxdpri : DATA_PRI_MAX
+      rtsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_MID
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_B, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    PDQ1:
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_HIGH
+        - data   : DATA_A
+          datapri: DATA_PRI_MID

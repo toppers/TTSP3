@@ -1,0 +1,17 @@
+version: "$Id: cal_svc_H-a.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_svc_cal_svc_H_a:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      stksz  : TTSP_TASK_STACK_SIZE*10
+      sstksz : TTSP_TASK_STACK_SIZE*10
+      stk    : "NULL"
+      sstk   : "NULL"
+
+  do:
+    id     : TASK1
+    syscall: cal_svc(TTSP_FN_SVC_NEST_ERROR, ANY_SVC_ARG_1, ANY_SVC_ARG_2, ANY_SVC_ARG_3, ANY_SVC_ARG_4, ANY_SVC_ARG_5)
+    eruint : E_SYS
+
+  post_condition:

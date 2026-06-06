@@ -1,0 +1,108 @@
+version: "$Id: sta_alm_f_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_alarm_sta_alm_f_ai:
+  note: TESRY_001，【NGKI2543】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STA
+      hdlstat  : STP
+      lefttim  : RELATIVE_TIME_A
+
+  do_0:
+    id     : DUMMY_ALM
+    syscall: sta_alm(ALM1, RELATIVE_TIME_B)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      lefttim: RELATIVE_TIME_B
+
+  do_1:
+    id  : DUMMY_ALM
+    code: return
+
+  post_condition_1:
+    0:
+      DUMMY_ALM:
+        hdlstat: STP
+
+      ALM1:
+        lefttim: RELATIVE_TIME_B
+
+    RELATIVE_TIME_B:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_B+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+ASP_alarm_sta_alm_f_ci:
+  note: TESRY_001，【NGKI2543】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STA
+      hdlstat  : STP
+      lefttim  : RELATIVE_TIME_A
+
+  do_0:
+    id     : DUMMY_CYC
+    syscall: sta_alm(ALM1, RELATIVE_TIME_B)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      lefttim: RELATIVE_TIME_B
+
+  do_1:
+    id  : DUMMY_CYC
+    code: return
+
+  post_condition_1:
+    0:
+      DUMMY_CYC:
+        hdlstat: STP
+
+      ALM1:
+        lefttim: RELATIVE_TIME_B
+
+    RELATIVE_TIME_B:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_B+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE

@@ -1,0 +1,491 @@
+version: "$Id: ini_pdq_F-d_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_pridataq_ini_pdq_F_d_HM1:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM2:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM3:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM4:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM5:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_PDQ(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM6:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:
+
+FMP_pridataq_ini_pdq_F_d_HM7:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_MID
+        - TASK4:
+            data   : DATA_B
+            datapri: DATA_PRI_HIGH
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    PDQ1:
+      stsklist:

@@ -1,0 +1,216 @@
+version: "$Id: wup_tsk_F-d-7-3_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_sync_wup_tsk_F_d_7_3_HM1:
+  note: 【NGKI1273】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      wupcnt : 0
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1
+
+FMP_task_sync_wup_tsk_F_d_7_3_HM2:
+  note: 【NGKI1273】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      wupcnt : 0
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1
+
+FMP_task_sync_wup_tsk_F_d_7_3_HM3:
+  note: 【NGKI1273】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      wupcnt : 0
+      prcid  : PRC_OTHER
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1
+
+FMP_task_sync_wup_tsk_F_d_7_3_HM4:
+  note: 【NGKI1273】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      wupcnt : 0
+      prcid  : PRC_OTHER
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+      domain : DOM2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1
+
+FMP_task_sync_wup_tsk_F_d_7_3_HM5:
+  note: 【NGKI1273】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running-suspended
+      wupcnt : 0
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_WUP_TSK(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      wupcnt: 1

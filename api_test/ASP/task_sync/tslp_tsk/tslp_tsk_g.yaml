@@ -1,0 +1,39 @@
+version: "$Id: tslp_tsk_g.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_sync_tslp_tsk_g:
+  note: 【NGKI1272】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+
+  do_0:
+    id     : TASK2
+    syscall: tslp_tsk(ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : SLEEP
+      lefttmo: ANY_ELAPSED_TIME
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_WUP_TSK(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running

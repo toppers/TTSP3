@@ -1,0 +1,45 @@
+version: "$Id: mig_tsk_F-f-1-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_f_1_1_HM1:
+  note: 【NGKI1155】【NGKI1156】【NGKI1158】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      porder : 2
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      porder : 3
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TSK_SELF, PRC_SELF)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 3
+
+    TASK2:
+      tskstat: running
+
+    TASK3:
+      porder: 2

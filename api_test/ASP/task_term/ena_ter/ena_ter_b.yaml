@@ -1,0 +1,18 @@
+version: "$Id: ena_ter_b.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_term_ena_ter_b:
+  note: 【NGKI3491】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+
+  do:
+    id     : TASK1
+    syscall: ena_ter()
+    eruint : E_OK
+
+  post_condition:
+    TASK1:
+      dister: false

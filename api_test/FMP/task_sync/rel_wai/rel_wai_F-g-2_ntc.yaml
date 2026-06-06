@@ -1,0 +1,124 @@
+version: "$Id: rel_wai_F-g-2_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_task_sync_rel_wai_F_g_2_ai:
+  note: 【NGKI1296】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      lefttmo: ANY_ELAPSED_TIME
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_ALM
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      porder: 1
+
+    SEM1:
+      wtsklist:
+
+FMP_task_sync_rel_wai_F_g_2_ci:
+  note: 【NGKI1296】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      lefttmo: ANY_ELAPSED_TIME
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : DUMMY_CYC
+    syscall: rel_wai(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      porder: 1
+
+    SEM1:
+      wtsklist:

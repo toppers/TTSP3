@@ -1,0 +1,27 @@
+version: "$Id: terrtn_2.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+TERRTN_sample_2:
+  pre_condition:
+    TER1:
+      type   : TERRTN
+      exinf  : 0x10
+      do     :
+        syscall: can_act(TASK1)
+        eruint : E_CTX
+
+    TER2:
+      type   : TERRTN
+      exinf  : 0x1000
+      do     :
+        syscall: sns_ker()
+        bool   : true
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+
+  post_condition:

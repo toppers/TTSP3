@@ -1,0 +1,51 @@
+version: "$Id: unl_mtx_F-c-5-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_mutex_unl_mtx_F_c_5_1:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: running
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+        - TASK3:

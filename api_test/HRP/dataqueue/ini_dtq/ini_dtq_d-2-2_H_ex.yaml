@@ -1,0 +1,463 @@
+version: "$Id: ini_dtq_d-2-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_dataqueue_ini_dtq_d_2_2_H1:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H2:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H3:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H4:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H5:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_DTQ(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H6:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_ini_dtq_d_2_2_H7:
+  note: 【NGKI1778】【NGKI1779】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_dtq(DTQ1)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+
+    TASK4:
+      tskstat: running
+
+    DTQ1:
+      rtsklist:

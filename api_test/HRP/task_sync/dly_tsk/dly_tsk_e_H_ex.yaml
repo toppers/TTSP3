@@ -1,0 +1,46 @@
+version: "$Id: dly_tsk_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_dly_tsk_e_H3:
+  note: 【NGKI3456】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: dly_tsk(RELATIVE_TIME_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : DELAY
+      lefttmo: RELATIVE_TIME_A
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true

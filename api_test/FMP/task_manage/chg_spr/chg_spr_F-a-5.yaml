@@ -1,0 +1,28 @@
+version: "$Id: chg_spr_F-a-5.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_chg_spr_F_a_5:
+  note: 【NGKI3667】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: chg_spr(TASK2, TSK_PRI_MID)
+    ercd   : E_CTX
+
+  post_condition:

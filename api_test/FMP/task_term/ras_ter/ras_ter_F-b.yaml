@@ -1,0 +1,21 @@
+version: "$Id: ras_ter_F-b.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_term_ras_ter_F_b:
+  note: 【NGKI3481】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: ras_ter(TASK2)
+    ercd   : E_OBJ
+
+  post_condition:

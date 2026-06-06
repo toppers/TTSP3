@@ -1,0 +1,23 @@
+version: "$Id: T3_INI001-defined_global_and_defined_class.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_sys_manage_sns_ker_a:
+  pre_condition:
+    INI1:
+      type  : INIRTN
+      do    :
+        syscall: sns_ker()
+        bool   : true
+        gcov   : true
+      global: true
+      class : CLS_SELF_ONLY_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+    gcov   : false
+
+  post_condition:

@@ -1,0 +1,30 @@
+version: "$Id: sus_tsk_i-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_sync_sus_tsk_i_1_H1:
+  note: 【NGKI1310】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sus_tsk(TSK_SELF)
+
+  post_condition:
+    TASK1:
+      tskstat: suspended
+
+    TASK2:
+      tskstat: running

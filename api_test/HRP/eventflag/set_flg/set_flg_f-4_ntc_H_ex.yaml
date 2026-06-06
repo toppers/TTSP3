@@ -1,0 +1,242 @@
+version: "$Id: set_flg_f-4_ntc_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_set_flg_f_4_ai_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+
+ASP_eventflag_set_flg_f_4_ai_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+      domain  : NONE
+
+  do:
+    id     : DUMMY_ALM
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+
+ASP_eventflag_set_flg_f_4_ci_H2:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+
+ASP_eventflag_set_flg_f_4_ci_H6:
+  note: 【NGKI1608】【NGKI1609】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : FLG1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : FLG1
+      domain : KERNEL
+
+    FLG1:
+      type    : EVENTFLAG
+      flgatr  : TA_WMUL
+      flgptn  : BIT_PATTERN_0A
+      wtsklist:
+        - TASK2:
+            waiptn: BIT_PATTERN_A
+            wfmode: WAIT_FLG_MODE_A
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B
+      domain  : NONE
+
+  do:
+    id     : DUMMY_CYC
+    syscall: set_flg(FLG1, BIT_PATTERN_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    FLG1:
+      flgptn  : BIT_PATTERN_0A|BIT_PATTERN_A
+      wtsklist:
+        - TASK3:
+            waiptn: BIT_PATTERN_B
+            wfmode: WAIT_FLG_MODE_B

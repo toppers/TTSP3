@@ -1,0 +1,26 @@
+version: "$Id: T4_039-not_running_task_defined_isr.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_interrupt_ena_int_F_c:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_ENAINT
+      intno  : INTNO_SELF_ISR_B
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      isrpri : ISR_PRI_MID
+      exinf  : 0x03
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+  do:
+    id     : ISR1
+    syscall: iact_tsk(TASK1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt: 1

@@ -1,0 +1,49 @@
+version: "$Id: clr_int_F-d.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_interrupt_clr_int_F_d:
+  note: TESRY_006，【NGKI3924】
+  variation:
+    api_support_clr_int: true
+    api_support_ena_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_DISINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      intreq : true
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do_0:
+    id  : TASK1
+    code: clr_int(INTNO_SELF_INH_A)
+
+  post_condition_0:
+    INH1:
+      intstat: TA_DISINT
+      intreq : false
+
+  do_1:
+    id  : TASK1
+    code: ena_int(INTNO_SELF_INH_A)
+
+  post_condition_1:
+    INH1:
+      intstat: TA_ENAINT

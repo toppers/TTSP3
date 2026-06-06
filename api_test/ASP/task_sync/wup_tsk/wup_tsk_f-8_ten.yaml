@@ -1,0 +1,198 @@
+version: "$Id: wup_tsk_f-8_ten.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_sync_wup_tsk_f_8_at:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_WUPTSK
+      nfy_info1: TASK2
+      almstat  : TALM_STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        lefttmo: ANY_ELAPSED_TIME-1
+        wupcnt : 1
+
+ASP_task_sync_wup_tsk_f_8_ae:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_WUPTSK
+      enfy_info1: TASK2
+      almstat   : TALM_STP
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        lefttmo: ANY_ELAPSED_TIME-1
+        wupcnt : 1
+
+ASP_task_sync_wup_tsk_f_8_ct:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_WUPTSK
+      nfy_info1: TASK2
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        lefttmo: ANY_ELAPSED_TIME-1
+        wupcnt : 1
+
+ASP_task_sync_wup_tsk_f_8_ce:
+  note: 【NGKI1273】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_WUPTSK
+      enfy_info1: TASK2
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      wupcnt : 0
+      lefttmo: ANY_ELAPSED_TIME
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        lefttmo: ANY_ELAPSED_TIME-1
+        wupcnt : 1

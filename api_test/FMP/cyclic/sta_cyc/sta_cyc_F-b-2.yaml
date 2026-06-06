@@ -1,0 +1,62 @@
+version: "$Id: sta_cyc_F-b-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_cyclic_sta_cyc_F_b_2:
+  note: 【NGKI2437】【NGKI2438】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+
+    CYC1:
+      type     : CYCLE
+      nfytype  : TNFY_SETVAR
+      nfy_info1: "&data"
+      nfy_info2: ANY_VALUE
+      cycstat  : TCYC_STP
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B
+      prcid    : PRC_OTHER
+
+  do_0:
+    0:
+      id     : TASK1
+      syscall: sta_cyc(CYC1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+      TASK1:
+        tskstat: running
+
+      CYC1:
+        cycstat: TCYC_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      CYC1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, ANY_VALUE)
+
+  post_condition_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE
+
+      CYC1:
+        lefttim: RELATIVE_TIME_B-1

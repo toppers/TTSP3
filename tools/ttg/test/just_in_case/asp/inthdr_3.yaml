@@ -1,0 +1,49 @@
+version: "$Id: inthdr_3.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+INTHDR_sample_3:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+
+    INH2:
+      type   : INTHDR
+      intatr : TA_ENAINT
+      intno  : INTNO_SELF_INH_B
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_B
+      intstat: TA_ENAINT
+      hdlstat: STP
+
+    INH3:
+      type   : INTHDR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_INH_C
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_C
+      intstat: TA_ENAINT
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: INT_PRI_MID
+
+  do:
+    id     : INH1
+    syscall: iact_tsk(TASK1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt: 1

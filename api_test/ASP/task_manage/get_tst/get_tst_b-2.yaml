@@ -1,0 +1,19 @@
+version: "$Id: get_tst_b-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_manage_get_tst_b_2:
+  note: 【NGKI3616】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        tskstat:
+          type : STAT
+          value: TTS_RUN
+
+  do:
+    id     : TASK1
+    syscall: get_tst(TNUM_TSKID+1, &tskstat)
+    eruint : E_ID
+
+  post_condition:

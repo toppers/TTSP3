@@ -1,0 +1,29 @@
+version: "$Id: sig_sem_F-a.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_semaphore_sig_sem_F_a:
+  note: 【NGKI1501】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    SEM1:
+      type: SEMAPHORE
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: sig_sem(SEM1)
+    ercd   : E_CTX
+
+  post_condition:

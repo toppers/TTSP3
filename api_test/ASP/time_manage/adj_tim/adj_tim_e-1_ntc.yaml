@@ -1,0 +1,124 @@
+version: "$Id: adj_tim_e-1_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_time_manage_adj_tim_e_1_ai:
+  note: 【NGKI3587】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      almstat  : TALM_STA
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      lefttim  : RELATIVE_TIME_C
+      hdlstat  : STP
+
+  do_0:
+    id     : DUMMY_ALM
+    syscall: adj_tim(ANY_ADJUST_PLUS_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      lefttim: RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME
+
+  do_1:
+    id  : DUMMY_ALM
+    code: return
+
+  post_condition_1:
+    0:
+      DUMMY_ALM:
+        hdlstat: STP
+
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+  do_2:
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      id  : ALM1
+      code: return
+
+  post_condition_2:
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      ALM1:
+        hdlstat: STP
+
+ASP_time_manage_adj_tim_e_1_ci:
+  note: 【NGKI3587】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    ALM1:
+      type     : ALARM
+      almstat  : TALM_STA
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      lefttim  : RELATIVE_TIME_C
+      hdlstat  : STP
+
+  do_0:
+    id     : DUMMY_CYC
+    syscall: adj_tim(ANY_ADJUST_PLUS_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    ALM1:
+      lefttim: RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME
+
+  do_1:
+    id  : DUMMY_CYC
+    code: return
+
+  post_condition_1:
+    0:
+      DUMMY_CYC:
+        hdlstat: STP
+
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+  do_2:
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      id  : ALM1
+      code: return
+
+  post_condition_2:
+    RELATIVE_TIME_C-ANY_ADJUST_PLUS_TIME+1:
+      ALM1:
+        hdlstat: STP

@@ -1,0 +1,20 @@
+version: "$Id: twai_sem_d.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_semaphore_twai_sem_d:
+  note: 【NGKI3457】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+
+    SEM1:
+      type: SEMAPHORE
+
+  do:
+    id     : TASK1
+    syscall: twai_sem(SEM1, ANY_ELAPSED_TIME)
+    ercd   : E_RASTER
+
+  post_condition:

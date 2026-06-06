@@ -1,0 +1,41 @@
+version: "$Id: T6_004-enable_exc_in_cpulock.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_exception_xsns_dpn_b_2:
+  variation:
+    enable_exc_in_cpulock: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+    EXC1:
+      type   : EXCEPTION
+      excno  : EXCNO_SELF_A
+      hdlstat: STP
+
+  do_0:
+    id     : TASK1
+    code   : ttsp_cpuexc_raise(EXCNO_SELF_A)
+
+  post_condition_0:
+    EXC1:
+      hdlstat: ACTIVATE
+
+  do_1:
+    id     : EXC1
+    syscall: xsns_dpn(p_excinf)
+    bool   : true
+
+  post_condition_1:
+
+  do_2:
+    id     : EXC1
+    code   : return
+
+  post_condition_2:
+    EXC1:
+      hdlstat: STP

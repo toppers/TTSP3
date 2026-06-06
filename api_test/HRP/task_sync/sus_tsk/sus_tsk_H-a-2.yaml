@@ -1,0 +1,27 @@
+version: "$Id: sus_tsk_H-a-2.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_task_sync_sus_tsk_H_a_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sus_tsk(TASK2)
+    ercd   : E_OACV
+
+  post_condition:

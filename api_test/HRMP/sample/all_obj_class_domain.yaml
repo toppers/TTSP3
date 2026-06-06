@@ -1,0 +1,301 @@
+version: "$Id: all_obj_class_domain.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+all_obj_class_domain:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      class  : CLS_SELF_ALL
+      domain : KERNEL
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      prcid    : PRC_SELF
+      class    : CLS_SELF_ALL
+
+    CYC1:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STP
+      hdlstat  : STP
+      prcid    : PRC_SELF
+      class    : CLS_SELF_ALL
+      cyctim   : RELATIVE_TIME_B
+      cycphs   : RELATIVE_TIME_A
+
+    SEM1:
+      type  : SEMAPHORE
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    SEM2:
+      type  : SEMAPHORE
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    SEM3:
+      type  : SEMAPHORE
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    SEM4:
+      type  : SEMAPHORE
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    FLG1:
+      type  : EVENTFLAG
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    FLG2:
+      type  : EVENTFLAG
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    FLG3:
+      type  : EVENTFLAG
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    FLG4:
+      type  : EVENTFLAG
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    DTQ1:
+      type  : DATAQUEUE
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    DTQ2:
+      type  : DATAQUEUE
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    DTQ3:
+      type  : DATAQUEUE
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    DTQ4:
+      type  : DATAQUEUE
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    PDQ2:
+      type  : P_DATAQUEUE
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    PDQ3:
+      type  : P_DATAQUEUE
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    PDQ4:
+      type  : P_DATAQUEUE
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    MPF1:
+      type  : MEMORYPOOL
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    MPF2:
+      type  : MEMORYPOOL
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    MPF3:
+      type  : MEMORYPOOL
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    MPF4:
+      type  : MEMORYPOOL
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      class  : CLS_SELF_ALL
+      domain : KERNEL
+
+    SPN2:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      class  : CLS_OTHER_ALL
+      domain : KERNEL
+
+    SPN3:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      class  : CLS_SELF_ALL
+      domain : DOM1
+
+    SPN4:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      class  : CLS_OTHER_ALL
+      domain : DOM1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      class  : CLS_SELF_ALL
+      domain : KERNEL
+
+    MTX2:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      class  : CLS_OTHER_ALL
+      domain : KERNEL
+
+    MTX3:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      class  : CLS_SELF_ALL
+      domain : DOM1
+
+    MTX4:
+      type   : MUTEX
+      mtxstat: TMTX_UNL
+      class  : CLS_OTHER_ALL
+      domain : DOM1
+
+    MEM_SEC1:
+      type   : MEMORY_SECTION
+      section: ".sec_kernel1"
+      region : DDR
+      class  : CLS_SELF_ALL
+      domain : KERNEL
+
+    MEM_SEC2:
+      type   : MEMORY_SECTION
+      section: ".sec_kernel2"
+      region : DDR
+      class  : CLS_OTHER_ALL
+      domain : KERNEL
+
+    MEM_SEC3:
+      type   : MEMORY_SECTION
+      section: ".sec_user1"
+      region : DDR
+      class  : CLS_SELF_ALL
+      domain : DOM1
+
+    MEM_SEC4:
+      type   : MEMORY_SECTION
+      section: ".sec_user2"
+      region : DDR
+      class  : CLS_OTHER_ALL
+      domain : DOM1
+
+    MEM_MOD1:
+      type  : MEMORY_MODULE
+      file  : ttsp_mem_obj_kernel_dummy1.o
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    MEM_MOD2:
+      type  : MEMORY_MODULE
+      file  : ttsp_mem_obj_kernel_dummy2.o
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    MEM_MOD3:
+      type  : MEMORY_MODULE
+      file  : ttsp_mem_obj_user_dummy1.o
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    MEM_MOD4:
+      type  : MEMORY_MODULE
+      file  : ttsp_mem_obj_user_dummy2.o
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    MEM_AREA1:
+      type  : MEMORY_AREA
+      base  : 50331648
+      size  : 4096
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    MEM_AREA2:
+      type  : MEMORY_AREA
+      base  : 50335744
+      size  : 4096
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    MEM_AREA3:
+      type  : MEMORY_AREA
+      base  : 50339840
+      size  : 4096
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    MEM_AREA4:
+      type  : MEMORY_AREA
+      base  : 50343936
+      size  : 4096
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    PHY_MEM1:
+      type  : PHYSICAL_MEMORY
+      base  : 50348032
+      size  : 4096
+      paddr : 33570816
+      class : CLS_SELF_ALL
+      domain: KERNEL
+
+    PHY_MEM2:
+      type  : PHYSICAL_MEMORY
+      base  : 50352128
+      size  : 4096
+      paddr : 33574912
+      class : CLS_OTHER_ALL
+      domain: KERNEL
+
+    PHY_MEM3:
+      type  : PHYSICAL_MEMORY
+      base  : 50356224
+      size  : 4096
+      paddr : 33579008
+      class : CLS_SELF_ALL
+      domain: DOM1
+
+    PHY_MEM5:
+      type  : PHYSICAL_MEMORY
+      base  : 50360320
+      size  : 4096
+      paddr : 33583104
+      class : CLS_OTHER_ALL
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      actcnt: 1

@@ -1,0 +1,30 @@
+version: "$Id: T6_011-all_gain_time[T]_func_time[T]_gain_time[T]_stipulation[T].yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_alarm_ista_alm_a_2:
+  variation:
+    gain_time: true
+
+  pre_condition:
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+    ALM2:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : ALM1
+    syscall: ista_alm(ALM2, RELATIVE_TIME_A)
+    ercd   : E_CTX
+
+  post_condition:

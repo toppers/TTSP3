@@ -1,0 +1,52 @@
+version: "$Id: tget_mpf_F-e-1-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_mempfix_tget_mpf_F_e_1_1:
+  note: 【NGKI2303】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        blk:
+          type: void*
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : MPF1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MPF1
+      prcid  : PRC_OTHER
+
+    MPF1:
+      type    : MEMORYPOOL
+      mpfatr  : TA_NULL
+      fblkcnt : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: tget_mpf(MPF1, &blk, ANY_ELAPSED_TIME)
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : MPF1
+      lefttmo: ANY_ELAPSED_TIME
+
+    MPF1:
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK1:
+            var: blk

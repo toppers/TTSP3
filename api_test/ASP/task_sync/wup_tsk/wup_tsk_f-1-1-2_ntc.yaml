@@ -1,0 +1,82 @@
+version: "$Id: wup_tsk_f-1-1-2_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_sync_wup_tsk_f_1_1_2_ai:
+  note: 【NGKI1271】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      wupcnt : 0
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : DUMMY_ALM
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready
+
+ASP_task_sync_wup_tsk_f_1_1_2_ci:
+  note: 【NGKI1271】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      wupcnt : 0
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      wupcnt : 0
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : DUMMY_CYC
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: ready

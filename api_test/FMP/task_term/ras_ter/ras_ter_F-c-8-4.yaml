@@ -1,0 +1,34 @@
+version: "$Id: ras_ter_F-c-8-4.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_term_ras_ter_F_c_8_4:
+  note: 【NGKI3477】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting-suspended
+      wobjid : DELAY
+      lefttmo: RELATIVE_TIME_A
+      actcnt : 1
+      actprc : PRC_OTHER
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: ras_ter(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      actcnt : 0
+      bootcnt: 1
+      actprc : TPRC_NONE
+      prcid  : PRC_OTHER

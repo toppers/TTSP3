@@ -1,0 +1,254 @@
+version: "$Id: sig_sem_F-c-4_ntc_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_semaphore_sig_sem_F_c_4_ai_HM2:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    SEM1:
+      wtsklist:
+        - TASK3:
+
+FMP_semaphore_sig_sem_F_c_4_ai_HM6:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : NONE
+
+  do:
+    id     : DUMMY_ALM
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    SEM1:
+      wtsklist:
+        - TASK3:
+
+FMP_semaphore_sig_sem_F_c_4_ci_HM2:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    SEM1:
+      wtsklist:
+        - TASK3:
+
+FMP_semaphore_sig_sem_F_c_4_ci_HM6:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+      domain  : NONE
+
+  do:
+    id     : DUMMY_CYC
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: suspended
+
+    SEM1:
+      wtsklist:
+        - TASK3:

@@ -1,0 +1,25 @@
+version: "$Id: sus_tsk_a-2.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_sync_sus_tsk_a_2:
+  note: 【NGKI1300】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: sus_tsk(TASK2)
+    ercd   : E_CTX
+
+  post_condition:

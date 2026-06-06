@@ -1,0 +1,23 @@
+version: "$Id: act_tsk_a.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_task_manage_act_tsk_a:
+  note: 【NGKI1114】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+    ercd   : E_CTX
+
+  post_condition:

@@ -1,0 +1,72 @@
+version: "$Id: T3_CYC003-waitspin_undefined_spinid.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_cyclic_sta_cyc_F_b:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    CYC1:
+      type   : CYCLE
+      cycstat: TCYC_STP
+      hdlstat: STP
+      cycphs : RELATIVE_TIME_A
+      cyctim : RELATIVE_TIME_B
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+  do_0:
+    0:
+      id     : TASK1
+      syscall: sta_cyc(CYC1)
+      ercd   : E_OK
+
+  post_condition_0:
+    0:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: STP
+
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      CYC1:
+        cycstat: TCYC_STA
+        hdlstat: ACTIVATE
+
+  do_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      id     : TASK1
+      syscall: spn_loc(SPN1)
+      ercd   : E_OK
+
+  post_condition_1:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      SPN1:
+        spnstat: TSPN_LOC
+        procid : TASK1
+
+      CPU_STATE1:
+        loc_cpu: true
+
+  do_2:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      id     : CYC1
+      syscall: spn_loc(SPN1)
+      ercd   : E_OK
+
+  post_condition_2:
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      CYC1:
+        hdlstat: ACTIVATE-waitspin

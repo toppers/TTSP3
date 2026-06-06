@@ -1,0 +1,37 @@
+version: "$Id: chg_spr_F-c-9-1.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_chg_spr_F_c_9_1:
+  note: 【NGKI3672】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: running
+      subpri : TSK_PRI_MID
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: running
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: waiting-suspended
+      wobjid : SLEEP
+      subpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: chg_spr(TASK3, TSK_PRI_LOW)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      subpri: TSK_PRI_LOW

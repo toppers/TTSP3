@@ -1,0 +1,88 @@
+version: "$Id: mrot_rdq_F-e-1-1-3_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_mrot_rdq_F_e_1_1_3_ai:
+  note: 【NGKI2699】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      prcid  : PRC_SELF
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_SELF
+
+  do:
+    id     : DUMMY_ALM
+    syscall: mrot_rdq(PRC_SELF, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      porder: 2
+
+    TASK2:
+      porder: 1
+
+FMP_sys_manage_mrot_rdq_F_e_1_1_3_ci:
+  note: 【NGKI2699】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      prcid  : PRC_SELF
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_SELF
+
+  do:
+    id     : DUMMY_CYC
+    syscall: mrot_rdq(PRC_SELF, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      porder: 2
+
+    TASK2:
+      porder: 1

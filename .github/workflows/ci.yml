@@ -1,0 +1,90 @@
+name: ttsp3-ci
+
+# TTSP3 を標準ASP3（兄弟SVN）に対して QEMU(xilinx-zynq-a9) でビルド・実行する。
+# 配置：  <runner_workspace>/ttsp3   ← 本リポジトリ（actions/checkout先）
+#         <runner_workspace>/asp3    ← SVNで取得（兄弟ディレクトリ）
+# configure.sh は OS_PATH="../asp3/" を参照するため、この並びが必須。
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  # UPSTREAM_KERNEL.md と一致させること（再現性のため版を固定）
+  ASP3_SVN_URL: "PLACEHOLDER_ASP3_SVN_URL"
+  ASP3_SVN_REV: "PLACEHOLDER_REV"
+  # 他プロファイルを試す場合（任意。PROFILE_NAMEに応じて兄弟へcheckout）
+  # FMP3_SVN_URL/REV, HRP3_SVN_URL/REV, HRMP3_SVN_URL/REV
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # 本リポジトリを ws/ttsp3 に取得（兄弟配置にするためサブパスへ）
+      - name: Checkout TTSP3
+        uses: actions/checkout@v4
+        with:
+          path: ttsp3
+
+      - name: Install toolchain / QEMU / SVN / Ruby
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-arm-none-eabi binutils-arm-none-eabi \
+            qemu-system-arm subversion ruby make
+          arm-none-eabi-gcc --version
+          qemu-system-arm --version
+          ruby --version
+
+      # 標準ASP3を ttsp3 の兄弟（../asp3）として固定リビジョンで取得
+      - name: Checkout standard ASP3 (SVN, sibling)
+        run: |
+          svn checkout "${ASP3_SVN_URL}@${ASP3_SVN_REV}" asp3
+          ls -d ttsp3 asp3   # 兄弟配置の確認
+
+      - name: Configure (ASP3 / zybo_z7_gcc / QEMU)
+        working-directory: ttsp3
+        run: |
+          # configure.sh / ttsp_target.sh をCI用に設定
+          #  OS_PATH="../asp3/"  PROFILE_NAME="ASP"  TARGET_NAME="zybo_z7_gcc"
+          #  zybo の ttsp_target.sh: USE_QEMU=true
+          # （実際の設定方法はリポジトリの configure.sh 仕様に合わせて調整）
+          sed -i 's|^OS_PATH=.*|OS_PATH="../asp3/"|' configure.sh
+          sed -i 's|^PROFILE_NAME=.*|PROFILE_NAME="ASP"|' configure.sh
+          grep -q 'USE_QEMU=true' library/ASP/target/zybo_z7_gcc/ttsp_target.sh \
+            || echo "WARNING: confirm USE_QEMU=true for zybo_z7_gcc"
+
+      - name: Run TTSP3 (target-dependent check -> SIL -> API) on QEMU
+        working-directory: ttsp3
+        run: |
+          # ttb.sh は対話メニュー。CIでは非対話実行用ラッパ scripts/ci_run.sh を用意して呼ぶ想定。
+          # ci_run.sh: configure -> build -> qemu 実行 -> execute.log 生成
+          if [ -x scripts/ci_run.sh ]; then
+            ./scripts/ci_run.sh
+          else
+            echo "TODO: scripts/ci_run.sh（ttb.shの非対話ラッパ）を用意する"
+            exit 1
+          fi
+
+      - name: Evaluate result
+        working-directory: ttsp3
+        run: |
+          # execute.log を判定（OK/NG・チェックポイント）。失敗時は非0で落とす。
+          test -f execute.log || { echo "no execute.log"; exit 1; }
+          if grep -Eq "NG|FAIL|not ok|Error" execute.log; then
+            echo "::error::TTSP3 reported failures"
+            tail -50 execute.log
+            exit 1
+          fi
+          echo "TTSP3 passed"
+          tail -20 execute.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttsp3-execute-log
+          path: ttsp3/execute.log

@@ -1,0 +1,84 @@
+version: "$Id: stp_alm_F-c_ntc_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_alarm_stp_alm_F_c_ai_HM2:
+  note: 【NGKI2571】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      var      :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_INCVAR
+      nfy_info1: "&data"
+      almstat  : TALM_STP
+      prcid    : PRC_OTHER
+      domain   : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: stp_alm(ALM1)
+    ercd   : E_OK
+
+  post_condition:
+
+FMP_alarm_stp_alm_F_c_ci_HM2:
+  note: 【NGKI2571】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+      var      :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_INCVAR
+      nfy_info1: "&data"
+      almstat  : TALM_STP
+      prcid    : PRC_OTHER
+      domain   : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: stp_alm(ALM1)
+    ercd   : E_OK
+
+  post_condition:

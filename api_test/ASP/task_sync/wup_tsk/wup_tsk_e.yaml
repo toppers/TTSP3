@@ -1,0 +1,18 @@
+version: "$Id: wup_tsk_e.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_task_sync_wup_tsk_e:
+  note: 【NGKI1273】【NGKI1275】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      wupcnt : 0
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TSK_SELF)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      wupcnt: 1

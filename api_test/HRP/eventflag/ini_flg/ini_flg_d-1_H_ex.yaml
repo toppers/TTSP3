@@ -1,0 +1,183 @@
+version: "$Id: ini_flg_d-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_eventflag_ini_flg_d_1_H1:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H2:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H3:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP(DOM1)
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H4:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP(DOM1)
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H5:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_FLG(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H6:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : KERNEL
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : NONE
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:
+
+ASP_eventflag_ini_flg_d_1_H7:
+  note: 【NGKI1645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0A
+      domain : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_flg(FLG1)
+    ercd   : E_OK
+
+  post_condition:

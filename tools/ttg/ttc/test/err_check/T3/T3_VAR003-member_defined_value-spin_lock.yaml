@@ -1,0 +1,36 @@
+version: "$Id: T3_VAR003-member_defined_value-spin_lock.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_spin_lock_ref_spn_F_c_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var:
+        rspn:
+          type: T_RSPN
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: ref_spn(SPN1, &rspn)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        rspn:
+          value: 1

@@ -1,0 +1,130 @@
+version: "$Id: prb_int_c-1_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_interrupt_prb_int_c_1_H3:
+  note: 【NGKI3948】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM_SYS_ACP4
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP(DOM_SYS_ACP4)
+
+    DOM_SYS_ACP4:
+      type: DOMAIN
+
+  do_0:
+    id  : TASK1
+    code: ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition_0:
+    INH1:
+      intreq: true
+
+  do_1:
+    id     : TASK1
+    syscall: prb_int(INTNO_SELF_INH_A)
+    erbool : true
+
+  post_condition_1:
+
+  do_2:
+    id     : TASK1
+    syscall: TTSP_UNL_CPU()
+    ercd   : E_OK
+
+  post_condition_2:
+    INH1:
+      hdlstat: ACTIVATE
+      intreq : false
+
+    CPU_STATE:
+      loc_cpu: false
+
+  do_3:
+    id  : INH1
+    code: return
+
+  post_condition_3:
+    INH1:
+      hdlstat: STP
+
+ASP_interrupt_prb_int_c_1_H5:
+  note: 【NGKI3948】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      intreq : false
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id  : TASK1
+    code: ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition_0:
+    INH1:
+      intreq: true
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_PRB_INT(INTNO_SELF_INH_A)
+    erbool : true
+
+  post_condition_1:
+
+  do_2:
+    id     : TASK1
+    syscall: TTSP_UNL_CPU()
+    ercd   : E_OK
+
+  post_condition_2:
+    INH1:
+      hdlstat: ACTIVATE
+      intreq : false
+
+    CPU_STATE:
+      loc_cpu: false
+
+  do_3:
+    id  : INH1
+    code: return
+
+  post_condition_3:
+    INH1:
+      hdlstat: STP

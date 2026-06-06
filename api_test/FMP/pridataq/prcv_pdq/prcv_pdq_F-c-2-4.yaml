@@ -1,0 +1,65 @@
+version: "$Id: prcv_pdq_F-c-2-4.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_pridataq_prcv_pdq_F_c_2_4:
+  note: 【NGKI1894】【NGKI1897】【NGKI1899】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting-suspended
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+
+    TASK4:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      maxdpri : DATA_PRI_MAX
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: prcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        data   :
+          value: DATA_A
+        datapri:
+          value: DATA_PRI_HIGH
+
+    TASK2:
+      tskstat: suspended
+
+    PDQ1:
+      stsklist:
+        - TASK3:
+            data   : DATA_B
+            datapri: DATA_PRI_MID

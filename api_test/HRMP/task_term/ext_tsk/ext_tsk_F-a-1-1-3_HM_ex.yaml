@@ -1,0 +1,44 @@
+version: "$Id: ext_tsk_F-a-1-1-3_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_term_ext_tsk_F_a_1_1_3_HM3:
+  note: 【NGKI3449】【NGKI1169】【NGKI1168】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_MID
+      actcnt : 1
+      actprc : PRC_OTHER
+      wupcnt : 1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ext_tsk()
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      tskpri : TSK_PRI_HIGH
+      actcnt : 0
+      actprc : TPRC_NONE
+      wupcnt : 0
+      bootcnt: 1
+      prcid  : PRC_OTHER

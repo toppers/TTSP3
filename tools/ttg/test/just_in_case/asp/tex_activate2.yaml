@@ -1,0 +1,31 @@
+version: "$Id: tex_activate2.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+TEX_ACTIVATE_2_in_pre_condition:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : 16
+      itskpri: 16
+
+    TEX1:
+      type   : TASK_EXC
+      task   : TASK1
+      texstat: TTEX_DIS
+      hdlstat: ACTIVATE
+      texptn : 0x01
+      pndptn : 0x02
+
+  do:
+    id     : TEX1
+    syscall: slp_tsk()
+
+  post_condition:
+    TASK1:
+      tskstat: waiting
+      wobjid : SLEEP
+
+    TEX1:
+      texstat: TTEX_DIS
+      hdlstat: STP
+      texptn : 0x01
+      pndptn : 2

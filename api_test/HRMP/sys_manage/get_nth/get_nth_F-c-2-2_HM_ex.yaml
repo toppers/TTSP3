@@ -1,0 +1,110 @@
+version: "$Id: get_nth_F-c-2-2_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_sys_manage_get_nth_F_c_2_2_HM3:
+  note: 【NGKI3647】【NGKI5127】【NGKI3648】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      porder : 1
+      var    :
+        p_tskid:
+          type: ID
+      prcid  : PRC_SELF
+      domain : DOM_ACP4
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      porder : 1
+      prcid  : PRC_SELF
+      domain : DOM_ACP4
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      prcid  : PRC_OTHER
+      domain : DOM_ACP4
+
+    TASK4:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      prcid  : PRC_OTHER
+      domain : DOM_ACP4
+
+    DOM_ACP4:
+      type   : DOMAIN
+      access1: TACP(DOM_ACP4)
+      access2: TACP_KERNEL
+      access3: TACP(DOM_ACP4)
+      access4: TACP(DOM_ACP4)
+
+  do:
+    id     : TASK1
+    syscall: get_nth(TSK_PRI_MID, 1, &p_tskid)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_tskid:
+          value: TSK_NONE
+
+FMP_sys_manage_get_nth_F_c_2_2_HM5:
+  note: 【NGKI3647】【NGKI5127】【NGKI3648】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      porder : 1
+      var    :
+        p_tskid:
+          type: ID
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      porder : 1
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_GET_NTH(TSK_PRI_MID, 1, &p_tskid)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_tskid:
+          value: TSK_NONE

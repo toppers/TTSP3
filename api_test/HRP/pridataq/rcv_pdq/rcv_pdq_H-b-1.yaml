@@ -1,0 +1,25 @@
+version: "$Id: rcv_pdq_H-b-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_pridataq_rcv_pdq_H_b_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, (intptr_t*)TTSP_MACV_ADDRESS, &datapri)
+    ercd   : E_MACV
+
+  post_condition:

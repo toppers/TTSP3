@@ -1,0 +1,27 @@
+version: "$Id: ini_flg_a-1.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_eventflag_ini_flg_a_1:
+  note: 【NGKI1640】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    FLG1:
+      type   : EVENTFLAG
+      iflgptn: BIT_PATTERN_0A
+      flgptn : BIT_PATTERN_0B
+
+  do:
+    id     : ALM1
+    syscall: ini_flg(FLG1)
+    ercd   : E_CTX
+
+  post_condition:

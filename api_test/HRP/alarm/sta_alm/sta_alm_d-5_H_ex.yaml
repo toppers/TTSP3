@@ -1,0 +1,296 @@
+version: "$Id: sta_alm_d-5_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_alarm_sta_alm_d_5_H1:
+  note: 【NGKI2541】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      domain : DOM1
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      ALM1:
+        almstat: TALM_STP
+
+ASP_alarm_sta_alm_d_5_H2:
+  note: 【NGKI2541】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      domain : DOM1
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      domain    : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      ALM1:
+        almstat: TALM_STP
+
+ASP_alarm_sta_alm_d_5_H3:
+  note: 【NGKI2541】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      domain : KERNEL
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      domain    : KERNEL
+      access1   : TACP(DOM1)
+      access2   : TACP_KERNEL
+      access3   : TACP_KERNEL
+      access4   : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      ALM1:
+        almstat: TALM_STP
+
+ASP_alarm_sta_alm_d_5_H4:
+  note: 【NGKI2541】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      domain : DOM2
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      domain    : DOM2
+      access1   : TACP(DOM1)
+      access2   : TACP_KERNEL
+      access3   : TACP_KERNEL
+      access4   : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      ALM1:
+        almstat: TALM_STP
+
+ASP_alarm_sta_alm_d_5_H5:
+  note: 【NGKI2541】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      domain : KERNEL
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_INCVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      domain    : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: ANY_VALUE+1
+
+      ALM1:
+        almstat: TALM_STP

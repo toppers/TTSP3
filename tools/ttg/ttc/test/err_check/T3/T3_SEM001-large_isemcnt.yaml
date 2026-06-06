@@ -1,0 +1,18 @@
+version: "$Id: T3_SEM001-large_isemcnt.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_semaphore_ini_sem_b_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type   : SEMAPHORE
+      maxsem : 1
+      isemcnt: 2
+
+  do:
+    id     : TASK1
+    syscall: ini_sem(0)
+    ercd   : E_ID
+
+  post_condition:

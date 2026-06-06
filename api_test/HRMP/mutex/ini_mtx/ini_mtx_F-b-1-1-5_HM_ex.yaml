@@ -1,0 +1,477 @@
+version: "$Id: ini_mtx_F-b-1-1-5_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_mutex_ini_mtx_F_b_1_1_5_HM1:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM2:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM3:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM4:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP_KERNEL
+      access3 : TACP(DOM1)
+      access4 : TACP_KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM5:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_INI_MTX(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM6:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:
+
+FMP_mutex_ini_mtx_F_b_1_1_5_HM7:
+  note: 【NGKI2104】【NGKI2105】【NGKI2106】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+
+    MTX1:
+      mtxstat : TMTX_UNL
+      wtsklist:

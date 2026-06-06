@@ -1,0 +1,169 @@
+version: "$Id: ter_tsk_F-c-1-1-5_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_term_ter_tsk_F_c_1_1_5_HM1:
+  note: 【NGKI3450】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      actcnt : 1
+      actprc : PRC_OTHER
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt : 0
+      bootcnt: 1
+      actprc : TPRC_NONE
+      prcid  : PRC_OTHER
+
+FMP_task_term_ter_tsk_F_c_1_1_5_HM2:
+  note: 【NGKI3450】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      actcnt : 1
+      actprc : PRC_OTHER
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt : 0
+      bootcnt: 1
+      actprc : TPRC_NONE
+      prcid  : PRC_OTHER
+
+FMP_task_term_ter_tsk_F_c_1_1_5_HM4:
+  note: 【NGKI3450】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      actcnt : 1
+      actprc : PRC_OTHER
+      prcid  : PRC_SELF
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP(DOM1)
+      access4: TACP_KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      prcid  : PRC_OTHER
+      domain : DOM2
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK3
+      domain : DOM2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      actcnt : 0
+      bootcnt: 1
+      actprc : TPRC_NONE
+      prcid  : PRC_OTHER

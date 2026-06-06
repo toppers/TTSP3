@@ -1,0 +1,28 @@
+version: "$Id: inirtn_2.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+INIRTN_sample_2:
+  pre_condition:
+    INI1:
+      type   : INIRTN
+      exinf  : 0x03
+      do     :
+        syscall: sns_ker()
+
+    INI2:
+      type   : INIRTN
+      exinf  : 0x10
+      do     :
+        syscall: iact_tsk(TASK1)
+        ercd   : E_CTX
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : 16
+      itskpri: 16
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+
+  post_condition:

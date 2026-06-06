@@ -1,0 +1,244 @@
+version: "$Id: sig_sem_F-c-5-1_ten.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_semaphore_sig_sem_F_c_5_1_at:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SIGSEM
+      nfy_info1: SEM1
+      almstat  : TALM_STP
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: running
+
+      SEM1:
+        wtsklist:
+          - TASK3:
+
+FMP_semaphore_sig_sem_F_c_5_1_ae:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SIGSEM
+      enfy_info1: SEM1
+      almstat   : TALM_STP
+      prcid     : PRC_SELF
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      prcid  : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: running
+
+      SEM1:
+        wtsklist:
+          - TASK3:
+
+FMP_semaphore_sig_sem_F_c_5_1_ct:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SIGSEM
+      nfy_info1: SEM1
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: running
+
+      SEM1:
+        wtsklist:
+          - TASK3:
+
+FMP_semaphore_sig_sem_F_c_5_1_ce:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SIGSEM
+      enfy_info1: SEM1
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      prcid     : PRC_SELF
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      prcid  : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      prcid  : PRC_OTHER
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: running
+
+      SEM1:
+        wtsklist:
+          - TASK3:

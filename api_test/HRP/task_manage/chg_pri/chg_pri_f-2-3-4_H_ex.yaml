@@ -1,0 +1,316 @@
+version: "$Id: chg_pri_f-2-3-4_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_manage_chg_pri_f_2_3_4_H1:
+  note: 【NGKI1195】【NGKI1196】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      sematr  : TA_NULL
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+        - TASK5:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskpri: TSK_PRI_MID
+
+ASP_task_manage_chg_pri_f_2_3_4_H2:
+  note: 【NGKI1195】【NGKI1196】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      sematr  : TA_NULL
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+        - TASK5:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskpri: TSK_PRI_MID
+
+ASP_task_manage_chg_pri_f_2_3_4_H3:
+  note: 【NGKI1195】【NGKI1196】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      sematr  : TA_NULL
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+        - TASK5:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskpri: TSK_PRI_MID
+
+ASP_task_manage_chg_pri_f_2_3_4_H4:
+  note: 【NGKI1195】【NGKI1196】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM2
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM2
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      domain : DOM2
+
+    SEM1:
+      type    : SEMAPHORE
+      sematr  : TA_NULL
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+        - TASK5:
+      domain  : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskpri: TSK_PRI_MID
+
+ASP_task_manage_chg_pri_f_2_3_4_H5:
+  note: 【NGKI1195】【NGKI1196】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    TASK5:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      sematr  : TA_NULL
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+        - TASK3:
+        - TASK4:
+        - TASK5:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CHG_PRI(TASK3, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      tskpri: TSK_PRI_MID

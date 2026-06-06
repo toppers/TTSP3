@@ -1,0 +1,23 @@
+version: "$Id: get_lod_a-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_get_lod_a_2:
+  note: 【NGKI3625】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_load:
+          type: uint_t
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: get_lod(TSK_PRI_MID, &p_load)
+    ercd   : E_CTX
+
+  post_condition:

@@ -1,0 +1,84 @@
+version: "$Id: T4_026-wtsklist_mismatch_wobjid-mempfix.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_mempfix_rel_mpf_e_1_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : SLEEP
+      var    :
+        blk:
+          type: void*
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : 1
+      wtsklist:
+
+    MPF2:
+      type: MEMORYPOOL
+
+  do_0:
+    id     : TASK1
+    syscall: get_mpf(MPF1, &blk)
+    ercd   : E_OK
+    gcov   : false
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: 0
+
+  do_1:
+    id     : TASK1
+    syscall: wup_tsk(TASK2)
+    ercd   : E_OK
+    gcov   : false
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+  do_2:
+    id     : TASK2
+    syscall: get_mpf(MPF1, &blk)
+    ercd   : E_OK
+    gcov   : false
+
+  post_condition_2:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : MPF2
+
+    MPF1:
+      wtsklist:
+        - TASK2:
+
+  do_3:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    gcov   : true
+
+  post_condition_3:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    MPF1:
+      wtsklist:

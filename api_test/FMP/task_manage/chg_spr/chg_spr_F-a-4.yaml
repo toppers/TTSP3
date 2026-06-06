@@ -1,0 +1,26 @@
+version: "$Id: chg_spr_F-a-4.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_chg_spr_F_a_4:
+  note: 【NGKI3666】
+  variation:
+    profile: FMP
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+  do:
+    id     : ALM1
+    syscall: chg_spr(TASK1, TSK_PRI_MID)
+    eruint : E_CTX
+
+  post_condition:

@@ -1,0 +1,22 @@
+version: "$Id: unl_mtx_b-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_mutex_unl_mtx_b_2:
+  note: 【NGKI2089】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      locmtx :
+        - MTX1
+
+    MTX1:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      htskid : TASK1
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(TNUM_MTXID+1)
+    ercd   : E_ID
+
+  post_condition:

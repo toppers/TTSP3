@@ -1,0 +1,32 @@
+version: "$Id: SAC_MBF_H-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_sac_mbf_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+          value  : MBF_MSG_A
+
+    MBF1:
+      type   : MESSAGEBUF
+      maxmsz : ANY_MAX_MSIZE
+      mbfsz  : ANY_MBF_SIZE
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_mbf(MBF1, (void*)message1, MBF_MSGSZ_A)
+    ercd   : E_OACV
+
+  post_condition:

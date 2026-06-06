@@ -1,0 +1,21 @@
+version: "$Id: twai_sem_i.yaml 64 2019-12-20 01:33:52Z fujisft-shigihara $"
+ASP_semaphore_twai_sem_i:
+  note: 【NGKI1524】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type  : SEMAPHORE
+      semcnt: ANY_NOW_SEMCNT
+
+  do:
+    id     : TASK1
+    syscall: twai_sem(SEM1, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition:
+    SEM1:
+      semcnt: ANY_NOW_SEMCNT-1

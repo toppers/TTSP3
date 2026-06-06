@@ -1,0 +1,196 @@
+version: "$Id: can_act_F-c-4-2_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_task_manage_can_act_F_c_4_2_HM1:
+  note: 【NGKI1144】【NGKI1145】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: can_act(TASK2)
+    eruint : 1
+
+  post_condition:
+    TASK2:
+      actcnt: 0
+
+FMP_task_manage_can_act_F_c_4_2_HM2:
+  note: 【NGKI1144】【NGKI1145】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: can_act(TASK2)
+    eruint : 1
+
+  post_condition:
+    TASK2:
+      actcnt: 0
+
+FMP_task_manage_can_act_F_c_4_2_HM3:
+  note: 【NGKI1144】【NGKI1145】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: can_act(TASK2)
+    eruint : 1
+
+  post_condition:
+    TASK2:
+      actcnt: 0
+
+FMP_task_manage_can_act_F_c_4_2_HM4:
+  note: 【NGKI1144】【NGKI1145】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: can_act(TASK2)
+    eruint : 1
+
+  post_condition:
+    TASK2:
+      actcnt: 0
+
+FMP_task_manage_can_act_F_c_4_2_HM5:
+  note: 【NGKI1144】【NGKI1145】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : SEM1
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    SEM1:
+      type    : SEMAPHORE
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CAN_ACT(TASK2)
+    eruint : 1
+
+  post_condition:
+    TASK2:
+      actcnt: 0

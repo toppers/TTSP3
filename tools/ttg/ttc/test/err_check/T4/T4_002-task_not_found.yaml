@@ -1,0 +1,19 @@
+version: "$Id: T4_002-task_not_found.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_alarm_ista_alm_b_2:
+  pre_condition:
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+
+    ALM2:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: STP
+
+  do:
+    id     : ALM1
+    syscall: ista_alm(TNUM_ALMID+1, RELATIVE_TIME_A)
+    ercd   : E_ID
+
+  post_condition:

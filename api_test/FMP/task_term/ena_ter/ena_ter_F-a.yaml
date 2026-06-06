@@ -1,0 +1,25 @@
+version: "$Id: ena_ter_F-a.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_term_ena_ter_F_a:
+  note: 【NGKI3489】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: ena_ter()
+    eruint : E_CTX
+
+  post_condition:

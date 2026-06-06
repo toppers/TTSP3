@@ -1,0 +1,24 @@
+version: "$Id: can_wup_H-a-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_task_sync_can_wup_H_a_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: can_wup(TASK2)
+    eruint : E_OACV
+
+  post_condition:

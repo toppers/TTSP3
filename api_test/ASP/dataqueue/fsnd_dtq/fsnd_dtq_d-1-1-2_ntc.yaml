@@ -1,0 +1,100 @@
+version: "$Id: fsnd_dtq_d-1-1-2_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_fsnd_dtq_d_1_1_2_ai:
+  note: 【NGKI1747】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+
+  do:
+    id     : DUMMY_ALM
+    syscall: fsnd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+ASP_dataqueue_fsnd_dtq_d_1_1_2_ci:
+  note: 【NGKI1747】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        data:
+          type: intptr_t
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 3
+      rtsklist:
+        - TASK2:
+            var: data
+      datalist:
+
+  do:
+    id     : DUMMY_CYC
+    syscall: fsnd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:

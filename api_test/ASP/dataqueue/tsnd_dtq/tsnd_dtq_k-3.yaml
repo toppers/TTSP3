@@ -1,0 +1,22 @@
+version: "$Id: tsnd_dtq_k-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_dataqueue_tsnd_dtq_k_3:
+  note: 【NGKI1731】
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+
+  do:
+    id     : TASK1
+    syscall: tsnd_dtq(DTQ1, DATA_A, ANY_ELAPSED_TIME)
+    ercd   : E_TMOUT
+
+  post_condition:

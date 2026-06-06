@@ -1,0 +1,64 @@
+version: "$Id: get_ipm_b-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_interrupt_get_ipm_b_2_H3:
+  note: 【NGKI3120】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        intpri:
+          type: PRI
+      domain : DOM_SYS_ACP4
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP(DOM_SYS_ACP4)
+
+    DOM_SYS_ACP4:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_ipm(&intpri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        intpri:
+          value: ANY_IPM
+
+ASP_interrupt_get_ipm_b_2_H5:
+  note: 【NGKI3120】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        intpri:
+          type: PRI
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_GET_IPM(&intpri)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        intpri:
+          value: ANY_IPM

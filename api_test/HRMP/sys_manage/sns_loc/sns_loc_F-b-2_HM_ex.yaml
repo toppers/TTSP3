@@ -1,0 +1,36 @@
+version: "$Id: sns_loc_F-b-2_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_sys_manage_sns_loc_F_b_2_HM3:
+  note: 【NGKI2755】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: sns_loc()
+    bool   : false
+
+  post_condition:

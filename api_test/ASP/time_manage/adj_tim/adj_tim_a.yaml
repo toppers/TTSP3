@@ -1,0 +1,19 @@
+version: "$Id: adj_tim_a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_time_manage_adj_tim_a:
+  note: 【NGKI3583】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: adj_tim(ANY_ADJUST_PLUS_TIME)
+    ercd   : E_CTX
+
+  post_condition:

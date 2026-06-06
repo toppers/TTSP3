@@ -1,0 +1,31 @@
+version: "$Id: mget_lod_F-a-2-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_sys_manage_mget_lod_F_a_2_2:
+  note: 【NGKI3634】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_load:
+          type: uint_t
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: mget_lod(PRC_OTHER, TSK_PRI_MID, &p_load)
+    ercd   : E_CTX
+
+  post_condition:

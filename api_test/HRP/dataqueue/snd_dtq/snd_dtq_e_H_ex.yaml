@@ -1,0 +1,421 @@
+version: "$Id: snd_dtq_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_dataqueue_snd_dtq_e_H1:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H2:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H3:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H4:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H5:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_SND_DTQ(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H6:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : NONE
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:
+
+ASP_dataqueue_snd_dtq_e_H7:
+  note: 【NGKI3459】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      stsklist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : DTQ1
+
+    TASK2:
+      tskstat: running
+
+    DTQ1:
+      stsklist:
+        - TASK1:
+            data: DATA_A
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_RAS_TER(TASK1)
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      raster : true
+
+    TASK2:
+      tskstat: ready
+
+    DTQ1:
+      stsklist:

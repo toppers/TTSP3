@@ -1,0 +1,274 @@
+version: "$Id: psnd_dtq_F-b-1-1-3_ten.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_dataqueue_psnd_dtq_F_b_1_1_3_at:
+  note: 【NGKI1734】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_SNDDTQ
+      nfy_info1: DTQ1
+      nfy_info2: DATA_A
+      almstat  : TALM_STP
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      DTQ1:
+        rtsklist:
+
+FMP_dataqueue_psnd_dtq_F_b_1_1_3_ae:
+  note: 【NGKI1734】
+
+  pre_condition:
+    DUMMY_ALM:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SNDDTQ
+      enfy_info1: DTQ1
+      almstat   : TALM_STP
+      prcid     : PRC_SELF
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      prcid  : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(DUMMY_ALM, 0)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_ALM:
+        almstat: TALM_STA
+
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+
+      TASK2:
+        tskstat: ready
+
+      DTQ1:
+        rtsklist:
+
+FMP_dataqueue_psnd_dtq_F_b_1_1_3_ct:
+  note: 【NGKI1734】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_SNDDTQ
+      nfy_info1: DTQ1
+      nfy_info2: DATA_A
+      cycstat  : TCYC_STP
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_A
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      DTQ1:
+        rtsklist:
+
+FMP_dataqueue_psnd_dtq_F_b_1_1_3_ce:
+  note: 【NGKI1734】
+
+  pre_condition:
+    DUMMY_CYC:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : DUMMY_TASK
+      enfytype  : TENFY_SNDDTQ
+      enfy_info1: DTQ1
+      cycstat   : TCYC_STP
+      cycphs    : 0
+      cyctim    : RELATIVE_TIME_A
+      prcid     : PRC_SELF
+
+    DUMMY_TASK:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_BOTTOM
+      actcnt : 1
+      prcid  : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_CYC(DUMMY_CYC)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      DUMMY_CYC:
+        cycstat: TCYC_STA
+
+    1:
+      TASK2:
+        tskstat: ready
+
+      DTQ1:
+        rtsklist:

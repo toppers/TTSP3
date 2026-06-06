@@ -1,0 +1,470 @@
+version: "$Id: rcv_pdq_e_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_pridataq_rcv_pdq_e_H1:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H2:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : KERNEL
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H3:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type   : P_DATAQUEUE
+      pdqcnt : 0
+      domain : KERNEL
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H4:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type   : P_DATAQUEUE
+      pdqcnt : 0
+      domain : DOM2
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H5:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+      domain: KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: TTSP_RCV_PDQ(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H6:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : KERNEL
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+      domain: NONE
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:
+
+ASP_pridataq_rcv_pdq_e_H7:
+  note: 【NGKI3462】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      dister : true
+      var    :
+        data   :
+          type : intptr_t
+          value: DATA_A
+        datapri:
+          type : PRI
+          value: DATA_PRI_MID
+      domain : DOM1
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 0
+      domain: NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK2
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_RASTER
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK2:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_RAS_TER(TASK2)
+
+  post_condition_1:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      raster : true
+
+    PDQ1:
+      rtsklist:

@@ -1,0 +1,23 @@
+version: "$Id: T2_003-alarm_var_invalid.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_alarm_ref_alm_b_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STP
+      hdlstat: ACTIVATE
+      var:
+        ralm*:
+          type: T_RALM
+          almstat: ANY_ALARM_STAT
+          lefttim: RELATIVE_TIME_A
+
+  do:
+    id     : ALM1
+    syscall: ref_alm(0, &ralm)
+    ercd   : E_ID
+
+  post_condition:

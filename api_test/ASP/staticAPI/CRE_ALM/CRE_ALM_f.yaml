@@ -1,0 +1,31 @@
+version: "$Id: CRE_ALM_f.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_staticAPI_CRE_ALM_f:
+  note: 【NGKI2501】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A+1:
+      ALM1:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE

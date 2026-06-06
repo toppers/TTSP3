@@ -1,0 +1,74 @@
+version: "$Id: get_lod_F-c-2_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_sys_manage_get_lod_F_c_2_HM3:
+  note: 【NGKI3629】【NGKI5126】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_load:
+          type: uint_t
+      prcid  : PRC_SELF
+      domain : DOM_ACP4
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : DOM_ACP4
+
+    DOM_ACP4:
+      type   : DOMAIN
+      access1: TACP(DOM_ACP4)
+      access2: TACP_KERNEL
+      access3: TACP(DOM_ACP4)
+      access4: TACP(DOM_ACP4)
+
+  do:
+    id     : TASK1
+    syscall: get_lod(TSK_PRI_MID, &p_load)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_load:
+          value: 1
+
+FMP_sys_manage_get_lod_F_c_2_HM5:
+  note: 【NGKI3629】【NGKI5126】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_load:
+          type: uint_t
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_GET_LOD(TSK_PRI_MID, &p_load)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_load:
+          value: 1

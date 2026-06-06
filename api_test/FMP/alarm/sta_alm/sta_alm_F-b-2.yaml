@@ -1,0 +1,24 @@
+version: "$Id: sta_alm_F-b-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_alarm_sta_alm_F_b_2:
+  note: 【NGKI2538】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : STP
+      prcid    : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: sta_alm(ALM1, TMAX_RELTIM+1)
+    ercd   : E_PAR
+
+  post_condition:

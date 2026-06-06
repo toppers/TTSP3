@@ -1,0 +1,18 @@
+version: "$Id: T4_010-ProdessUnit_not_found_and_cpu_loc.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_task_manage_act_tsk_F_a_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: ext_tsk()
+
+  post_condition:
+    TASK1:
+      tskstat: dormant

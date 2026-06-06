@@ -1,0 +1,43 @@
+version: "$Id: sig_sem_e-2.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_semaphore_sig_sem_e_2:
+  note: 【NGKI1505】【NGKI1506】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : SEM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+
+    SEM1:
+      type    : SEMAPHORE
+      maxsem  : ANY_MAX_SEMCNT
+      semcnt  : 0
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: sig_sem(SEM1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      porder: 1
+
+    SEM1:
+      wtsklist:

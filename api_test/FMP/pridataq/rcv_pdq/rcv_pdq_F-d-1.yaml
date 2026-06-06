@@ -1,0 +1,56 @@
+version: "$Id: rcv_pdq_F-d-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_pridataq_rcv_pdq_F_d_1:
+  note: 【NGKI1872】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    PDQ1:
+      type  : P_DATAQUEUE
+      pdqcnt: 1
+
+  do_0:
+    id     : TASK1
+    syscall: rcv_pdq(PDQ1, &data, &datapri)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : PDQ1
+
+    PDQ1:
+      rtsklist:
+        - TASK1:
+            vardata: data
+            varpri : datapri
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_SND_PDQ(PDQ1, DATA_A, DATA_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      var    :
+        data   :
+          value: DATA_A
+        datapri:
+          value: DATA_PRI_HIGH
+
+    PDQ1:
+      rtsklist:

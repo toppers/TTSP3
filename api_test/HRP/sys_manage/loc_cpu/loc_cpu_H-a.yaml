@@ -1,0 +1,21 @@
+version: "$Id: loc_cpu_H-a.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRP_sys_manage_loc_cpu_H_a:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: false
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_cpu()
+    ercd   : E_OACV
+
+  post_condition:

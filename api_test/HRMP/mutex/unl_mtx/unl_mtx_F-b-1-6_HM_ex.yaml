@@ -1,0 +1,477 @@
+version: "$Id: unl_mtx_F-b-1-6_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_mutex_unl_mtx_F_b_1_6_HM1:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM2:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM3:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM4:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM5:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_UNL_MTX(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM6:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:
+
+FMP_mutex_unl_mtx_F_b_1_6_HM7:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      locmtx :
+        - MTX1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : MTX1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_NULL
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      locmtx:
+
+    TASK2:
+      tskstat: ready
+      locmtx :
+        - MTX1
+
+    MTX1:
+      htskid  : TASK2
+      wtsklist:

@@ -1,0 +1,47 @@
+version: "$Id: T2_sc_list_1.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T2_sc_list_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SEM1:
+      type    : SEMAPHORE
+      wtsklist:
+        - 1
+
+    FLG1:
+      type    : EVENTFLAG
+      wtsklist:
+        - 1
+
+    DTQ1:
+      type    : DATAQUEUE
+      stsklist:
+        - 1
+      rtsklist:
+        - 1
+      datalist: 1
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      stsklist:
+        - 1
+      rtsklist:
+        - 1
+      datalist: 1
+
+    MBX1:
+      type    : MAILBOX
+      wtsklist:
+        - 1
+      msglist : 1
+
+    MEM1:
+      type    : MEMORYPOOL
+      wtsklist:
+        - 1
+
+  do:
+
+  post_condition:

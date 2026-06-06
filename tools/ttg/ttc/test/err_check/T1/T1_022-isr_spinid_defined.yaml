@@ -1,0 +1,35 @@
+version: "$Id: T1_022-isr_spinid_defined.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_1:
+  variation:
+    api_support_ena_int: true
+
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intpri : INT_PRI_MID
+      intno  : INTNO_SELF_ISR_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : EXINF_A
+      spinid : defined
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    CPU_STATE:
+      type   : CPU_STATE
+      chg_ipm: TIPM_ENAALL
+
+  do:
+    id  : TASK1
+    code: ttsp_int_raise(INTNO_SELF_ISR_A)
+
+  post_condition:
+    ISR1:
+      hdlstat: ACTIVATE
+
+    CPU_STATE:
+      chg_ipm: INT_PRI_MID

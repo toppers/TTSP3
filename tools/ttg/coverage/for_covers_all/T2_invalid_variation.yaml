@@ -1,0 +1,22 @@
+version: "$Id: T2_invalid_variation.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T2_invalid_variation:
+  variation:
+    gcov_all                  : invalid
+    gain_time                 : invalid
+    timer_arch                : invalid
+    irc_arch                  : invalid
+    enable_exc_in_cpulock     : invalid
+    enable_chg_ipm_in_non_task: invalid
+    api_support_get_utm       : invalid
+    api_support_ena_int       : invalid
+    api_support_dis_int       : invalid
+    undefined                 : invalid
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+
+  post_condition:

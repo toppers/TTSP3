@@ -1,0 +1,73 @@
+version: "$Id: T3_procunit.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T3_procunit:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type: ALARM
+      almstat: TALM_STP
+      hdlstat: STP
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+    CYC1:
+      type   : CYCLE
+      cycstat: TCYC_STP
+      hdlstat: STP
+      cyctim : 1
+      cycphs : 0
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+    TEX1:
+      type   : TASK_EXC
+      task   : TASK1
+      texstat: TTEX_DIS
+      hdlstat: STP
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+    EXC1:
+      type    : EXCEPTION
+      excno   : EXCNO_SELF_A
+      hdlstat : STP
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_A
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+      var    :
+        rtsk:
+          type   : R_TSK
+          almstat: TALM_STA
+
+  do:
+
+  post_condition:

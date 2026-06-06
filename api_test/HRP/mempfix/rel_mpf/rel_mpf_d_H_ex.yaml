@@ -1,0 +1,288 @@
+version: "$Id: rel_mpf_d_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_mempfix_rel_mpf_d_H1:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H2:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H3:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : KERNEL
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H4:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : DOM2
+      access1 : TACP_KERNEL
+      access2 : TACP(DOM1)
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H5:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_REL_MPF(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H6:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : KERNEL
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : NONE
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT
+
+ASP_mempfix_rel_mpf_d_H7:
+  note: TESRY_007，【NGKI2312】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+      domain : DOM1
+
+    MPF1:
+      type    : MEMORYPOOL
+      blkcnt  : ANY_INI_BLKCNT
+      fblkcnt : ANY_NOW_BLKCNT
+      wtsklist:
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT-1
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: ANY_NOW_BLKCNT

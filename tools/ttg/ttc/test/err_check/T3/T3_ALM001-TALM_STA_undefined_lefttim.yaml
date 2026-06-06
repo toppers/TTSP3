@@ -1,0 +1,21 @@
+version: "$Id: T3_ALM001-TALM_STA_undefined_lefttim.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_alarm_stp_alm_c:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    ALM1:
+      type   : ALARM
+      almstat: TALM_STA
+      hdlstat: STP
+
+  do:
+    id     : TASK1
+    syscall: stp_alm(ALM1)
+    ercd   : E_OK
+
+  post_condition:
+    ALM1:
+      almstat: TALM_STP
+      hdlstat: STP

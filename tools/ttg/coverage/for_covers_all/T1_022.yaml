@@ -1,0 +1,11 @@
+version: "$Id: T1_022.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T1_022_temp:
+  pre_condition:
+    TASK1:
+      type     : TASK
+      tskstat  : running
+      undefined: 1
+
+  do:
+
+  post_condition:

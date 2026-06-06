@@ -1,0 +1,27 @@
+version: "$Id: T4_005-INIRTN_post_condition_defined_exinf.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+FMP_sys_manage_sns_ker_F_a:
+  pre_condition:
+    INI1:
+      type : INIRTN
+      exinf: EXINF_A
+      do   :
+        syscall: sns_ker()
+        bool   : true
+      prcid: PRC_OTHER
+      class: CLS_OTHER_ONLY_OTHER
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: sns_ker()
+    bool   : false
+
+  post_condition:
+    INI1:
+      do:
+        syscall: sns_ker()
+        bool   : true

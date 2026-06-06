@@ -1,0 +1,32 @@
+version: "$Id: T4_024-intstat_mismatch.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_1:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intno  : INTNO_SELF_ISR_A
+      intpri : ANY_INT_PRI
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : 0x00
+
+    ISR2:
+      type   : ISR
+      intno  : INTNO_SELF_ISR_A
+      intpri : ANY_INT_PRI
+      intstat: TA_DISINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : 0x00
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id   : TASK1
+    code : ttsp_int_raise(INTNO_SELF_ISR_A)
+
+  post_condition:
+    ISR1:
+      hdlstat: ACTIVATE

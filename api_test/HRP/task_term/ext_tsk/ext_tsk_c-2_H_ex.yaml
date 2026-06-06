@@ -1,0 +1,27 @@
+version: "$Id: ext_tsk_c-2_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_task_term_ext_tsk_c_2_H3:
+  note: 【NGKI1168】【NGKI1169】【NGKI3449】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ext_tsk()
+
+  post_condition:
+    TASK1:
+      tskstat: dormant
+
+    CPU_STATE:
+      loc_cpu: false

@@ -1,0 +1,16 @@
+version: "$Id: T1_022_proc_do.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+T1_022_temp:
+  pre_condition:
+    TASK1:
+      type     : TASK
+      tskstat  : running
+
+    INI1:
+      type: INIRTN
+      do  :
+        code     : sns_ker()
+        undefined: 1
+
+  do:
+
+  post_condition:

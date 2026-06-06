@@ -1,0 +1,302 @@
+version: "$Id: psnd_pdq_e-2-2_ntc_H_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+ASP_pridataq_psnd_pdq_e_2_2_ai_H2:
+  note: 【NGKI1871】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+        ttg_pri :
+          type: PRI
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+        - TASK2:
+            vardata: ttg_data
+            varpri : ttg_pri
+        - TASK3:
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_ALM
+    syscall: psnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      tskstat: ready
+      porder : 1
+
+    PDQ1:
+      rtsklist:
+        - TASK3:
+
+ASP_pridataq_psnd_pdq_e_2_2_ai_H6:
+  note: 【NGKI1871】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+        ttg_pri :
+          type: PRI
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+        - TASK2:
+            vardata: ttg_data
+            varpri : ttg_pri
+        - TASK3:
+      datalist:
+      domain  : NONE
+
+  do:
+    id     : DUMMY_ALM
+    syscall: psnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      tskstat: ready
+      porder : 1
+
+    PDQ1:
+      rtsklist:
+        - TASK3:
+
+ASP_pridataq_psnd_pdq_e_2_2_ci_H2:
+  note: 【NGKI1871】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+        ttg_pri :
+          type: PRI
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+        - TASK2:
+            vardata: ttg_data
+            varpri : ttg_pri
+        - TASK3:
+      datalist:
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : DUMMY_CYC
+    syscall: psnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      tskstat: ready
+      porder : 1
+
+    PDQ1:
+      rtsklist:
+        - TASK3:
+
+ASP_pridataq_psnd_pdq_e_2_2_ci_H6:
+  note: 【NGKI1871】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      domain   : KERNEL
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+        ttg_pri :
+          type: PRI
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: waiting
+      wobjid : PDQ1
+      domain : KERNEL
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      domain : KERNEL
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 3
+      rtsklist:
+        - TASK2:
+            vardata: ttg_data
+            varpri : ttg_pri
+        - TASK3:
+      datalist:
+      domain  : NONE
+
+  do:
+    id     : DUMMY_CYC
+    syscall: psnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+      wobjid :
+      porder : 2
+
+    TASK4:
+      tskstat: ready
+      porder : 1
+
+    PDQ1:
+      rtsklist:
+        - TASK3:

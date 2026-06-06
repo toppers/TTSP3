@@ -1,0 +1,122 @@
+version: "$Id: chg_ipm_F-c_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_interrupt_chg_ipm_F_c_HM3:
+  note: 【NGKI3111】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM_SYS_ACP2
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      prcid  : PRC_SELF
+      domain : DOM_SYS_ACP2
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM_SYS_ACP2
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      prcid  : PRC_OTHER
+      domain : DOM_SYS_ACP2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+      access1: TACP_KERNEL
+      access2: TACP(DOM_SYS_ACP2)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM_SYS_ACP2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: chg_ipm(TIPM_ENAALL)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE1:
+      chg_ipm: TIPM_ENAALL
+
+FMP_interrupt_chg_ipm_F_c_HM5:
+  note: 【NGKI3111】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: ready
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      chg_ipm: ANY_IPM
+      prcid  : PRC_OTHER
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_CHG_IPM(TIPM_ENAALL)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+
+    CPU_STATE1:
+      chg_ipm: TIPM_ENAALL

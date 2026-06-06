@@ -1,0 +1,22 @@
+version: "$Id: mig_tsk_F-d.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_d:
+  note: TESRY_015，【NGKI1160】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      class  : CLS_SELF_ONLY_SELF
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TASK1, PRC_OTHER)
+    ercd   : E_PAR
+
+  post_condition:

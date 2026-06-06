@@ -1,0 +1,72 @@
+version: "$Id: T3_ISR002-waitspin_undefined_spinid.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_1:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intno  : INTNO_SELF_ISR_A
+      intpri : ANY_INT_PRI
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : 0x00
+      prcid  : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : TASK2
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    CPU_STATE2:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_OTHER
+
+  do_0:
+    id  : TASK1
+    code: ttsp_int_raise(INTNO_SELF_ISR_A)
+
+  post_condition_0:
+    ISR1:
+      hdlstat: ACTIVATE
+
+  do_1:
+    id     : ISR1
+    syscall: iloc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition_1:
+    ISR1:
+      hdlstat: ACTIVATE-waitspin
+
+  do_2:
+    id     : TASK2
+    syscall: unl_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition_2:
+    ISR1:
+      hdlstat: ACTIVATE
+
+    SPN1:
+      procid: ISR1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+    CPU_STATE2:
+      loc_cpu: false

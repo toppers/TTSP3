@@ -1,0 +1,55 @@
+version: "$Id: sta_cyc_c-4.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_cyclic_sta_cyc_c_4:
+  note: 【NGKI2437】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+
+    CYC1:
+      type      : CYCLE
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK2
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      cycstat   : TCYC_STP
+      cycphs    : RELATIVE_TIME_A
+      cyctim    : RELATIVE_TIME_B
+
+  do:
+    id     : TASK1
+    syscall: sta_cyc(CYC1)
+    ercd   : E_OK
+
+  post_condition:
+    0:
+      CYC1:
+        cycstat: TCYC_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      CYC1:
+        lefttim: 0
+
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*0)+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      CYC1:
+        lefttim: RELATIVE_TIME_B-1
+
+    RELATIVE_TIME_A+(RELATIVE_TIME_B*1)+1:

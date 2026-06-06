@@ -1,0 +1,172 @@
+version: "$Id: dis_int_F-d_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_interrupt_dis_int_F_d_ai:
+  note: TESRY_006，【NGKI3086】
+  variation:
+    api_support_dis_int: true
+    api_support_ena_int: true
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      intreq : false
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : DUMMY_ALM
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do_0:
+    id     : DUMMY_ALM
+    syscall: dis_int(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intstat: TA_DISINT
+
+  do_1:
+    id  : DUMMY_ALM
+    code: ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition_1:
+    INH1:
+      intreq: true
+
+  do_2:
+    id     : DUMMY_ALM
+    syscall: TTSP_ENA_INT(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_2:
+    INH1:
+      intstat: TA_ENAINT
+
+  do_3:
+    id     : DUMMY_ALM
+    syscall: TTSP_UNL_SPN(SPN1)
+
+  post_condition_3:
+    DUMMY_ALM:
+      hdlstat: STP
+
+    INH1:
+      hdlstat: ACTIVATE
+      intreq : false
+
+    SPN1:
+      spnstat: TSPN_UNL
+
+    CPU_STATE1:
+      loc_cpu: false
+      chg_ipm: INT_PRI_MID
+
+FMP_interrupt_dis_int_F_d_ci:
+  note: TESRY_006，【NGKI3086】
+  variation:
+    api_support_dis_int: true
+    api_support_ena_int: true
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+      prcid    : PRC_SELF
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    INH1:
+      type   : INTHDR
+      intno  : INTNO_SELF_INH_A
+      intpri : INT_PRI_MID
+      inhno  : INHNO_SELF_A
+      intstat: TA_ENAINT
+      hdlstat: STP
+      prcid  : PRC_SELF
+      intreq : false
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_LOC
+      procid : DUMMY_CYC
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: true
+      prcid  : PRC_SELF
+
+  do_0:
+    id     : DUMMY_CYC
+    syscall: dis_int(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    INH1:
+      intstat: TA_DISINT
+
+  do_1:
+    id  : DUMMY_CYC
+    code: ttsp_int_raise(INTNO_SELF_INH_A)
+
+  post_condition_1:
+    INH1:
+      intreq: true
+
+  do_2:
+    id     : DUMMY_CYC
+    syscall: TTSP_ENA_INT(INTNO_SELF_INH_A)
+    ercd   : E_OK
+
+  post_condition_2:
+    INH1:
+      intstat: TA_ENAINT
+
+  do_3:
+    id     : DUMMY_CYC
+    syscall: TTSP_UNL_SPN(SPN1)
+
+  post_condition_3:
+    DUMMY_CYC:
+      hdlstat: STP
+
+    INH1:
+      hdlstat: ACTIVATE
+      intreq : false
+
+    SPN1:
+      spnstat: TSPN_UNL
+
+    CPU_STATE1:
+      loc_cpu: false
+      chg_ipm: INT_PRI_MID

@@ -1,0 +1,260 @@
+version: "$Id: loc_spn_F-c_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_spin_lock_loc_spn_F_c_HM1:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM2:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : DOM1
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM3:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : KERNEL
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM4:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : DOM2
+      access1: TACP(DOM1)
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM5:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : KERNEL
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_LOC_SPN(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM6:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : NONE
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true
+
+FMP_spin_lock_loc_spn_F_c_HM7:
+  note: 【NGKI2178】【NGKI2181】【NGKI2182】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    SPN1:
+      type   : SPINLOCK
+      spnstat: TSPN_UNL
+      domain : NONE
+
+    CPU_STATE1:
+      type   : CPU_STATE
+      loc_cpu: false
+      prcid  : PRC_SELF
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: loc_spn(SPN1)
+    ercd   : E_OK
+
+  post_condition:
+    SPN1:
+      spnstat: TSPN_LOC
+      procid : TASK1
+
+    CPU_STATE1:
+      loc_cpu: true

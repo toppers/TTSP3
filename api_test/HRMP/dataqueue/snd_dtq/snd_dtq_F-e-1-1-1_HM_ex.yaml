@@ -1,0 +1,407 @@
+version: "$Id: snd_dtq_F-e-1-1-1_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM1:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM2:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM3:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : KERNEL
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM4:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : DOM2
+      access1 : TACP(DOM1)
+      access2 : TACP_KERNEL
+      access3 : TACP_KERNEL
+      access4 : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM5:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: TTSP_SND_DTQ(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM6:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : NONE
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:
+
+FMP_dataqueue_snd_dtq_F_e_1_1_1_HM7:
+  note: 【NGKI1734】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : DTQ1
+      var    :
+        ttg_data:
+          type: intptr_t
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    DTQ1:
+      type    : DATAQUEUE
+      dtqcnt  : 0
+      rtsklist:
+        - TASK2:
+            var: ttg_data
+      domain  : NONE
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: snd_dtq(DTQ1, DATA_A)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: running
+      var    :
+        ttg_data:
+          value: DATA_A
+
+    TASK3:
+      tskstat: ready
+
+    DTQ1:
+      rtsklist:

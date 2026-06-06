@@ -1,0 +1,34 @@
+version: "$Id: T2_003-isr_var_invalid.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_1:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_A
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : EXINF_A
+      var:
+        rtsk*:
+          type   : T_RTSK
+          tskstat: ANY_TASK_STAT
+          tskpri : TSK_PRI_MID
+          tskbpri: TSK_PRI_MID
+          tskwait: ANY_TASK_WAIT
+          wobjid : ANY_OBJECT_ID
+          lefttmo: RELATIVE_TIME_A
+          actcnt : ANY_QUEUING_CNT
+          wupcnt : ANY_QUEUING_CNT
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : INH1
+    syscall: ref_tsk(-1,&rtsk)
+    ercd   : E_ID
+
+  post_condition:

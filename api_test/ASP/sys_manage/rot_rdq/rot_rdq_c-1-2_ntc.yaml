@@ -1,0 +1,80 @@
+version: "$Id: rot_rdq_c-1-2_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_rot_rdq_c_1_2_ai:
+  note: 【NGKI2687】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : DUMMY_ALM
+    syscall: rot_rdq(TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      porder: 2
+
+    TASK2:
+      porder: 1
+
+ASP_sys_manage_rot_rdq_c_1_2_ci:
+  note: 【NGKI2687】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : RELATIVE_TIME_A
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : DUMMY_CYC
+    syscall: rot_rdq(TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      porder: 2
+
+    TASK2:
+      porder: 1

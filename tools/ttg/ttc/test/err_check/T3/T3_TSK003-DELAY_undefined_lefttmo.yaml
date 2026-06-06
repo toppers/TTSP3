@@ -1,0 +1,20 @@
+version: "$Id: T3_TSK003-DELAY_undefined_lefttmo.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_task_manage_ter_tsk_e_2:
+  pre_condition:
+    TASK1:
+      type    : TASK
+      tskstat : running
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      wobjid : DELAY
+
+  do:
+    id     : TASK1
+    syscall: ter_tsk(TASK2)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: dormant

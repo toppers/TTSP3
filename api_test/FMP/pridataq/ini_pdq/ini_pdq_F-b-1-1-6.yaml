@@ -1,0 +1,50 @@
+version: "$Id: ini_pdq_F-b-1-1-6.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_pridataq_ini_pdq_F_b_1_1_6:
+  note: 【NGKI1908】【NGKI1909】
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      prcid    : PRC_OTHER
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: waiting
+      wobjid : PDQ1
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 0
+      stsklist:
+        - TASK2:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+
+  do:
+    id     : TASK1
+    syscall: ini_pdq(PDQ1)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskstat: ready
+
+    PDQ1:
+      stsklist:

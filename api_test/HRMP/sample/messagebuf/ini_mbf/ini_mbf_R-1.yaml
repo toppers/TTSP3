@@ -1,0 +1,21 @@
+version: "$Id: ini_mbf_R-1.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+HRMP_ini_mbf_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+      class : CLS_OTHER_ALL
+
+  do:
+    id     : TASK1
+    syscall: ini_mbf(MBF1)
+    ercd   : E_OK
+
+  post_condition:

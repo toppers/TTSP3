@@ -1,0 +1,20 @@
+version: "$Id: T6_010-api_support_ena_int_TA_NULL_isr_pre_condition.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_interrupt_ena_int_d_1:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intatr : TA_NULL
+      intno  : INTNO_SELF_ISR_A
+      intpri : INT_PRI_MID
+      intstat: TA_ENAINT
+      hdlstat: STP
+      isrpri : ISR_PRI_MID
+      exinf  : EXINF_A
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+
+  post_condition:

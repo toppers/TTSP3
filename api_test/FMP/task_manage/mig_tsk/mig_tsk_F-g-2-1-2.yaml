@@ -1,0 +1,41 @@
+version: "$Id: mig_tsk_F-g-2-1-2.yaml 67 2020-02-04 09:15:32Z fujisft-shigihara $"
+FMP_task_manage_mig_tsk_F_g_2_1_2:
+  note: 【NGKI1155】【NGKI1156】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      prcid  : PRC_SELF
+
+    TASK4:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: ready
+      prcid  : PRC_OTHER
+
+  do:
+    id     : TASK1
+    syscall: mig_tsk(TASK3, PRC_OTHER)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      prcid : PRC_OTHER
+      porder: 3
+
+    TASK4:
+      porder: 2

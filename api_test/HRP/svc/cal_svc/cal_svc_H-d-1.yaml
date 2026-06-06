@@ -1,0 +1,35 @@
+version: "$Id: cal_svc_H-d-1.yaml 59 2019-12-05 03:44:37Z fujisft-shigihara $"
+HRP_svc_cal_svc_H_d_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    SVC1:
+      type   : SVC
+      fncd   : ANY_SVC_FNCD
+      hdlstat: STP
+
+  do_0:
+    id     : TASK1
+    syscall: cal_svc(ANY_SVC_FNCD, ANY_SVC_ARG_1, ANY_SVC_ARG_2, ANY_SVC_ARG_3, ANY_SVC_ARG_4, ANY_SVC_ARG_5)
+    eruint : E_OK
+
+  post_condition_0:
+    SVC1:
+      hdlstat: ACTIVATE
+      caller : TASK1
+      args   :
+        - ANY_SVC_ARG_1
+        - ANY_SVC_ARG_2
+        - ANY_SVC_ARG_3
+        - ANY_SVC_ARG_4
+        - ANY_SVC_ARG_5
+
+  do_1:
+    id  : SVC1
+    code: return(E_OK)
+
+  post_condition_1:
+    SVC1:
+      hdlstat: STP

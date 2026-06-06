@@ -1,0 +1,376 @@
+version: "$Id: sta_alm_F-c-4_HM_ex.yaml 75 2020-03-19 08:28:47Z fujisft-shigihara $"
+FMP_alarm_sta_alm_F_c_4_HM1:
+  note: 【NGKI2541】【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      prcid     : PRC_OTHER
+      domain    : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, E_QOVR)
+
+  post_condition_1:
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      ALM1:
+        almstat: TALM_STP
+
+FMP_alarm_sta_alm_F_c_4_HM2:
+  note: 【NGKI2541】【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM1
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      prcid     : PRC_OTHER
+      domain    : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, E_QOVR)
+
+  post_condition_1:
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      ALM1:
+        almstat: TALM_STP
+
+FMP_alarm_sta_alm_F_c_4_HM3:
+  note: 【NGKI2541】【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      prcid     : PRC_OTHER
+      domain    : KERNEL
+      access1   : TACP(DOM1)
+      access2   : TACP_KERNEL
+      access3   : TACP_KERNEL
+      access4   : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, E_QOVR)
+
+  post_condition_1:
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      ALM1:
+        almstat: TALM_STP
+
+FMP_alarm_sta_alm_F_c_4_HM4:
+  note: 【NGKI2541】【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : DOM2
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : DOM2
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      prcid     : PRC_OTHER
+      domain    : DOM2
+      access1   : TACP(DOM1)
+      access2   : TACP_KERNEL
+      access3   : TACP_KERNEL
+      access4   : TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: sta_alm(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, E_QOVR)
+
+  post_condition_1:
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      ALM1:
+        almstat: TALM_STP
+
+FMP_alarm_sta_alm_F_c_4_HM5:
+  note: 【NGKI2541】【NGKI2542】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_SELF
+      var    :
+        data:
+          type : g_intptr_t
+          value: ANY_VALUE+1
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_LOW
+      tskstat: ready
+      actcnt : 1
+      prcid  : PRC_OTHER
+      domain : KERNEL
+
+    ALM1:
+      type      : ALARM
+      nfytype   : TNFY_ACTTSK
+      nfy_info1 : TASK3
+      enfytype  : TENFY_SETVAR
+      enfy_info1: "&data"
+      almstat   : TALM_STP
+      prcid     : PRC_OTHER
+      domain    : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_STA_ALM(ALM1, RELATIVE_TIME_A)
+    ercd   : E_OK
+
+  post_condition_0:
+    0:
+      ALM1:
+        almstat: TALM_STA
+        lefttim: RELATIVE_TIME_A
+
+    RELATIVE_TIME_A:
+      ALM1:
+        lefttim: 0
+
+  do_1:
+    RELATIVE_TIME_A+1:
+      id  : TASK1
+      code: ttsp_value_sync("TASK1", "data", &data, E_QOVR)
+
+  post_condition_1:
+    RELATIVE_TIME_A+1:
+      TASK1:
+        var:
+          data:
+            value: E_QOVR
+
+      ALM1:
+        almstat: TALM_STP

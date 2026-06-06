@@ -1,0 +1,146 @@
+version: "$Id: adj_tim_d-2_ntc.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_time_manage_adj_tim_d_2_ai:
+  note: 【NGKI3586】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STA
+      hdlstat  : STP
+      lefttim  : 0
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        systim1:
+          type: SYSTIM
+        systim2:
+          type: SYSTIM
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_TIM(&systim1)
+    ercd   : E_OK
+
+  post_condition_0:
+    1:
+      DUMMY_ALM:
+        almstat: TALM_STP
+        hdlstat: ACTIVATE
+
+  do_1:
+    1:
+      id     : DUMMY_ALM
+      syscall: adj_tim(ANY_ADJUST_MINUS_TIME)
+      ercd   : E_OK
+
+  post_condition_1:
+    1:
+
+  do_2:
+    1:
+      id  : DUMMY_ALM
+      code: return
+
+  post_condition_2:
+    1:
+      DUMMY_ALM:
+        hdlstat: STP
+
+  do_3:
+    1:
+      id     : TASK1
+      syscall: TTSP_GET_TIM(&systim2)
+      ercd   : E_OK
+
+  post_condition_3:
+    1:
+      TASK1:
+        var:
+          systim2:
+            value: systim1+1
+
+  do_4:
+    1:
+      id     : TASK1
+      syscall: adj_tim(-1 * ANY_ADJUST_MINUS_TIME)
+      ercd   : E_OK
+
+  post_condition_4:
+    1:
+
+ASP_time_manage_adj_tim_d_2_ci:
+  note: 【NGKI3586】
+
+  pre_condition:
+    DUMMY_CYC:
+      type     : CYCLE
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      cycstat  : TCYC_STA
+      cycphs   : 0
+      cyctim   : RELATIVE_TIME_B*2
+      hdlstat  : STP
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        systim1:
+          type: SYSTIM
+        systim2:
+          type: SYSTIM
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_TIM(&systim1)
+    ercd   : E_OK
+
+  post_condition_0:
+    1:
+      DUMMY_CYC:
+        hdlstat: ACTIVATE
+
+  do_1:
+    1:
+      id     : DUMMY_CYC
+      syscall: adj_tim(ANY_ADJUST_MINUS_TIME)
+      ercd   : E_OK
+
+  post_condition_1:
+    1:
+
+  do_2:
+    1:
+      id  : DUMMY_CYC
+      code: return
+
+  post_condition_2:
+    1:
+      DUMMY_CYC:
+        hdlstat: STP
+
+  do_3:
+    1:
+      id     : TASK1
+      syscall: TTSP_GET_TIM(&systim2)
+      ercd   : E_OK
+
+  post_condition_3:
+    1:
+      TASK1:
+        var:
+          systim2:
+            value: systim1+1
+
+  do_4:
+    1:
+      id     : TASK1
+      syscall: adj_tim(-1 * ANY_ADJUST_MINUS_TIME)
+      ercd   : E_OK
+
+  post_condition_4:
+    1:

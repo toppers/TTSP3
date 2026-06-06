@@ -1,0 +1,36 @@
+version: "$Id: T7_004-exinf-multipleB.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ISR_sample_4:
+  pre_condition:
+    ISR1:
+      type   : ISR
+      intno  : INTNO_SELF_ISR_B
+      intpri : ANY_INT_PRI
+      intstat: TA_ENAINT
+      hdlstat: ACTIVATE
+      isrpri : ISR_PRI_MID
+      exinf  : 0x04
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do_0:
+    id     : ISR1
+    syscall: iact_tsk(TASK1)
+    ercd   : E_OK
+
+  post_condition_0:
+    ISR1:
+      hdlstat: STP
+
+    TASK1:
+      actcnt : 1
+
+  do_1:
+    id   : TASK1
+    code : ttsp_int_raise(INTNO_SELF_ISR_B)
+
+  post_condition_1:
+    ISR1:
+      hdlstat: ACTIVATE
+      bootcnt: 1

@@ -1,0 +1,17 @@
+version: "$Id: prb_int_a.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_interrupt_prb_int_a:
+  note: 【NGKI3945】
+  variation:
+    api_support_prb_int: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : TASK1
+    syscall: prb_int(INTNO_INVALID_SELF)
+    erbool : E_PAR
+
+  post_condition:

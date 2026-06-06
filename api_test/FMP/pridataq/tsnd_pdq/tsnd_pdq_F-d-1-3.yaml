@@ -1,0 +1,65 @@
+version: "$Id: tsnd_pdq_F-d-1-3.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+FMP_pridataq_tsnd_pdq_F_d_1_3:
+  note: 【NGKI1896】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskstat: running
+      var    :
+        data   :
+          type: intptr_t
+        datapri:
+          type: PRI
+      prcid  : PRC_OTHER
+
+    PDQ1:
+      type    : P_DATAQUEUE
+      pdqcnt  : 1
+      datalist:
+        - data   : DATA_B
+          datapri: DATA_PRI_MID
+
+  do_0:
+    id     : TASK1
+    syscall: tsnd_pdq(PDQ1, DATA_A, DATA_PRI_HIGH, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: waiting
+      wobjid : PDQ1
+      lefttmo: ANY_ELAPSED_TIME
+
+    PDQ1:
+      stsklist:
+        - TASK1:
+            data   : DATA_A
+            datapri: DATA_PRI_HIGH
+
+  do_1:
+    id     : TASK2
+    syscall: TTSP_TRCV_PDQ(PDQ1, &data, &datapri, ANY_ELAPSED_TIME)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+    TASK2:
+      var:
+        data   :
+          value: DATA_B
+        datapri:
+          value: DATA_PRI_MID
+
+    PDQ1:
+      stsklist:
+      datalist:
+        - data   : DATA_A
+          datapri: DATA_PRI_HIGH

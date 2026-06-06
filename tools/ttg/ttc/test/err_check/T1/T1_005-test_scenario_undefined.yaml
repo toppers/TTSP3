@@ -1,0 +1,30 @@
+version: "$Id: T1_005-test_scenario_undefined.yaml 6 2018-12-10 02:19:09Z fujisft-shigihara $"
+ASP_task_manage_act_tsk_d_1_1:
+  undefined:
+    undefined condition found.
+
+  variation:
+    gain_time: true
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      itskpri: TSK_PRI_HIGH
+      tskstat: dormant
+
+  do:
+    id     : TASK1
+    syscall: act_tsk(TASK2)
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
