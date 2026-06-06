@@ -46,6 +46,7 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `tools/ttg/common/bin/Config.rb` | 改変 | ruby 3.x対応：ruby 3.2で削除された `Object#=~` 対策にString判定ガード追加（3箇所） | 済（2026-06-06） |
 | `scripts/ci_run.sh` | NEW（scaffold置換） | 非対話CIランナー実装：ttb.shを標準入力駆動でビルド→QEMU実行→合否判定（smoke/full） | 済（2026-06-06） |
 | `.github/workflows/ci.yml` | 改変（scaffold具体化） | ASP3をZIP配布物で版固定取得、QEMU 11+a9gtimerパッチをソースビルド＆キャッシュ、ci_run.sh実行 | 済（2026-06-06） |
+| `scripts/coverage_run.sh` `scripts/ttsp_coverage.py` `docs/COVERAGE.md` | NEW | カーネル非依存部の行カバレッジ計測（QEMU drcovプラグイン方式・ターゲット無計装）。初回計測 97.5% | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
