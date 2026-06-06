@@ -47,6 +47,10 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `scripts/ci_run.sh` | NEW（scaffold置換） | 非対話CIランナー実装：ttb.shを標準入力駆動でビルド→QEMU実行→合否判定（smoke/full） | 済（2026-06-06） |
 | `.github/workflows/ci.yml` | 改変（scaffold具体化） | ASP3をZIP配布物で版固定取得、QEMU 11+a9gtimerパッチをソースビルド＆キャッシュ、ci_run.sh実行 | 済（2026-06-06） |
 | `scripts/coverage_run.sh` `scripts/ttsp_coverage.py` `docs/COVERAGE.md` | NEW | カーネル非依存部の行カバレッジ計測（QEMU drcovプラグイン方式・ターゲット無計装）。初回計測 97.5% | 済（2026-06-06） |
+| `library/FMP/test/ttsp_test_lib.c` | 改変 | FMP3 3.4.0対応：`make_non_runnable` のシグネチャ変更（3引数→2引数）に追従 | 済（2026-06-06） |
+| `library/FMP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | FMP3 3.4.0対応：`objs/arm.o` 削除（arm.c廃止）／`-S serial_cfg.o` 追加（serial設定データの分離先） | 済（2026-06-06） |
+| `library/FMP/target/zybo_z7_gcc/ttsp_target_test.h` | 改変 | FMP3 3.4.0対応：`TTSP_IPI_INTNO` を 0x1e（PPI）→ 0x04（SGI 4）に変更。`gicd_raise_sgi` はSGIのみ発行可能でPPI指定はSGI 14誤発火になるため（カーネルはSGI 0〜3使用） | 済（2026-06-06） |
+| `tools/ttg/common/bin/process_unit/Execption.rb` | 改変 | FMP3 3.4.0対応：FMPでは `DEF_EXC` を例外発生PE専用クラス（`CLS_PRC<n>`）へ生成（コンフィギュレータが割付け可能プロセッサ＝例外発生PEを要求。マイグレーション可能クラス配置はE_RSATR）。固定クラス配置は旧FMP3でも正当＝後方互換 | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
@@ -63,6 +67,14 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 
 > パッチ適用手順：`cd ~/qemu/qemu-11.0.0 && patch -p1 < <ttsp3>/docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch && cd build && ninja qemu-system-arm`
 > CIでQEMUを取得する場合も同パッチの適用が必要。
+
+---
+
+## D. FMP3対応の未解決課題
+
+| 課題 | 内容 | 状態 |
+|---|---|---|
+| `sta_alm_d` 系テストのレース失敗 | `ASP_alarm_sta_alm_d_*`（QEMU -smp 2）で、pre-setupの `msta_alm(1000)→stp_alm` 直後に `sta_alm(3)` を発行すると、`ref_alm` が `almstat=TALM_STP`/`lefttim=0` を返し失敗（20グループ中3グループの先頭で再現）。**`stp_alm` 直後に `sil_dly_nse(TTSP_SIL_DLY_NSE_TIME)` 1回を挟むだけで5/5回安定パス**（`sta_alm` 側は無改変）。pre-setupが残す処理中HRTイベント/割込みと直後の `sta_alm` の競合が原因とみられ、**FMP3 3.4.0カーネルの `stp_alm`/`sta_alm` 間のレースの可能性**（実機でも窓は存在しうる）。再現: `api_test/ASP/alarm/sta_alm/sta_alm_d-2.yaml` 単体をFMP/QEMU(-smp 2)で実行 | **未解決**（カーネルメンテナ判断待ち。2026-06-06） |
 
 ---
 

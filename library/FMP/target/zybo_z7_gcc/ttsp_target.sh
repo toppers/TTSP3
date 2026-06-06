@@ -39,6 +39,13 @@
 #
 #  $Id: ttsp_target.sh 83 2020-07-14 05:37:57Z nces-mtakada $
 #
+#  [改変] 2026-06-06: FMP3 3.4.0対応．
+#  - KERNEL_COBJS_TARGET から objs/arm.o を削除
+#    （arm.c は arm.h に統合済みのため．ASP3 3.7.0と同様）．
+#  - CONFIG_OPT に -S serial_cfg.o を追加（FMP3 3.4.0で serial.c から
+#    設定データが syssvc/serial_cfg.c に分離され，spinib_table 等が
+#    そちらで定義されるため）．
+#
 
 #
 # 実機(ZYBOボード) or QEMU
@@ -91,7 +98,7 @@ TTG_OPT=
 # (-T, -A, -U, -a, -LはTTSP3で使用するため使用不可)
 # (コーテーションを含むオプションは指定不可(例:"-d \"dir1 dir2\""))
 #
-CONFIG_OPT="-w -S syslog.o -S banner.o -S serial.o -S chip_serial.o -S logtask.o -S xuartps.o -o -Wno-unused-but-set-variable"
+CONFIG_OPT="-w -S syslog.o -S banner.o -S serial.o -S serial_cfg.o -S chip_serial.o -S logtask.o -S xuartps.o -o -Wno-unused-but-set-variable"
 if [ "$USE_QEMU" == "true" ]
 then
 	CONFIG_OPT="$CONFIG_OPT -o -DTOPPERS_USE_QEMU"
@@ -100,7 +107,7 @@ fi
 #
 # ターゲット依存部でKERNEL_COBJSへ追加するオブジェクトファイル
 #
-KERNEL_COBJS_TARGET="objs/arm.o objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
+KERNEL_COBJS_TARGET="objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
 APPL_COBJS_TARGET="objs/ttsp_target_test.o"
 
 #

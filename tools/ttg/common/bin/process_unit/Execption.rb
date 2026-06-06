@@ -40,6 +40,13 @@
 #
 #  $Id: Execption.rb 28 2019-02-12 01:50:02Z fujisft-shigihara $
 #
+#  [改変] 2026-06-06: FMP3 3.4.0対応．FMPプロファイルではDEF_EXCを
+#  例外発生プロセッサ専用のクラス（CLS_PRC<n>）に配置するように変更．
+#  FMP3 3.4.0のコンフィギュレータは「DEF_EXCを記述したクラスの割付け
+#  可能プロセッサ＝例外発生プロセッサ」を要求するため（E_RSATR）．
+#  マイグレーション可能クラス（CLS_ALL_PRC<n>等）への配置は不可．
+#  固定クラスへの配置は旧FMP3でも正当なため後方互換．
+#
 require "common/bin/process_unit/ProcessUnit.rb"
 require "ttc/bin/process_unit/Execption.rb"
 
@@ -70,7 +77,13 @@ module CommonModule
     def gc_config(cElement)
       check_class(IMCodeElement, cElement) # エレメント
 
-      cElement.set_config("#{API_DEF_EXC}(#{@hState[TSR_PRM_EXCNO]}, {#{KER_TA_NULL}, #{@sObjectID.downcase}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+      # [改変] FMPでは例外発生プロセッサ専用クラス（CLS_PRC<n>）に配置する
+      sClass = @hState[TSR_PRM_CLASS]
+      if (@cConf.is_fmp?())
+        nPrcid = @hState[TSR_PRM_PRCID].nil?() ? @cConf.get_main_prcid() : @hState[TSR_PRM_PRCID]
+        sClass = "CLS_PRC#{nPrcid}"
+      end
+      cElement.set_config("#{API_DEF_EXC}(#{@hState[TSR_PRM_EXCNO]}, {#{KER_TA_NULL}, #{@sObjectID.downcase}});", sClass, @hState[TSR_PRM_DOMAIN])
     end
   end
 end

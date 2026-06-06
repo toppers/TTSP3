@@ -1,5 +1,6 @@
 # テスト作業フォルダ（OBJECT_DIR。ビルド産物・TTG/tecsgen生成物はすべてこの下）
 /obj/
+/obj_*/
 
 # ビルド産物
 *.o

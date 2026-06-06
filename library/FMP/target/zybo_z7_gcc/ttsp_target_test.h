@@ -146,9 +146,15 @@
 
 /*
  *  ティック更新用割込み
+ *
+ *  [改変] 2026-06-06: FMP3 3.4.0対応．0x001e（PPI: ウォッチドッグ）から
+ *  0x0004（SGI 4）に変更．FMP3 3.4.0の gicd_raise_sgi()/raise_int() は
+ *  プロセッサ間割込みとしてSGI（INTID 0〜15）のみ発行可能で，PPIを指定
+ *  すると GICD_SGIR のINTIDフィールド（4bit）で折り返されSGI 14が誤発火
+ *  していた．カーネルは SGI 0〜3（非SafeG時）を使用するため SGI 4 を選定．
  */
 #define TTSP_IPI_INTPRI -16
-#define TTSP_IPI_INTNO 0x001e
+#define TTSP_IPI_INTNO 0x0004
 #define TTSP_IPI_INTNO_PRC1 (0x10000|TTSP_IPI_INTNO)
 #define TTSP_IPI_INTNO_PRC2 (0x20000|TTSP_IPI_INTNO)
 
