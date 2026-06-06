@@ -52,6 +52,8 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `library/FMP/target/zybo_z7_gcc/ttsp_target_test.h` | 改変 | FMP3 3.4.0対応：`TTSP_IPI_INTNO` を 0x1e（PPI）→ 0x04（SGI 4）に変更。`gicd_raise_sgi` はSGIのみ発行可能でPPI指定はSGI 14誤発火になるため（カーネルはSGI 0〜3使用） | 済（2026-06-06） |
 | `tools/ttg/common/bin/process_unit/Execption.rb` | 改変 | FMP3 3.4.0対応：FMPでは `DEF_EXC` を例外発生PE専用クラス（`CLS_PRC<n>`）へ生成（コンフィギュレータが割付け可能プロセッサ＝例外発生PEを要求。マイグレーション可能クラス配置はE_RSATR）。固定クラス配置は旧FMP3でも正当＝後方互換 | 済（2026-06-06） |
 | `api_test/FMP/staticAPI/DEF_ICS/DEF_ICS_F-{d-1-1,d-1-2,d-2,e,f-1-1,f-1-2,f-2}/out.cfg` | 改変 | FMP3 3.4.0対応：手書きcfg内の `DEF_EXC` を固定クラス `CLS_PRC1/CLS_PRC2` ブロックへ移動（上記TTG対応と同根） | 済（2026-06-06） |
+| `library/FMP/target/zybo_z7_gcc/ttsp_target.sh`（MAKE_OPT） | 改変 | `MAKE_OPT` を環境変数 `TTSP_MAKE_OPT` で上書き可能に（`ENABLE_GCOV=true` 投入用） | 済（2026-06-06） |
+| `scripts/coverage_gcov_fmp.sh` `scripts/ttsp_gcov_report.py` | NEW | FMP GCOVカバレッジ計測（行＋分岐C1）。fmp3側のGCOV対応（メンテナ管理・`docs/COVERAGE.md` 参照）が前提 | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |

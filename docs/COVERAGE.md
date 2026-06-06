@@ -78,7 +78,49 @@ TOTAL  1510/1549  97.5%
 - interrupt.c: dis_int/ena_int 等の特定終端パス（等間隔4行）
 - 一部はインライン展開により行情報が呼び出し元へ帰属したもの
 
+## FMP3 の GCOV 方式（行＋分岐カバレッジ、2026-06-06 整備）
+
+FMP3 はメンテナ管理下のため、**カーネル側にGCOV対応を実装**した
+（zybo_z7_gcc ターゲット）。drcov方式と異なり**分岐カバレッジ(C1)**が取れる。
+
+```
+ENABLE_GCOV=true でビルド（--coverage -fprofile-update=atomic -fprofile-info-section）
+   │  テスト終了時（マスタPEの software_term_hook）
+   ▼
+__gcov_info_to_gcda() が .gcov_info セクションを走査
+   │  librdimon（セミホスティング）の fopen/fwrite
+   ▼
+ホスト側の各テストディレクトリ objs/*.gcda
+   │  scripts/ttsp_gcov_report.py（arm-none-eabi-gcov --json-format で解析・統合）
+   ▼
+fmp3/kernel/ の行＋分岐カバレッジ
+```
+
+使い方：
+
+```bash
+./scripts/coverage_gcov_fmp.sh           # check_libraryのみ（数分）
+./scripts/coverage_gcov_fmp.sh full      # APIオートコード含む（1時間超）
+```
+
+### 前提となる fmp3 側の変更（FMP3メンテナのリポジトリで管理）
+
+現行 arm-none-eabi の libgcov はフリースタンディング構成で
+`__gcov_exit`（旧ctor/dtor方式）を持たないため、方式を刷新した：
+
+| fmp3側ファイル | 変更 |
+|---|---|
+| `target/zybo_z7_gcc/Makefile.target` | GCOVブランチ刷新：`GCC_TARGET=arm-eabi` 廃止、`-fprofile-update=atomic`（SMP対策）・`-fprofile-info-section` 追加、`-lrdimon` 明示、gcov用ldscript切替廃止 |
+| `target/zybo_z7_gcc/zybo_z7.ld` | `.gcov_info` セクション収集（`__gcov_info_start/end`）追加 |
+| `target/zybo_z7_gcc/target_kernel_impl.c` | ダンプ実装を `__gcov_info_to_gcda` 方式に書換え。weak版 `software_term_hook` をGCOV時無効化。**GCOV時はマスタPEのみQEMU終了**（他PEが先に終了させるとダンプが失われるレース対策） |
+| `target/zybo_z7_gcc/zybo_z7_gcov.ld` | 廃止予定（GCOVセクションは zybo_z7.ld に統合済み） |
+
+検証（2026-06-06）：check_library 3モジュール計装ビルドで全テスト緑、
+gcda 33/31/32件出力、統合レポート出力まで確認
+（check_libraryのみで kernel/ 行25.6%・分岐15.4%）。
+
 ## 更新手順
 
-カーネル版数更新・テスト追加時は `./scripts/coverage_run.sh` を再実行し、
+カーネル版数更新・テスト追加時は `./scripts/coverage_run.sh`（ASP/drcov）
+または `./scripts/coverage_gcov_fmp.sh`（FMP/gcov）を再実行し、
 本ファイルのスナップショットを更新する。
