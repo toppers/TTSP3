@@ -116,8 +116,27 @@ fmp3/kernel/ の行＋分岐カバレッジ
 | `target/zybo_z7_gcc/zybo_z7_gcov.ld` | 廃止予定（GCOVセクションは zybo_z7.ld に統合済み） |
 
 検証（2026-06-06）：check_library 3モジュール計装ビルドで全テスト緑、
-gcda 33/31/32件出力、統合レポート出力まで確認
-（check_libraryのみで kernel/ 行25.6%・分岐15.4%）。
+gcda 33/31/32件出力、統合レポート出力まで確認。
+
+### 並列実行（scripts/ttsp_parallel_api.sh）
+
+APIオートコードの各 `auto_code_N` はマニフェスト断片・生成物とも独立のため、
+TTG＋make（`-j`）とQEMU実行をグループ並列化できる（既定 P=10×make -j4）。
+ttb.sh逐次実行比で**ビルド約160分→約2分**（32コア環境・GCOV計装20分割）。
+`coverage_gcov_fmp.sh full` はこのドライバを使用する。
+
+### FMP3 kernel/ カバレッジスナップショット（2026-06-06）
+
+check_library 3 + APIオートコード20グループ統合
+（auto_code_15のみ sta_alm_d レース（DIVERGENCE_MAP.md D表）で途中終了＝部分データ）：
+
+```
+行カバレッジ:   3489/3620 = 96.4%
+分岐カバレッジ: 1329/1631 = 81.5% (C1)
+```
+
+100%/C1主要部の未カバーは exception.c の分岐(50%)・wait.c の分岐(58.3%)・
+interrupt.c(行92.7%/分岐67.0%) などに残る。`--uncovered` で行単位の特定が可能。
 
 ## 更新手順
 

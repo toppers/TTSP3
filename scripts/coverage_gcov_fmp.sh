@@ -10,7 +10,7 @@
 #  使い方:
 #    ./scripts/coverage_gcov_fmp.sh [smoke|full]
 #      smoke: check_libraryのみ（既定．数分）
-#      full : APIオートコード20分割も含む（1時間超）
+#      full : APIオートコード20分割も含む（並列ドライバ使用で5分程度）
 #
 #  環境変数:
 #    OBJ_DIR      : ワークディレクトリ（既定 obj_fmp_gcov）
@@ -50,19 +50,13 @@ for d in exception interrupt timer; do
 done
 
 if [ "$MODE" = "full" ]; then
-	echo "===== build & run: API auto-code (${DIV_NUM}-way, GCOV) ====="
-	printf '1\n1\n3\n%s\n4\nr\nr\nr\nq\n' "$DIV_NUM" | TTSP_MAKE_OPT="ENABLE_GCOV=true" \
-		bash ttb.sh ../fmp3/ FMP "$OBJ_DIR" > "/tmp/gcov_build_api_$$.log" 2>&1
+	echo "===== build & run: API auto-code (${DIV_NUM}-way, GCOV, parallel) ====="
+	# グループ並列ドライバ（TTG+make -j とQEMU実行を並列化。詳細は同スクリプト参照）
+	TTSP_MAKE_OPT="ENABLE_GCOV=true" \
+		bash scripts/ttsp_parallel_api.sh ../fmp3/ FMP "$OBJ_DIR" "$DIV_NUM"
 	for i in $(seq 1 "$DIV_NUM"); do
 		dir=$OBJ_DIR/api_test/auto_code_$i
-		if [ ! -f "$dir/fmp" ]; then
-			echo "BUILD FAIL: auto_code_$i (skip)"
-			continue
-		fi
-		run_qemu "$dir"
-		last=$(tr -d '\r' < "$dir/execute.log" | tail -1)
-		echo "run auto_code_$i: $last"
-		dirs="$dirs $dir"
+		[ -f "$dir/fmp" ] && dirs="$dirs $dir"
 	done
 fi
 
