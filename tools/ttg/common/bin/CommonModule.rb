@@ -40,7 +40,18 @@
 #
 #  $Id: CommonModule.rb 72 2020-03-19 08:08:03Z fujisft-shigihara $
 #
-require "curses"
+#  [改変] 2026-06-06: ruby 3.x 対応．
+#  - cursesが標準添付から外れたため，curses無し環境（CI等のヘッドレス
+#    実行を含む）では端末幅80にフォールバックするように変更．
+#    cursesは進捗バー表示にのみ使用．
+#  - ruby 3.0で削除されたFixnumをIntegerに置換（2箇所）．
+#
+begin
+  require "curses"
+  TTG_HAS_CURSES = true
+rescue LoadError
+  TTG_HAS_CURSES = false
+end
 
 #=====================================================================
 # CommonModule
@@ -1689,7 +1700,7 @@ module CommonModule
     TSR_PRM_SYSCALL => [String],
     TSR_PRM_GCOV    => [TrueClass, FalseClass],
     TSR_PRM_ERCD    => [String],
-    TSR_PRM_ERUINT  => [String, Fixnum],
+    TSR_PRM_ERUINT  => [String, Integer],
     TSR_PRM_ERBOOL  => [TrueClass, FalseClass, String],
     TSR_PRM_BOOL    => [TrueClass, FalseClass],
     TSR_PRM_CODE    => [String]
@@ -2608,7 +2619,7 @@ module CommonModule
   # trueとfalseを一つのクラスで使えるようにするための真偽値マクロ
   Bool = [TrueClass, FalseClass]
   # dup，cloneできないクラス
-  CANNOT_CLONE_CLASS = [Fixnum, NilClass, TrueClass, FalseClass, Symbol, Float]
+  CANNOT_CLONE_CLASS = [Integer, NilClass, TrueClass, FalseClass, Symbol, Float]
 
   #=================================================================
   # 概　要: オブジェクトを複製可能な場合は複製
@@ -2689,14 +2700,29 @@ module CommonModule
   end
 
   #===================================================================
+  # 概　要: コンソールの幅取得（curses無し環境では80にフォールバック）
+  #===================================================================
+  def get_console_width()
+    if (TTG_HAS_CURSES && $stderr.tty?())
+      begin
+        Curses.init_screen
+        nCols = Curses.cols
+        Curses.close_screen
+        return nCols  # [Integer]コンソールの幅
+      rescue
+        # 端末が取得できない場合はフォールバックへ
+      end
+    end
+    return 80  # [Integer]コンソールの幅(フォールバック)
+  end
+
+  #===================================================================
   # 概　要: 処理の進捗を表示
   #===================================================================
   def print_progress(sPhase, sTestID, nCnt, nTotal)
     # 呼び出す処理が局所的のためcheck_classはしない
-    Curses.init_screen
-
     # コンソールの幅取得
-    nCols = Curses.cols
+    nCols = get_console_width()
 
     # 進捗率計算
     fProgress = nCnt.to_f / nTotal.to_f
@@ -2721,8 +2747,6 @@ module CommonModule
     sProgress += "\s"  * (TTG_MAX_TEST_ID_SIZE - sTestID.size())
     sProgress += "]"
     $stderr.print("\r#{sProgress}\r")
-
-    Curses.close_screen
   end
 
   #===================================================================
@@ -2730,10 +2754,8 @@ module CommonModule
   #===================================================================
   def finish_progress(sPhase, nTotal)
     # 呼び出す処理が局所的のためcheck_classはしない
-    Curses.init_screen
-
     # コンソールの幅取得
-    nCols = Curses.cols
+    nCols = get_console_width()
 
     # プログレスバーサイズ計算(幅-フェーズ-進捗率-最大テストID-括弧等)
     nProgressSize = nCols - TTG_MAX_TEST_ID_SIZE - 16
@@ -2754,8 +2776,6 @@ module CommonModule
     sProgress += "]"
     $stderr.print(sProgress)
 
-    Curses.close_screen
-
     $stderr.print(TTG_NL)
   end
 
@@ -2763,15 +2783,11 @@ module CommonModule
   # 概  要: コンソールの横幅チェック
   #===================================================================
   def check_console_width()
-    Curses.init_screen
-
     # コンソールの幅取得
-    nCols = Curses.cols
+    nCols = get_console_width()
 
     # プログレスバーサイズ計算(幅-フェーズ-進捗率-最大テストID-括弧等)
     nSize = nCols - TTG_MAX_TEST_ID_SIZE - 17
-
-    Curses.close_screen
 
     if (nSize > 0)
       return true  # [Bool]実行可能

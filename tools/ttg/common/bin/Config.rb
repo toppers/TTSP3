@@ -40,6 +40,10 @@
 #
 #  $Id: Config.rb 60 2019-12-20 01:14:37Z fujisft-shigihara $
 #
+#  [改変] 2026-06-06: ruby 3.x 対応．ruby 3.2でObject#=~が削除され
+#  Integer等への `val =~ 正規表現` がNoMethodErrorになるため，
+#  String判定ガードを追加（3箇所）．
+#
 require "common/bin/CommonModule.rb"
 require "ttc/bin/class/TTCCommon.rb"
 
@@ -87,7 +91,7 @@ module CommonModule
       check_class(Object, val, true)  # 値
 
       # 16進数処理
-      if (val =~ TTC_REX_HEX)
+      if (val.is_a?(String) && val =~ TTC_REX_HEX)
         val = val.hex()
       end
 
@@ -119,7 +123,7 @@ module CommonModule
       # 0より大きい整数
       when CFG_MAIN_PRCID, CFG_PRC_NUM
         # オプション指定時は文字列になるため変換
-        if (val =~ TTC_REX_NUM)
+        if (val.is_a?(String) && val =~ TTC_REX_NUM)
           val = val.to_i()
         end
         ### T0_002: configureの設定値が指定された型と異なる
@@ -135,7 +139,7 @@ module CommonModule
       # 0以上の整数
       when CFG_SPINLOCK_NUM, CFG_WAIT_SPIN_LOOP
         # オプション指定時は文字列になるため変換
-        if (val =~ TTC_REX_NUM)
+        if (val.is_a?(String) && val =~ TTC_REX_NUM)
           val = val.to_i()
         end
         ### T0_002: configureの設定値が指定された型と異なる

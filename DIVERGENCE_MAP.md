@@ -12,14 +12,18 @@ ASP3変更履歴から、TTSP3のテスト/TTG/TESRYに影響しうる項目。�
 
 | 仕様変更 | 由来 | 影響範囲 | 状態 |
 |---|---|---|---|
-| 高分解能タイマ64bit化（HRTCNT型変更） | 3.4→3.5 | 時刻/タイマテスト・ターゲット依存タイマ | 未確認 |
-| 静的API末尾 `;` 必須化 | 3.4→3.5 | 生成cfg・TESRY | 未確認 |
-| モノトニックタイマ拡張パッケージ追加 | 3.4→3.5 | time_manage テスト（任意） | 未確認 |
-| サブ優先度の仕様変更 | 3.6→3.7 | task優先度系API・TTG（サブ優先度） | 未確認 |
-| 優先度継承拡張パッケージ追加 | 3.6→3.7 | mutex 系（任意） | 未確認 |
-| `CRE_XXX` のID衝突をエラー化 | 3.6→3.7 | 静的APIテスト（CRE_*のTESRY期待値） | 未確認 |
-| objdumpダンプ形式対応 | 3.6→3.7 | cfg/ビルド（影響小） | 未確認 |
+| 高分解能タイマ64bit化（HRTCNT型変更） | 3.4→3.5 | 時刻/タイマテスト・ターゲット依存タイマ | **影響なし確認**（2026-06-06。timerチェック＋時刻系APIテスト緑。要QEMUパッチ＝C表） |
+| 静的API末尾 `;` 必須化 | 3.4→3.5 | 生成cfg・TESRY | **影響なし確認**（2026-06-06。TTG 3.2.0の生成cfgで全1788ファイルのビルド成功） |
+| モノトニックタイマ拡張パッケージ追加 | 3.4→3.5 | time_manage テスト（任意） | 対象外（R3.1.0スイートにテストなし・任意パッケージ） |
+| サブ優先度の仕様変更 | 3.6→3.7 | task優先度系API・TTG（サブ優先度） | **影響なし確認**（2026-06-06。既存スイートの範囲。サブ優先度固有の新規テストは将来課題） |
+| 優先度継承拡張パッケージ追加 | 3.6→3.7 | mutex 系（任意） | 対象外（任意パッケージ・既存mutex系テストは緑） |
+| `CRE_XXX` のID衝突をエラー化 | 3.6→3.7 | 静的APIテスト（CRE_*のTESRY期待値） | **影響なし確認**（2026-06-06。コンフィグエラーテスト113/113 OK。TTG生成cfgはID一意で衝突せず） |
+| objdumpダンプ形式対応 | 3.6→3.7 | cfg/ビルド（影響小） | **影響なし確認**（2026-06-06。全ビルド成功） |
 | macOS/Linux POSIXシミュ追加 | 3.6→3.7 | 後段 host ターゲットで活用 | 後段 |
+
+> **2026-06-06 全面実測**：ASP3 3.7.2 + zybo_z7_gcc + QEMU（要a9gtimerパッチ＝C表）で
+> オートコード2202/2202・スクラッチ5/5・コンフィグエラー113/113 すべて緑。
+> ただしツール側で ruby 3.x 対応が必要だった（B表のTTG改変）。
 | ARMコア依存部見直し：`arm.c` 廃止（`arm.h`に統合） | 3.6→3.7 | `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` の `KERNEL_COBJS_TARGET`（`objs/arm.o` 参照でリンク前に make が停止） | **対応済**（arm.o削除・改変明記。check_library 3モジュールのビルド成功を確認） |
 
 > 3.5→3.6 の項目は `asp3/doc/version.txt` を確認して追記すること。
@@ -38,6 +42,8 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | TTSP3 R3.1.0（SVN由来） | 取り込み | git初期コミット（provenance。`docs/MIGRATION.md`） | 移行時 |
 | （scaffold追加） | NEW | AGENTS/START/CI 等のgit管理基盤 | 済 |
 | `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | ASP3 3.7.0で廃止された `arm.c` 由来の `objs/arm.o` を `KERNEL_COBJS_TARGET` から削除 | 済（2026-06-06） |
+| `tools/ttg/common/bin/CommonModule.rb` | 改変 | ruby 3.x対応：curses不在時に端末幅80へフォールバック／`Fixnum`→`Integer`（2箇所） | 済（2026-06-06） |
+| `tools/ttg/common/bin/Config.rb` | 改変 | ruby 3.x対応：ruby 3.2で削除された `Object#=~` 対策にString判定ガード追加（3箇所） | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
