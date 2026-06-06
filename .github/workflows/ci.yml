@@ -1,9 +1,13 @@
 name: ttsp3-ci
 
-# TTSP3 を標準ASP3（兄弟SVN）に対して QEMU(xilinx-zynq-a9) でビルド・実行する。
-# 配置：  <runner_workspace>/ttsp3   ← 本リポジトリ（actions/checkout先）
-#         <runner_workspace>/asp3    ← SVNで取得（兄弟ディレクトリ）
+# TTSP3 を標準ASP3（兄弟ディレクトリ）に対して QEMU(xilinx-zynq-a9) でビルド・実行する。
+# 配置：  <workspace>/ttsp3   ← 本リポジトリ（actions/checkout先）
+#         <workspace>/asp3    ← ZIP配布物から展開（兄弟ディレクトリ）
 # configure.sh は OS_PATH="../asp3/" を参照するため、この並びが必須。
+#
+# QEMU は a9gtimer パッチ（docs/patches/）適用済みのものをソースビルドして使う。
+# 素のQEMUでは check_library/timer が原理的に通らない（DIVERGENCE_MAP.md C表）。
+# ビルド済みバイナリは actions/cache でキャッシュし、2回目以降は数秒で復元される。
 
 on:
   push:
@@ -11,17 +15,23 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      ci_mode:
+        description: "smoke: ターゲット依存チェックのみ / full: 全テスト"
+        type: choice
+        options: [ full, smoke ]
+        default: full
 
 env:
   # UPSTREAM_KERNEL.md と一致させること（再現性のため版を固定）
-  ASP3_SVN_URL: "PLACEHOLDER_ASP3_SVN_URL"
-  ASP3_SVN_REV: "PLACEHOLDER_REV"
-  # 他プロファイルを試す場合（任意。PROFILE_NAMEに応じて兄弟へcheckout）
-  # FMP3_SVN_URL/REV, HRP3_SVN_URL/REV, HRMP3_SVN_URL/REV
+  ASP3_ZIP_URL: "https://www.toppers.jp/download.cgi/asp3_zybo_z7_gcc-20260520.zip"
+  QEMU_VERSION: "11.0.0"
+  QEMU_PREFIX: "/opt/qemu-ttsp3"
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       # 本リポジトリを ws/ttsp3 に取得（兄弟配置にするためサブパスへ）
       - name: Checkout TTSP3
@@ -29,62 +39,71 @@ jobs:
         with:
           path: ttsp3
 
-      - name: Install toolchain / QEMU / SVN / Ruby
+      - name: Install toolchain / Ruby
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             gcc-arm-none-eabi binutils-arm-none-eabi \
-            qemu-system-arm subversion ruby make
-          arm-none-eabi-gcc --version
-          qemu-system-arm --version
+            ruby make unzip
+          arm-none-eabi-gcc --version | head -1
           ruby --version
 
-      # 標準ASP3を ttsp3 の兄弟（../asp3）として固定リビジョンで取得
-      - name: Checkout standard ASP3 (SVN, sibling)
+      # ---- QEMU（a9gtimerパッチ適用版）----
+      - name: Cache patched QEMU
+        id: cache-qemu
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.QEMU_PREFIX }}
+          key: qemu-${{ env.QEMU_VERSION }}-a9gtimer-${{ hashFiles('ttsp3/docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch') }}
+
+      - name: Build patched QEMU (cache miss only)
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
         run: |
-          svn checkout "${ASP3_SVN_URL}@${ASP3_SVN_REV}" asp3
+          sudo apt-get install -y ninja-build libglib2.0-dev libpixman-1-dev \
+            python3-venv flex bison
+          curl -sLO "https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz"
+          tar xf "qemu-${QEMU_VERSION}.tar.xz"
+          cd "qemu-${QEMU_VERSION}"
+          patch -p1 < ../ttsp3/docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch
+          ./configure --target-list=arm-softmmu --prefix="${QEMU_PREFIX}" \
+            --disable-docs --disable-gtk --disable-sdl --disable-vnc --disable-werror
+          make -j"$(nproc)"
+          sudo make install
+
+      - name: Add QEMU to PATH and verify
+        run: |
+          echo "${QEMU_PREFIX}/bin" >> "$GITHUB_PATH"
+          "${QEMU_PREFIX}/bin/qemu-system-arm" --version | head -1
+
+      # ---- 被テストカーネル（兄弟 ../asp3）----
+      - name: Fetch standard ASP3 (ZIP, pinned; sibling dir)
+        run: |
+          curl -sL -o asp3.zip "${ASP3_ZIP_URL}"
+          mkdir asp3_extract
+          unzip -q asp3.zip -d asp3_extract
+          # 展開トップ（configure.rb を含むディレクトリ）を ./asp3 に配置
+          top=$(dirname "$(find asp3_extract -maxdepth 2 -name configure.rb | head -1)")
+          test -n "$top" || { echo "configure.rb not found in archive"; exit 1; }
+          mv "$top" asp3
           ls -d ttsp3 asp3   # 兄弟配置の確認
+          grep -m1 'Release' asp3/doc/version.txt
 
-      - name: Configure (ASP3 / zybo_z7_gcc / QEMU)
+      # ---- 実行 ----
+      - name: Run TTSP3 (target-dependent check -> API) on QEMU
         working-directory: ttsp3
+        env:
+          CI_MODE: ${{ github.event.inputs.ci_mode || 'full' }}
         run: |
-          # configure.sh / ttsp_target.sh をCI用に設定
-          #  OS_PATH="../asp3/"  PROFILE_NAME="ASP"  TARGET_NAME="zybo_z7_gcc"
-          #  zybo の ttsp_target.sh: USE_QEMU=true
-          # （実際の設定方法はリポジトリの configure.sh 仕様に合わせて調整）
-          sed -i 's|^OS_PATH=.*|OS_PATH="../asp3/"|' configure.sh
-          sed -i 's|^PROFILE_NAME=.*|PROFILE_NAME="ASP"|' configure.sh
-          grep -q 'USE_QEMU=true' library/ASP/target/zybo_z7_gcc/ttsp_target.sh \
-            || echo "WARNING: confirm USE_QEMU=true for zybo_z7_gcc"
-
-      - name: Run TTSP3 (target-dependent check -> SIL -> API) on QEMU
-        working-directory: ttsp3
-        run: |
-          # ttb.sh は対話メニュー。CIでは非対話実行用ラッパ scripts/ci_run.sh を用意して呼ぶ想定。
-          # ci_run.sh: configure -> build -> qemu 実行 -> execute.log 生成
-          if [ -x scripts/ci_run.sh ]; then
-            ./scripts/ci_run.sh
-          else
-            echo "TODO: scripts/ci_run.sh（ttb.shの非対話ラッパ）を用意する"
-            exit 1
-          fi
-
-      - name: Evaluate result
-        working-directory: ttsp3
-        run: |
-          # execute.log を判定（OK/NG・チェックポイント）。失敗時は非0で落とす。
-          test -f execute.log || { echo "no execute.log"; exit 1; }
-          if grep -Eq "NG|FAIL|not ok|Error" execute.log; then
-            echo "::error::TTSP3 reported failures"
-            tail -50 execute.log
-            exit 1
-          fi
-          echo "TTSP3 passed"
-          tail -20 execute.log
+          bash scripts/ci_run.sh
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ttsp3-execute-log
-          path: ttsp3/execute.log
+          name: ttsp3-logs
+          path: |
+            ttsp3/ci_*.log
+            ttsp3/obj/**/execute.log
+            ttsp3/obj/**/result_ttg.log
+            ttsp3/obj/api_test/config_error/result_conf_err.log
+          if-no-files-found: warn

@@ -8,6 +8,9 @@
 *.bin
 execute.log
 
+# CIランナー（scripts/ci_run.sh）のログ
+/ci_*.log
+
 # 注意：`out` `out.c` `out.h` `out.cfg` `**/gen/` をグローバルに無視してはならない。
 # library/*/check_library/*/out.{c,h,cfg} はテストスイートのソース本体。
 # 生成物は /obj/ 配下に限られるため、/obj/ の無視で十分。
