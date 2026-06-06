@@ -33,7 +33,7 @@ AIには「自己検証ループ」と「参照パターン」が要る。
 ### ④ 最初の緑（QEMUで自己検証ループを作る）【最重要】
 - `configure.sh`：`OS_PATH="../asp3/"` / `PROFILE_NAME="ASP"` / `TARGET_NAME="zybo_z7_gcc"`
 - `zybo_z7_gcc/ttsp_target.sh`：`USE_QEMU=true`
-- `./ttb.sh` で **ターゲット依存チェック → SIL → API** を実行
+- `./ttb.sh` で **ターゲット依存チェック → API** を実行（SIL・Kernel LibraryはTTSP3未サポート：`user.txt` (3.2)(10)）
 - 3.4→3.7差分で破綻する箇所を捕捉（`execute.log`・ビルドエラー）し、`DIVERGENCE_MAP.md` に列挙
 
 ここまでを `v0.1.0`（標準ASP3 3.7.2 で緑）としてタグ付け＝**引き渡し点**。
@@ -51,7 +51,7 @@ QEMUで回る自己検証ループができたので任せられる：
 | GitHub Actions（QEMU-zynq）CI構築 | CI実行 | 不要 |
 | カバレッジ計測（非依存部100%目標） | カバレッジ出力 | 不要 |
 
-差分対応の進め方：**SIL（安定）→ API（差分大）** の順。CRE系のID衝突エラー化・`;`必須化・64bit HRT・サブ優先度を順に潰す。
+差分対応の進め方：**APIテスト**を対象に進める（SILテストはTTSP3未サポートのため対象外）。CRE系のID衝突エラー化・`;`必須化・64bit HRT・サブ優先度を順に潰す。
 
 ---
 
