@@ -53,20 +53,49 @@ STK_T nontask2_stack[COUNT_STK_T(TTSP_NON_TASK_STACK_SIZE)];
 
 /*
  *  ティック更新の停止
+ *
+ *  [改変] 2026-06-06: GTC_CTRLのRMWをジャイアントロックで保護．
+ *  GTC_CTRLは全体イネーブル（bit0，全PE共有）とコンペア/割込みイネーブル
+ *  （PE毎バンク）が同居するレジスタで，カーネル側の mpcore_gtc_set_cvr /
+ *  target_hrt_clear_event もRMWする（glock下）．本関数が無保護でRMWすると，
+ *  他PEのカーネル側RMWが古いbit0を書き戻し，停止したはずのタイマが再イネーブル
+ *  されるレースがある（sta_alm系テストがフレークする実測済みの要因）．
  */
 void
 ttsp_target_stop_tick(void)
 {
+	bool_t	locked;
+
+	locked = sense_lock();
+	if (!locked) {
+		lock_cpu();
+	}
+	acquire_glock();
 	sil_wrw_mem(MPCORE_GTC_CTRL, sil_rew_mem(MPCORE_GTC_CTRL) & ~MPCORE_GTC_CTRL_ENABLE);
+	release_glock();
+	if (!locked) {
+		unlock_cpu();
+	}
 }
 
 /*
- *  ティック更新の再開
+ *  ティック更新の再開（GTC_CTRLのRMW保護は stop_tick と同様）
  */
 void
 ttsp_target_start_tick(void)
 {
+	bool_t	locked;
+
+	locked = sense_lock();
+	if (!locked) {
+		lock_cpu();
+	}
+	acquire_glock();
 	sil_wrw_mem(MPCORE_GTC_CTRL, sil_rew_mem(MPCORE_GTC_CTRL) | MPCORE_GTC_CTRL_ENABLE);
+	release_glock();
+	if (!locked) {
+		unlock_cpu();
+	}
 }
 
 uint64_t temp_gtc = 0U;

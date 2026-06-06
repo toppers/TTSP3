@@ -76,11 +76,13 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 
 ---
 
-## D. FMP3対応の未解決課題
+## D. FMP3対応の課題（解決済み）
 
-| 課題 | 内容 | 状態 |
+| 課題 | 原因と解決 | 状態 |
 |---|---|---|
-| `sta_alm_d` 系テストのレース失敗 | `ASP_alarm_sta_alm_d_*`（QEMU -smp 2）で、pre-setupの `msta_alm(1000)→stp_alm` 直後に `sta_alm(3)` を発行すると、`ref_alm` が `almstat=TALM_STP`/`lefttim=0` を返し失敗（20グループ中3グループの先頭で再現）。**`stp_alm` 直後に `sil_dly_nse(TTSP_SIL_DLY_NSE_TIME)` 1回を挟むだけで5/5回安定パス**（`sta_alm` 側は無改変）。pre-setupが残す処理中HRTイベント/割込みと直後の `sta_alm` の競合が原因とみられ、**FMP3 3.4.0カーネルの `stp_alm`/`sta_alm` 間のレースの可能性**（実機でも窓は存在しうる）。再現: `api_test/ASP/alarm/sta_alm/sta_alm_d-2.yaml` 単体をFMP/QEMU(-smp 2)で実行 | **未解決**（カーネルメンテナ判断待ち。2026-06-06） |
+| `sta_alm_d` 系テストのレース失敗 | **原因（実測で特定）**: `GTC_CTRL` は全体イネーブル（bit0・全PE共有）とコンペア/割込みイネーブル（PE毎バンク）が同居するレジスタ。TTSPの `ttsp_target_stop_tick()` が**ジャイアントロック無しの生RMW**で bit0 を落とすと、他PEのカーネル側RMW（`mpcore_gtc_set_cvr`/`target_hrt_clear_event`、glock下）が**読み置きした古い bit0=1 を書き戻し、停止したはずのGTCが再イネーブル**される。以後テスト全体で時刻が密かに進行し、`sta_alm(3µs)` が実時間3µs後に発火 → `almstat`/`lefttim` 検査と競争（フレーク）。HRTハンドラ発火カウンタと `GTC_CTRL=0x4207`（bit0=1）の事後ダンプで実証。**解決**: `ttsp_target_stop_tick`/`start_tick` のRMWを glock 保護（`library/FMP/target/zybo_z7_gcc/ttsp_target_test.c`）。検証: 単体40回＋全20グループ×10周（200ブート）全パス | **解決**（2026-06-06） |
+
+> カーネル側への示唆（メンテナ向け）: `mpcore_gtc_set_cvr` のコメント「プロセッサ間排他制御をせずに呼び出して良い」は、**glock外からGTC_CTRLを触るコードが存在しない**ことが前提。bit0（共有）とバンクビットが同一レジスタに同居する構造上、ターゲット依存テストコード等がCTRLを触る場合は同じレースを踏むため、コメントへの前提条件の明記を推奨。
 
 ---
 
