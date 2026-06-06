@@ -31,7 +31,9 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # テストは並列ドライバ化済み（32コアローカルで34秒、4vCPUランナーでも数分想定）。
+    # 支配項は初回のQEMUビルド（キャッシュミス時のみ約8分）。
+    timeout-minutes: 60
     steps:
       # 本リポジトリを ws/ttsp3 に取得（兄弟配置にするためサブパスへ）
       - name: Checkout TTSP3

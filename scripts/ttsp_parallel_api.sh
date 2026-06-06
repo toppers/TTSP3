@@ -39,8 +39,10 @@ OS_PATH="$ARG_OS_PATH"; PROFILE_NAME="$ARG_PROFILE"; OBJECT_DIR="$ARG_OBJ"
 source ./library/$PROFILE_NAME/target/$TARGET_NAME/ttsp_target.sh
 
 DIV_NUM="$ARG_DIV"
-PAR_GROUPS="${PAR_GROUPS:-10}"
-MAKE_J="${MAKE_J:-4}"
+# 並列度の既定はコア数から自動決定（例: 32コア→P=10×j4, 4コア→P=2×j2）
+NPROC=$(nproc)
+PAR_GROUPS="${PAR_GROUPS:-$(( NPROC >= 12 ? NPROC / 3 : (NPROC >= 4 ? 2 : 1) ))}"
+MAKE_J="${MAKE_J:-$(( NPROC >= 16 ? 4 : 2 ))}"
 QEMU_TIMEOUT="${QEMU_TIMEOUT:-1800}"
 
 # プロファイル毎のオブジェクトリスト（ttb.sh より転記）

@@ -55,6 +55,8 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `library/FMP/target/zybo_z7_gcc/ttsp_target.sh`（MAKE_OPT） | 改変 | `MAKE_OPT` を環境変数 `TTSP_MAKE_OPT` で上書き可能に（`ENABLE_GCOV=true` 投入用） | 済（2026-06-06） |
 | `scripts/coverage_gcov_fmp.sh` `scripts/ttsp_gcov_report.py` | NEW | FMP GCOVカバレッジ計測（行＋分岐C1）。fmp3側のGCOV対応（メンテナ管理・`docs/COVERAGE.md` 参照）が前提 | 済（2026-06-06） |
 | `scripts/ttsp_parallel_api.sh` | NEW | APIオートコードのグループ並列ドライバ（TTG＋make -j＋QEMUを並列化。ビルド約160分→約2分@32コア）。初回計測: FMP kernel/ 行96.4%・分岐81.5% | 済（2026-06-06） |
+| `scripts/ttsp_parallel_cfgerr.sh` | NEW | コンフィグエラーテストの並列ドライバ（テストディレクトリ毎に独立のmake→期待エラーgrepを xargs -P 実行） | 済（2026-06-06） |
+| `scripts/ci_run.sh`（並列化） | 改変 | ステージ2/4を並列ドライバへ置換。ローカルfull実行 約50分→34秒@32コア（PASS=141維持） | 済（2026-06-06） |
 | api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |

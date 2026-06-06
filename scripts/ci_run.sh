@@ -75,12 +75,14 @@ for d in exception interrupt timer; do
 done
 
 if [ "$MODE" = "full" ]; then
-	echo "===== stage 2: API auto-code (TESRY, ${DIV_NUM}-way) ====="
-	printf '1\n1\n3\n%s\n4\nr\nr\nr\nq\n' "$DIV_NUM" | bash ttb.sh > ci_build_api.log 2>&1
+	echo "===== stage 2: API auto-code (TESRY, ${DIV_NUM}-way, parallel) ====="
+	# グループ並列ドライバ（TTG+make -j とQEMU実行を並列化）。
+	# ビルド・実行とも実施し、合否判定は本スクリプトで execute.log から行う。
+	bash scripts/ttsp_parallel_api.sh ../asp3/ ASP obj "$DIV_NUM" > ci_build_api.log 2>&1
+	grep -E 'wall time|TTG FAIL|MAKE FAIL' ci_build_api.log
 	for i in $(seq 1 "$DIV_NUM"); do
 		dir=obj/api_test/auto_code_$i
 		require_binary "$dir" "api/auto_code_$i" ci_build_api.log || continue
-		run_qemu "$dir"
 		check_log "$dir" "api/auto_code_$i"
 	done
 
@@ -101,12 +103,13 @@ if [ "$MODE" = "full" ]; then
 		FAIL_CNT=$((FAIL_CNT + 1))
 	fi
 
-	echo "===== stage 4: API configuration error ====="
-	printf '1\n3\n1\n2\nr\nr\nr\nq\n' | bash ttb.sh > ci_cfgerr.log 2>&1
+	echo "===== stage 4: API configuration error (parallel) ====="
+	bash scripts/ttsp_parallel_cfgerr.sh ../asp3/ ASP obj > ci_cfgerr.log 2>&1
+	cfgerr_rc=$?
 	ok_n=$(grep -c ': Test OK' ci_cfgerr.log)
 	ng_n=$(grep -c ': Test NG' ci_cfgerr.log)
 	echo "configuration error tests: OK=$ok_n NG=$ng_n"
-	if [ "$ng_n" -ne 0 ] || [ "$ok_n" -eq 0 ]; then
+	if [ "$cfgerr_rc" -ne 0 ] || [ "$ok_n" -eq 0 ]; then
 		echo "FAIL: configuration error tests (OK=$ok_n NG=$ng_n)"
 		grep ': Test NG' ci_cfgerr.log | sed 's/^/    /'
 		FAIL=1
