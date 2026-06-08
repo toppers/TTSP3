@@ -2,7 +2,11 @@
 
 > 更新: 2026-06-09  
 > 対象: ASP3 3.7.2 `kernel/`、残存 25 未到達分岐（1434/1459 = 98.3%、`all` モード）  
-> ビルド: `coverage_gcov_asp.sh all`
+> ビルド: `coverage_gcov_asp.sh all`  
+> コンパイルオプション（カバレッジ数値に影響するもの）:  
+> - `ENABLE_GCOV=true` — gcov 計装ビルド（`-fprofile-arcs -ftest-coverage`）  
+> - `-DNDEBUG`（`COPTS` 経由） — `assert()` を `((void)(0))` に展開し分岐ノードを消滅させる。これにより task.c / mutex.c / wait.c / time_event.c の assert 失敗パスが計測対象外となり、実質的なカバレッジ数値が上昇する  
+> - `-O2`（zybo_z7_gcc デフォルト） — `static inline` 関数の call-site インライン展開を促進し、wait.h の追跡分岐数が増加する（§5 参照）
 
 **分類凡例:**
 - **構造的到達不能**: カーネルの不変条件（恒真 flag、整合性保証ポインタ等）により実行時に到達できない。
