@@ -1,0 +1,23 @@
+version: "wb-2026-06-08"
+ASP_task_sync_wup_tsk_W_b:
+  # target_branch: kernel/task_sync.c:215  CHECK_ID(VALID_TSKID(tskid))
+  #   VALID_TSKID 内の上限条件 tskid <= tmax_tskid が偽（tskid > tmax, br[2]）
+  # wup_tsk_b-2 と同等（TNUM_TSKID+1→E_ID）だが，b-2 を含む auto_code
+  # グループがタイムアウトし br[2] が未到達のため追加．
+  note: 【NGKI1267 / ASP3 3.7.2】tskidが有効範囲の最大値を超える値の場合にE_IDが返ること（VALID_TASKIDの上限条件 tskid<=tmax_tskid が偽となる経路）
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+
+  do:
+    id     : TASK1
+    syscall: wup_tsk(TNUM_TSKID+1)
+    ercd   : E_ID
+
+  post_condition:
