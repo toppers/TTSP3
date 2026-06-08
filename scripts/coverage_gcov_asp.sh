@@ -17,6 +17,11 @@
 #    API_DIV_NUM  : full時の分割数（既定 20）
 #    QEMU_TIMEOUT : QEMU 1実行のタイムアウト秒（既定 1800）
 #
+#  ビルドオプション:
+#    -DNDEBUG を COPTS 環境変数として渡す（Makefile 側で展開される）．
+#    assert() はデバッグ用マクロであり，カバレッジ計測対象から除外するため
+#    NDEBUG を定義して無効化する（ASP3 t_stddef.h: #ifndef NDEBUG で制御）．
+#
 set -u
 cd "$(dirname "$0")/.."
 
@@ -26,6 +31,17 @@ DIV_NUM="${API_DIV_NUM:-20}"
 QEMU_TIMEOUT="${QEMU_TIMEOUT:-1800}"
 
 test -d ../asp3 || { echo "ERROR: ../asp3 (sibling kernel) not found"; exit 1; }
+
+# assert を無効化してカバレッジ計測対象から除外する
+# COPTS は環境変数として渡し，Makefile の "COPTS := -g ... $(COPTS)" で末尾に展開される
+export COPTS="${COPTS:+$COPTS }-DNDEBUG"
+
+# NDEBUG フラグ変更後は旧 .o/.gcno が stale になるため削除して再コンパイルを強制する
+echo "===== clean stale objects for NDEBUG rebuild ====="
+find "$OBJ_DIR" -name "*.o" -delete 2>/dev/null || true
+find "$OBJ_DIR" -name "*.gcno" -delete 2>/dev/null || true
+# WB テスト用ビルドディレクトリも削除して再作成させる
+rm -rf "$OBJ_DIR"/api_test/wb_* 2>/dev/null || true
 
 run_qemu() { # $1=dir
 	( cd "$1" && rm -f objs/*.gcda && timeout "$QEMU_TIMEOUT" qemu-system-arm \

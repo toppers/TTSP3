@@ -3,12 +3,16 @@
 > 計測日: 2026-06-09（最終）  
 > 方式: gcov（`python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
 > 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
-> ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。
+> ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
+> ※ **2026-06-09 NDEBUG 計測移行**: `coverage_gcov_asp.sh` に `-DNDEBUG` を追加し assert ブランチを計測対象外に変更。
 
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1386/1405 = 98.6%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1434/1459 = 98.3%  (C1, 2026-06-09 NDEBUG計測)
+  ※NDEBUG計測移行後: assert ブランチ除去により task.c/wait.c → 100%、mutex.c 99.3%
+    wait.h が 16→64ブランチ（インライン展開増加による計測アーティファクト）
+  ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
   ※alarm/cyclic/mempfix WBテスト追加後: 1386/1405 = 98.6%（alarm/cyclic/mempfix 100%）
   ※time_event.c WBテスト追加後: 1382/1405 = 98.4%（time_event.c 90.0%, 残6は到達不能/実機困難）
   ※mutex.c WBテスト追加後: 1377/1405 = 98.0%（mutex.c 97.2%, 残4は到達不能）
@@ -64,33 +68,37 @@
 - `ena_dsp_b-4.yaml` — raster&&enater=T時の自タスク終了（sys_manage.c L400 (f)分岐）
 - `ena_ter_c.yaml`   — raster&&dspflg=T時の自タスク終了（task_term.c L250 (t)分岐）
 
-### ファイル別サマリ（gcov 全分岐、union集計、最終値）
+### ファイル別サマリ（gcov 全分岐、union集計、NDEBUG計測）
 
 | ファイル | 行 C0 | 到達分岐 | 全分岐 | C1 |
 |---|---|---|---|---|
 | alarm.c | 70/70 100% | 32 | 32 | **100%** |
 | cyclic.c | 74/74 100% | 36 | 36 | **100%** |
-| dataqueue.c | 253/253 100% | 152 | 152 | **100%** |
-| eventflag.c | 165/165 100% | 120 | 120 | **100%** |
+| dataqueue.c | 253/253 100% | 156 | 156 | **100%** |
+| eventflag.c | 165/165 100% | 122 | 122 | **100%** |
 | exception.c | 7/7 100% | 4 | 6 | 66.7% ◀ |
 | interrupt.c | 108/110 98.2% | 57 | 58 | 98.3% ◀ |
-| mempfix.c | 150/150 100% | 88 | 88 | **100%** |
-| mutex.c | 209/209 100% | 138 | 142 | 97.2% ◀ |
-| pridataq.c | 243/244 99.6% | 148 | 148 | **100%** |
-| semaphore.c | 121/121 100% | 76 | 76 | **100%** |
+| mempfix.c | 150/150 100% | 90 | 90 | **100%** |
+| mutex.c | 212/212 100% | 137 | 138 | 99.3% ◀ |
+| pridataq.c | 243/244 99.6% | 152 | 152 | **100%** |
+| semaphore.c | 121/121 100% | 78 | 78 | **100%** |
 | startup.c | 25/25 100% | 4 | 4 | **100%** |
 | sys_manage.c | 152/152 100% | 62 | 62 | **100%** |
-| task.c | 110/111 99.1% | 60 | 62 | 96.8% ◀ |
+| task.c | 110/111 99.1% | 64 | 64 | **100%** |
 | task.h | 4/4 100% | 2 | 2 | **100%** |
 | task_manage.c | 119/119 100% | 92 | 92 | **100%** |
 | task_refer.c | 78/78 100% | 34 | 35 | 97.1% ◀ |
 | task_sync.c | 169/169 100% | 118 | 118 | **100%** |
 | task_term.c | 94/94 100% | 64 | 64 | **100%** |
-| time_event.c | 138/141 97.9% | 54 | 60 | 90.0% ◀ |
+| time_event.c | 138/141 97.9% | 52 | 56 | 92.9% ◀ |
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
-| wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
-| wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2443/2451 99.7%** | **1386** | **1405** | **98.6%** |
+| wait.c | 61/61 100% | 8 | 8 | **100%** |
+| wait.h | 38/38 100% | 49 | 64 | 76.6% ◀ |
+| **TOTAL** | **2446/2454 99.7%** | **1434** | **1459** | **98.3%** |
+
+> ※ wait.h の分岐数が 16→64 に増加: NDEBUG+O2 によるインライン展開変化のアーティファクト。  
+>    同一ソース行に複数の call-site インスタンスが生成され、一部が未到達となる。  
+>    各関数の論理的カバレッジ（wait_dequeue_wobj 両分岐等）はユニオンで確認済み。
 
 ## API（関数）別 分岐カバレッジ
 
@@ -191,8 +199,8 @@
 
 ### mutex.c
 
-> 分岐 C1: 138/142 = 97.2%（BBテスト ini_mtx_e/f, unl_mtx_g-1〜g-5, chg_pri_j-1〜j-3 追加後）  
-> 残 4 箇所は構造的到達不能（L227 br[1]: remove_mutex NULL exit、L375/423/474: assert失敗パス）
+> 分岐 C1: 137/138 = 99.3%（NDEBUG計測により assert 失敗パス除去、BBテスト ini_mtx_e/f 等追加後）  
+> 残 1 箇所: L227 br[1]（remove_mutex NULL exit、構造的到達不能）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -204,9 +212,9 @@
 | `_kernel_mutex_acquire` | 100% | 2/2 100% | — | — |
 | `_kernel_mutex_release` | 100% | 6/6 100% | — | — |
 | `_kernel_mutex_release_all` | 100% | 4/4 100% | — | — |
-| `loc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
-| `ploc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
-| `tloc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
+| `loc_mtx` | 100% | 100% | — | — |
+| `ploc_mtx` | 100% | 100% | — | — |
+| `tloc_mtx` | 100% | 100% | — | — |
 | `unl_mtx` | 100% | 100% | — | — |
 | `ini_mtx` | 100% | 100% | — | — |
 | `ref_mtx` | 100% | 100% | — | — |
@@ -272,17 +280,19 @@
 
 ### task.c（内部関数）
 
+> 分岐 C1: 64/64 = **100%**（NDEBUG計測により assert 失敗パス除去）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `_kernel_initialize_task` | 100% | 4/4 100% | — | — |
+| `_kernel_initialize_task` | 100% | 100% | — | — |
 | `_kernel_search_schedtsk` | 100% | — | — | — |
-| `_kernel_make_runnable` | 100% | 8/8 100% | — | — |
-| `_kernel_make_non_runnable` ◀ | 100% | 10/12 83.3% | 2 | M |
-| `_kernel_make_dormant` | 90% | 2/2 100% | — | — |
+| `_kernel_make_runnable` | 100% | 100% | — | — |
+| `_kernel_make_non_runnable` | 100% | 100% | — | — |
+| `_kernel_make_dormant` | 90% | 100% | — | — |
 | `_kernel_make_active` | 100% | — | — | — |
-| `_kernel_change_priority` | 100% | 16/16 100% | — | — |
-| `_kernel_rotate_ready_queue` ◀ | 100% | 9/10 90% | 1 | L |
-| `_kernel_task_terminate` | 100% | 10/10 100% | — | — |
+| `_kernel_change_priority` | 100% | 100% | — | — |
+| `_kernel_rotate_ready_queue` | 100% | 100% | — | — |
+| `_kernel_task_terminate` | 100% | 100% | — | — |
 
 ### task_manage.c
 
@@ -333,8 +343,8 @@
 
 ### time_event.c
 
-> 分岐 C1: 54/60 = 90.0%（WBテスト time_event_W-a/b + adj_tim_W-a 追加後）  
-> 残 6 箇所は構造的到達不能または実機困難（L390/L439/L588/L589/L624 等）
+> 分岐 C1: 52/56 = 92.9%（NDEBUG計測により assert 失敗パス L588/L589 除去）  
+> 残 4 箇所は構造的到達不能または実機困難（L390/L439/L624 等）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -347,6 +357,7 @@
 | `_kernel_update_current_evttim` ◀ | 92.9% | 3/4 75% | 1 | L |
 | `_kernel_set_hrt_event` ◀ | 90.9% | 5/6 83.3% | 1 | L |
 | `_kernel_tmevtb_register` | 100% | — | — | — |
+| `_kernel_signal_time` ◀ | 95.7% | 7/8 87.5% | 1 L624(空ヒープ割込み) | L |
 | `_kernel_tmevtb_enqueue_rel` | 100% | 4/4 100% | — | — |
 | `_kernel_tmevtb_dequeue` | 100% | 4/4 100% | — | — |
 | `_kernel_check_adjtim` | 100% | 8/8 100% | — | — |
@@ -364,9 +375,13 @@
 
 ### wait.c / wait.h（内部関数）
 
+> wait.c: 8/8 = **100%**（NDEBUG により assert 失敗パス除去）  
+> wait.h: 49/64 = 76.6%（NDEBUG+O2 インライン展開増加によるアーティファクト。  
+>   論理的カバレッジは両分岐とも確認済み。詳細は docs/WB_UNREACHABLE.md §wait.h 参照）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `_kernel_make_wait_tmout` ◀ | 100% | 3/4 75% | 1 | L |
+| `_kernel_make_wait_tmout` | 100% | 100% | — | — |
 | `_kernel_wait_complete` | 100% | — | — | — |
 | `_kernel_wait_tmout` | 100% | 2/2 100% | — | — |
 | `_kernel_wait_tmout_ok` | 100% | — | — | — |
@@ -374,30 +389,40 @@
 | `_kernel_wobj_make_wait` | 100% | — | — | — |
 | `_kernel_wobj_make_wait_tmout` | 100% | — | — | — |
 | `_kernel_init_wait_queue` | 100% | 2/2 100% | — | — |
-| `queue_insert_tpri` (wait.h) | 100% | 4/4 100% | — | — |
+| `queue_insert_tpri` (wait.h) | 100% | 100% | — | — |
 | `make_wait` (wait.h) | 100% | — | — | — |
-| `make_non_wait` (wait.h) ◀ | 100% | 3/4 75% | 1 | L |
+| `make_non_wait` (wait.h) | 100% | 100% | — | — |
+| `wait_dequeue_wobj` (wait.h) ◀ | 100% | — | インライン展開アーティファクト | — |
 | `wait_dequeue_tmevtb` (wait.h) | 100% | 2/2 100% | — | — |
 | `wait_tskid` (wait.h) | 100% | 2/2 100% | — | — |
 | `wobj_change_priority` (wait.h) | 100% | 2/2 100% | — | — |
 
 ---
 
-## 残存未到達分岐リスト（2026-06-09 最終）
+## 残存未到達分岐リスト（2026-06-09 NDEBUG計測後）
 
-> 全 19 箇所（1386/1405 = 98.6%）。未到達数の多い順。
+> 全 25 箇所（1434/1459 = 98.3%）。未到達数の多い順。  
+> ※ wait.h の 15 箇所はインライン展開アーティファクト（論理的カバレッジは確認済み）。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
-| 1 | time_event.c | 90.0% | 6 | L390(64bit EVTTIM overflow), L439(HRTCNT_BOUND=4G ticks), L588/589(assert失敗), L624(signal_time: 空ヒープ割込み), +1 |
-| 2 | mutex.c | 97.2% | 4 | L227 br[1](remove_mutex NULL exit, 到達不能), L375/423/474 br[0](assert失敗, 到達不能) |
-| 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / task文脈+p_runtsk=NULL矛盾） |
-| 4 | task.c | 96.8% | 2 | `assert` 失敗パス（L268/L274、構造的到達不能） |
+| 1 | wait.h | 76.6% | 15 | インライン展開増加アーティファクト（NDEBUG+O2。論理的両分岐カバー済み） |
+| 2 | time_event.c | 92.9% | 4 | L390(64bit EVTTIM overflow), L439(HRTCNT_BOUND=4G ticks), L624(空ヒープ割込み), +1 |
+| 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / p_runtsk=NULL矛盾） |
+| 4 | mutex.c | 99.3% | 1 | L227 br[1]（remove_mutex NULL exit、構造的到達不能） |
 | 5 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
-| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
-| 7 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
-| 8 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
-| 9 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
+| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
+| 7 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（到達困難） |
+
+**NDEBUG適用で解消した未到達 (assert系)**：
+
+| ファイル | 解消内容 |
+|---|---|
+| task.c L268/L274 | `assert(dspflg)` 失敗パス × 2 |
+| mutex.c L375/423/474 | `assert(p_runtsk == p_schedtsk)` 失敗パス × 3 |
+| wait.c L65 | `assert(tmout <= TMAX_RELTIM)` 失敗パス |
+| wait.h (`make_non_wait`) | `assert(TSTAT_WAITING)` 失敗パス |
+| time_event.c L588/589 | `assert(sense_context())` / `assert(!sense_lock())` 失敗パス × 2 |
 
 **BBテストで解消済み（100%到達）**：
 
