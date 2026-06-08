@@ -198,7 +198,7 @@ if (p_runtsk->raster && p_runtsk->enater) {
 |---|---|---|---|
 | L371 br[0]（`raster && enater` が真） | (1) タスク T が `enater=true` かつ (2) `chg_ipm` 実行中に (3) 別タスクが `ras_ter(T)` を呼び (4) T が `chg_ipm(TIPM_ENAALL)` に到達する、という競合タイミングが必要。 | **到達困難（制約あり）** |
 
-**補足**: 既存テスト `chg_ipm_e.yaml` は `enadsp=false`（L369 の真分岐不成立）のパスをカバー。L371 には `enadsp=true` かつ上記競合条件の同時成立が必要。
+**補足**: 既存テスト [`chg_ipm_e.yaml`](../api_test/ASP/interrupt/chg_ipm/chg_ipm_e.yaml) は `enadsp=false`（L369 の真分岐不成立）のパスをカバー。L371 には `enadsp=true` かつ上記競合条件の同時成立が必要。
 
 **結論**: WB テストで到達可能だが、コストに対して優先度低。当面未対応で可。
 
@@ -237,6 +237,8 @@ NDEBUG 適用により分岐ノード消滅。分岐の理由（構造的到達�
 
 ### 9-e. `_kernel_tmevt_down` L221 br[1]（**WBテスト無効化で追加**）
 
+> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox_archive/time_event/time_event_W-a/out.c)
+
 **ソース** (`asp3/kernel/time_event.c` L221–222):
 ```c
 if (child + 1 <= LAST_INDEX()
@@ -252,6 +254,8 @@ if (child + 1 <= LAST_INDEX()
 
 ### 9-f. `_kernel_tmevt_down` L231 br[0]（**WBテスト無効化で追加**）
 
+> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox_archive/time_event/time_event_W-a/out.c)（§9-e と同一テスト）
+
 **ソース** (`asp3/kernel/time_event.c` L231):
 ```c
 if (EVTTIM_LE(evttim, HEAP_NODE(child)->evttim)) {
@@ -264,6 +268,8 @@ if (EVTTIM_LE(evttim, HEAP_NODE(child)->evttim)) {
 | L231 br[0]（条件の true パス、早期 break） | sift-down 中に挿入ノードの発生時刻が子ノード以前 → 現在位置が挿入位置 | §9-e と同様にヒープの特定の構造・時刻分布が必要。 | **到達困難（内部状態依存）** |
 
 ### 9-g. `_kernel_tmevtb_delete` L302 br[0]（**WBテスト無効化で追加**）
+
+> アーカイブ済み WBテスト: [`time_event_W-b`](../api_test/ASP/whitebox_archive/time_event/time_event_W-b/out.c)
 
 **ソース** (`asp3/kernel/time_event.c` L301–303):
 ```c
@@ -297,6 +303,8 @@ if (!sense_lock()) {
 
 **結論**: WB テストは不要（通常の API 使用パターンから外れるため）。
 
+> アーカイブ済み WBテスト: [`alarm_W-a`](../api_test/ASP/whitebox_archive/alarm/alarm_W-a/out.c)
+
 ---
 
 ## 11. cyclic.c — `_kernel_call_cyclic` L259 br[1]（1 branch, 97.2%）
@@ -315,6 +323,8 @@ if (!sense_lock()) {
 | L259 br[1]（`sense_lock()` が true） | 周期ハンドラが `iloc_cpu()` を呼び出してロックを保持したまま戻る | §10 と同構造・同理由。 | **到達困難（内部状態依存）** |
 
 **結論**: WB テストは不要。
+
+> アーカイブ済み WBテスト: [`cyclic_W-a`](../api_test/ASP/whitebox_archive/cyclic/cyclic_W-a/out.c)
 
 ---
 
@@ -335,6 +345,8 @@ CHECK_PAR(blkoffset / p_mpfcb->p_mpfinib->blksz < p_mpfcb->unused);  /* L310 */
 
 **補足**: 両分岐とも不正パラメータ検査（`E_PAR`）であり、仕様上のエラー処理の確認。テストは原理上可能だが、TESRY YAML 形式での任意アドレス指定は困難で手書きテストが必要。優先度は低く当面未対応で可。
 
+> アーカイブ済み WBテスト: [`mempfix_W-a`](../api_test/ASP/whitebox_archive/mempfix/mempfix_W-a/out.c)（L309）、[`mempfix_W-b`](../api_test/ASP/whitebox_archive/mempfix/mempfix_W-b/out.c)（L310）
+
 ---
 
 ## 13. task_manage.c — `act_tsk` L137 br[1]（1 branch, 98.9%）
@@ -350,6 +362,8 @@ else if ((p_tcb->p_tinib->tskatr & TA_NOACTQUE) != 0U || p_tcb->actque) {
 | L137 br[1]（条件 true → E_QOVR） | `TA_NOACTQUE` 属性タスクに対して `act_tsk` を呼ぶ（または `actque=true` のタスクに再起動要求） | `TA_NOACTQUE` タスクへの `act_tsk` は TESRY BB テストの E_QOVR ケースでカバー可能だが、既存の `act_tsk` YAML テスト群では属性指定なしタスクで `actque=true` ケースをカバーしており、`TA_NOACTQUE` 専用パスには未到達。 | **到達可能（低優先度）** |
 
 **結論**: BB テスト（`act_tsk` に `TA_NOACTQUE` 属性タスクを追加）で到達可能。優先度は低く当面未対応で可。
+
+> アーカイブ済み WBテスト: [`act_tsk_W-a`](../api_test/ASP/whitebox_archive/task_manage/act_tsk_W-a/out.c)
 
 ---
 

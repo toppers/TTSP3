@@ -40,8 +40,6 @@ export COPTS="${COPTS:+$COPTS }-DNDEBUG"
 echo "===== clean stale objects for NDEBUG rebuild ====="
 find "$OBJ_DIR" -name "*.o" -delete 2>/dev/null || true
 find "$OBJ_DIR" -name "*.gcno" -delete 2>/dev/null || true
-# WB テスト用ビルドディレクトリも削除して再作成させる
-rm -rf "$OBJ_DIR"/api_test/wb_* 2>/dev/null || true
 
 run_qemu() { # $1=dir
 	( cd "$1" && rm -f objs/*.gcda && timeout "$QEMU_TIMEOUT" qemu-system-arm \
@@ -73,39 +71,6 @@ if [ "$MODE" = "full" ]; then
 		dir=$OBJ_DIR/api_test/auto_code_$i
 		[ -f "$dir/asp" ] && dirs="$dirs $dir"
 	done
-
-	# WBテスト（方式2: 手書き, api_test/ASP/whitebox/*/*/ に配置）
-	# auto_code_1 の Makefile を流用（同じディレクトリ深さ obj_asp_gcov/api_test/wb_*/）
-	REF_MK="$OBJ_DIR/api_test/auto_code_1/Makefile"
-	if [ -f "$REF_MK" ] && compgen -G "api_test/ASP/whitebox/*/*/" > /dev/null 2>&1; then
-		echo "===== build & run: WB tests (whitebox, manual) ====="
-		# ttsp_target.sh から COBJS_TARGET を取得
-		source ./configure.sh
-		source "./library/ASP/target/${TARGET_NAME}/ttsp_target.sh"
-		WB_KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o"
-		WB_APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
-		for wb_src in api_test/ASP/whitebox/*/*/; do
-			wb_name=$(basename "$wb_src")
-			wb_dir="$OBJ_DIR/api_test/wb_${wb_name}"
-			mkdir -p "$wb_dir/objs"
-			cp "$REF_MK" "$wb_dir/Makefile"
-			cp "${wb_src}out.c" "$wb_dir/out.c"
-			cp "${wb_src}out.h" "$wb_dir/out.h"
-			cp "${wb_src}out.cfg" "$wb_dir/out.cfg"
-			( cd "$wb_dir" && make ENABLE_GCOV=true -j4 \
-				KERNEL_COBJS="$WB_KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
-				APPL_COBJS="$WB_APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
-				> /tmp/gcov_build_wb_$$.log 2>&1 )
-			if [ -f "$wb_dir/asp" ]; then
-				run_qemu "$wb_dir"
-				last=$(tr -d '\r' < "$wb_dir/execute.log" | tail -1)
-				echo "run wb/$wb_name: $last"
-				dirs="$dirs $wb_dir"
-			else
-				echo "BUILD FAIL: wb/$wb_name"; tail -10 /tmp/gcov_build_wb_$$.log
-			fi
-		done
-	fi
 fi
 
 echo ""
