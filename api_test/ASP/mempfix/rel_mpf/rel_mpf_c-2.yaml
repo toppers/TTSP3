@@ -1,0 +1,43 @@
+version: "$Id: rel_mpf_c-2.yaml 2026-06-08 honda $"
+ASP_mempfix_rel_mpf_c_2:
+  note: 【NGKI2313】返却済みメモリブロックを再度返却した場合にE_PARが返ること（二重返却）
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : ANY_INI_BLKCNT
+      fblkcnt: 1
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: 0
+
+  do_1:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: 1
+
+  do_2:
+    id     : TASK1
+    syscall: rel_mpf(MPF1, blk)
+    ercd   : E_PAR
+
+  post_condition_2:
+    MPF1:
+      fblkcnt: 1
