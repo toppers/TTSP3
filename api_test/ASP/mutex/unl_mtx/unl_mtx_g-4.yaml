@@ -1,5 +1,5 @@
 version: "ASP3 3.7.2"
-ASP_mutex_unl_mtx_g_3:
+ASP_mutex_unl_mtx_g_4:
   note: 【NGKI2092】【NGKI2093】【NGKI2094】
 
   pre_condition:
@@ -15,8 +15,8 @@ ASP_mutex_unl_mtx_g_3:
     TASK2:
       type   : TASK
       tskstat: waiting
-      tskbpri: TSK_PRI_HIGH
-      tskpri : TSK_PRI_HIGH
+      tskbpri: TSK_PRI_LOW
+      tskpri : TSK_PRI_LOW
       wobjid : MTX_B
 
     MTX_A:
@@ -30,7 +30,7 @@ ASP_mutex_unl_mtx_g_3:
       type    : MUTEX
       mtxstat : TMTX_LOC
       mtxatr  : TA_CEILING
-      ceilpri : TSK_PRI_HIGH
+      ceilpri : TSK_PRI_MID
       htskid  : TASK1
       wtsklist:
         - TASK2:
@@ -50,8 +50,8 @@ ASP_mutex_unl_mtx_g_3:
 
     TASK2:
       tskstat: ready
-      tskpri : TSK_PRI_HIGH
-      tskbpri: TSK_PRI_HIGH
+      tskpri : TSK_PRI_MID
+      tskbpri: TSK_PRI_LOW
       locmtx :
         - MTX_B
 

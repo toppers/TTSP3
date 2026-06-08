@@ -34,6 +34,7 @@ ASP_mutex_unl_mtx_g_2:
   post_condition:
     TASK1:
       tskpri : TSK_PRI_HIGH
+      tskbpri: TSK_PRI_LOW
       locmtx :
         - MTX1
 

@@ -8,7 +8,8 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1366/1405 = 97.2%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1377/1405 = 98.0%  (C1, 2026-06-09 最終)
+  ※mutex.c WBテスト追加後: 1377/1405 = 98.0%（mutex.c 97.2%, 残4は到達不能）
   ※act_tsk_W-a追加直後:    1366/1405 = 97.2%（task_manage.c 100%）
   ※ras_ter_g追加直後:      1363/1405 = 97.0%（chg_ipm_e/get_mpf_k 未追加）
   ※2026-06-08:             1362/1405 = 96.9%（ras_ter L180(f) 未到達）
@@ -16,6 +17,18 @@
   ※BBテスト追加前:          1051/1405 = 74.8%（group17 失敗 + バグ）
   ※RAISE_CPU_EXCEPTION修正前: 1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
 ```
+
+**2026-06-09 追加した BBテスト（mutex.c WBテスト、全20グループ PASS）**:
+- `ini_mtx_e.yaml` — 未ロックのミューテックスに ini_mtx（mutex.c L558 br[1]）
+- `ini_mtx_f.yaml` — remove_mutex が非先頭要素を削除（mutex.c L227/L228 br）
+- `unl_mtx_g-1.yaml` — 2つの異なる上限優先度ミューテックスを保持中に低い方を解除（mutex.c L263 FALSE）
+- `unl_mtx_g-2.yaml` — 2つの同じ上限優先度ミューテックスを保持中に一方を解除（mutex.c L202, L265 FALSE）
+- `unl_mtx_g-3.yaml` — 待ちタスクの優先度 ≥ 上限優先度 → 優先度上昇なし（mutex.c L315 br[1]）
+- `unl_mtx_g-4.yaml` — 待ちタスクの優先度 < 上限優先度 → 優先度上昇あり（mutex.c L315 br[0]）
+- `unl_mtx_g-5.yaml` — 非上限優先度ミューテックスを含む保持中に上限優先度ミューテックス解除（mutex.c L203 br[1]）
+- `chg_pri_j-1.yaml` — ロック済みミューテックスリスト内の非上限優先度ミューテックス（mutex.c L161 FALSE）
+- `chg_pri_j-2.yaml` — 待ちミューテックスが非上限優先度の場合（mutex.c L173 pos.2 FALSE）
+- `chg_pri_j-3.yaml` — 待ちミューテックスが上限優先度で違反なし（mutex.c L173 pos.4 FALSE）
 
 **2026-06-09 追加した BBテスト（全20グループ PASS）**:
 - `ras_ter_g.yaml` — actcnt=1かつ再起動優先度が呼出しタスクより高い場合にディスパッチ発生（task_term.c L180 (f)分岐）
@@ -42,7 +55,7 @@
 | exception.c | 7/7 100% | 4 | 6 | 66.7% ◀ |
 | interrupt.c | 108/110 98.2% | 57 | 58 | 98.3% ◀ |
 | mempfix.c | 150/150 100% | 86 | 88 | 97.7% ◀ |
-| mutex.c | 204/209 97.6% | 127 | 142 | 89.4% ◀ |
+| mutex.c | 209/209 100% | 138 | 142 | 97.2% ◀ |
 | pridataq.c | 243/244 99.6% | 148 | 148 | **100%** |
 | semaphore.c | 121/121 100% | 76 | 76 | **100%** |
 | startup.c | 25/25 100% | 4 | 4 | **100%** |
@@ -57,7 +70,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
 | wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2431/2451 99.2%** | **1366** | **1405** | **97.2%** |
+| **TOTAL** | **2451/2451 100%** | **1377** | **1405** | **98.0%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -151,22 +164,26 @@
 
 ### mutex.c
 
+> 分岐 C1: 138/142 = 97.2%（BBテスト ini_mtx_e/f, unl_mtx_g-1〜g-5, chg_pri_j-1〜j-3 追加後）  
+> 残 4 箇所は構造的到達不能（L227 br[1]: remove_mutex NULL exit、L375/423/474: assert失敗パス）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_mutex` | 100% | 2/2 100% | — | — |
-| `_kernel_mutex_check_ceilpri` ◀ | 70% | 5/12 41.7% | 7 | **H** |
-| `mutex_calc_priority` ◀ | 76.9% | 1/4 25% | 3 | **H** |
+| `_kernel_mutex_check_ceilpri` | 100% | 12/12 100% | — | — |
+| `mutex_calc_priority` | 100% | 4/4 100% | — | — |
 | `mutex_raise_priority` | 100% | 2/2 100% | — | — |
-| `mutex_drop_priority` ◀ | 100% | 2/4 50% | 2 | M |
+| `mutex_drop_priority` | 100% | 4/4 100% | — | — |
 | `_kernel_mutex_acquire` | 100% | 2/2 100% | — | — |
-| `_kernel_mutex_release` ◀ | 93.8% | 5/6 83.3% | 1 | L |
-| `_kernel_mutex_release_all` | 100% | 2/2 100% | — | — |
-| `loc_mtx` ◀ | 100% | 20/22 90.9% | 2 | M |
-| `ploc_mtx` ◀ | 100% | 17/18 94.4% | 1 | L |
-| `tloc_mtx` ◀ | 100% | 22/26 84.6% | 4 | M |
-| `unl_mtx` | 100% | 14/14 100% | — | — |
-| `ini_mtx` ◀ | 95.7% | 12/14 85.7% | 2 | M |
-| `ref_mtx` ◀ | 56.2% | 7/10 70% | 3 | M |
+| `_kernel_mutex_release` | 100% | 6/6 100% | — | — |
+| `_kernel_mutex_release_all` | 100% | 4/4 100% | — | — |
+| `loc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
+| `ploc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
+| `tloc_mtx` ◀ | 100% | — | 1 assert失敗 | — |
+| `unl_mtx` | 100% | 100% | — | — |
+| `ini_mtx` | 100% | 100% | — | — |
+| `ref_mtx` | 100% | 100% | — | — |
+| `remove_mutex`（内部） ◀ | 100% | — | 1 NULL exit(到達不能) | — |
 
 ### pridataq.c
 
@@ -338,12 +355,12 @@
 
 ## 残存未到達分岐リスト（2026-06-09 最終）
 
-> 全 39 箇所（1366/1405 = 97.2%）。未到達数の多い順。
+> 全 28 箇所（1377/1405 = 98.0%）。未到達数の多い順。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
-| 1 | mutex.c | 89.4% | 15 | L161/173(ceiling優先度), L202/227(whileループ), L228/263/265(drop処理), L315/558 他 |
-| 2 | time_event.c | 81.7% | 11 | L221/231(ヒープdown処理), L302/390/439, L533(adj_tim負), L588/589(assert), L624 |
+| 1 | time_event.c | 81.7% | 11 | L221/231(ヒープdown処理), L302/390/439, L533(adj_tim負), L588/589(assert), L624 |
+| 2 | mutex.c | 97.2% | 4 | L227 br[1](remove_mutex NULL exit, 到達不能), L375/423/474 br[0](assert失敗, 到達不能) |
 | 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / task文脈+p_runtsk=NULL矛盾） |
 | 4 | task.c | 96.8% | 2 | `assert` 失敗パス（L268/L274、構造的到達不能） |
 | 5 | mempfix.c | 97.7% | 2 | `rel_mpf`(L309/L310: 不正ブロックオフセット), `tget_mpf`/`ref_mpf` 要確認 |
