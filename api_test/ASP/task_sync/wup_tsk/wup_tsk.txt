@@ -194,30 +194,6 @@ tskidで指定したタスク（対象タスク）を起床する．具体的な
       ・関連NGKI : 【NGKI1267】【NGKI1275】
       ・yaml     : wup_tsk_W-a.yaml （内部キー ASP_task_sync_wup_tsk_W_a）
 
-(W-b) tskidが有効範囲の最大値を超える値の場合にE_IDが返ること
-      （VALID_TASKIDの上限条件 tskid<=tmax_tskid が偽となる経路）．
-      ・狙う分岐 : kernel/task_sync.c:215  VALID_TSKID の上限条件
-                  tskid <= tmax_tskid が偽（br[2]）
-      ・到達手順 : wup_tsk(TNUM_TSKID+1) を呼び出す
-      ・分類     : (i) API到達可
-      ・関連NGKI : 【NGKI1267】
-      ・yaml     : wup_tsk_W-b.yaml （内部キー ASP_task_sync_wup_tsk_W_b）
-      ・備考     : (b-2)（TNUM_TSKID+1→E_ID）と同等だが，(b-2)を含む auto_code
-                  グループがタイムアウトし当該分岐が未到達のため，バックアップ
-                  として追加．
-
-(W-c) CPUロック状態で呼び出してE_CTXが返ること
-      （CHECK_UNL の sense_lock()=T となる経路）．
-      ・狙う分岐 : kernel/task_sync.c:210  CHECK_UNL() = if(sense_lock()) の T側（br[0]）
-      ・到達手順 : CPUロック状態で wup_tsk(TASK2) を呼び出す
-      ・分類     : (i) API到達可
-      ・関連NGKI : 【NGKI1265】
-      ・yaml     : wup_tsk_W-c.yaml （内部キー ASP_task_sync_wup_tsk_W_c）
-      ・備考     : (a)（CPUロック→E_CTX）と同等のバックアップ．追加当初は(a)の
-                  auto_code グループも本YAMLの auto_code グループも CPU例外テスト
-                  （RAISE_CPU_EXCEPTION のEQ条件バグ）でタイムアウトしていたが，
-                  2026-06-08 に RAISE_CPU_EXCEPTION を 0xf0500090（ARMv7無条件）に
-                  修正し全グループが通過，L210 br[0] は到達済み（task_sync.c 100%）．
 
 
 以上．
