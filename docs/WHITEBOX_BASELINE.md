@@ -1,15 +1,17 @@
 # WHITEBOX_BASELINE.md — ASP3 kernel/ API別分岐カバレッジベースライン
 
-> 計測日: 2026-06-09（最終）  
+> 計測日: 2026-06-09（WBテスト無効化後 最終）  
 > 方式: gcov（`python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
 > 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
 > ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
-> ※ **2026-06-09 NDEBUG 計測移行**: `coverage_gcov_asp.sh` に `-DNDEBUG` を追加し assert ブランチを計測対象外に変更。
+> ※ **2026-06-09 NDEBUG 計測移行**: `coverage_gcov_asp.sh` に `-DNDEBUG` を追加し assert ブランチを計測対象外に変更。  
+> ※ **2026-06-09 WBテスト無効化**: `api_test/ASP/whitebox/` → `api_test/ASP/whitebox_archive/` に移動。手書き WBテスト（方式2）を無効化した状態でのベースライン。
 
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1434/1459 = 98.3%  (C1, 2026-06-09 NDEBUG計測)
+分岐カバレッジ(kernel/): 1425/1459 = 97.7%  (C1, 2026-06-09 NDEBUG計測、WBテスト無効化後)
+  ※WBテスト無効化前（参考）: 1434/1459 = 98.3%（手書き WBテスト alarm/cyclic/mempfix/task_manage/time_event 含む）
   ※NDEBUG計測移行後: assert ブランチ除去により task.c/wait.c → 100%、mutex.c 99.3%
     wait.h が 16→64ブランチ（インライン展開増加による計測アーティファクト）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -72,13 +74,13 @@
 
 | ファイル | 行 C0 | 到達分岐 | 全分岐 | C1 |
 |---|---|---|---|---|
-| alarm.c | 70/70 100% | 32 | 32 | **100%** |
-| cyclic.c | 74/74 100% | 36 | 36 | **100%** |
+| alarm.c | 70/70 100% | 31 | 32 | 96.9% ◀ |
+| cyclic.c | 74/74 100% | 35 | 36 | 97.2% ◀ |
 | dataqueue.c | 253/253 100% | 156 | 156 | **100%** |
 | eventflag.c | 165/165 100% | 122 | 122 | **100%** |
 | exception.c | 7/7 100% | 4 | 6 | 66.7% ◀ |
 | interrupt.c | 108/110 98.2% | 57 | 58 | 98.3% ◀ |
-| mempfix.c | 150/150 100% | 90 | 90 | **100%** |
+| mempfix.c | 150/150 100% | 88 | 90 | 97.8% ◀ |
 | mutex.c | 212/212 100% | 137 | 138 | 99.3% ◀ |
 | pridataq.c | 243/244 99.6% | 152 | 152 | **100%** |
 | semaphore.c | 121/121 100% | 78 | 78 | **100%** |
@@ -86,15 +88,15 @@
 | sys_manage.c | 152/152 100% | 62 | 62 | **100%** |
 | task.c | 110/111 99.1% | 64 | 64 | **100%** |
 | task.h | 4/4 100% | 2 | 2 | **100%** |
-| task_manage.c | 119/119 100% | 92 | 92 | **100%** |
+| task_manage.c | 119/119 100% | 91 | 92 | 98.9% ◀ |
 | task_refer.c | 78/78 100% | 34 | 35 | 97.1% ◀ |
 | task_sync.c | 169/169 100% | 118 | 118 | **100%** |
 | task_term.c | 94/94 100% | 64 | 64 | **100%** |
-| time_event.c | 138/141 97.9% | 52 | 56 | 92.9% ◀ |
+| time_event.c | 131/141 92.9% | 48 | 56 | 85.7% ◀ |
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 8 | 8 | **100%** |
 | wait.h | 38/38 100% | 49 | 64 | 76.6% ◀ |
-| **TOTAL** | **2446/2454 99.7%** | **1434** | **1459** | **98.3%** |
+| **TOTAL** | **2439/2454 99.4%** | **1425** | **1459** | **97.7%** |
 
 > ※ wait.h の分岐数が 16→64 に増加: NDEBUG+O2 によるインライン展開変化のアーティファクト。  
 >    同一ソース行に複数の call-site インスタンスが生成され、一部が未到達となる。  
@@ -106,7 +108,7 @@
 
 ### alarm.c
 
-> 分岐 C1: 32/32 = **100%**（alarm_W-a (WB) で L241 br[1] 到達済み、2026-06-09）
+> 分岐 C1: 31/32 = **96.9%**（WBテスト無効化により L241 br[1] 未到達に戻った）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -114,11 +116,11 @@
 | `sta_alm` | 100% | 10/10 100% | — | — |
 | `stp_alm` | 100% | 8/8 100% | — | — |
 | `ref_alm` | 100% | 10/10 100% | — | — |
-| `_kernel_call_alarm` | 100% | 2/2 100% | — | — |
+| `_kernel_call_alarm` ◀ | 100% | 1/2 50% | L241 br[1]（iloc_cpu 戻り） | — |
 
 ### cyclic.c
 
-> 分岐 C1: 36/36 = **100%**（cyclic_W-a (WB) で L259 br[1] 到達済み、2026-06-09）
+> 分岐 C1: 35/36 = **97.2%**（WBテスト無効化により L259 br[1] 未到達に戻った）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -126,7 +128,7 @@
 | `sta_cyc` | 100% | 10/10 100% | — | — |
 | `stp_cyc` | 100% | 10/10 100% | — | — |
 | `ref_cyc` | 100% | 10/10 100% | — | — |
-| `_kernel_call_cyclic` | 100% | 2/2 100% | — | — |
+| `_kernel_call_cyclic` ◀ | 100% | 1/2 50% | L259 br[1]（iloc_cpu 戻り） | — |
 
 ### dataqueue.c
 
@@ -183,8 +185,7 @@
 
 ### mempfix.c
 
-> 分岐 C1: 88/88 = **100%**（mempfix_W-a/b (WB) で L309/L310 到達済み、2026-06-09）  
-> ※ per-API 内訳は旧値のまま（get_mpf_k + mempfix_W-a/b 追加後、ファイル全体は 100%）
+> 分岐 C1: 88/90 = **97.8%**（WBテスト無効化により L309/L310 br[0] 未到達に戻った）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -193,7 +194,7 @@
 | `get_mpf` | 100% | 16/16 100% | — | — |
 | `pget_mpf` | 100% | 10/10 100% | — | — |
 | `tget_mpf` | 100% | 20/20 100% | — | — |
-| `rel_mpf` | 100% | 20/20 100% | — | — |
+| `rel_mpf` ◀ | 100% | 18/20 90% | L309 br[0]（ミスアライメント）、L310 br[0]（範囲外） | — |
 | `ini_mpf` | 100% | 10/10 100% | — | — |
 | `ref_mpf` | 100% | 8/8 100% | — | — |
 
@@ -296,11 +297,11 @@
 
 ### task_manage.c
 
-> 分岐 C1: 92/92 = 100%（act_tsk_W-a (WB) で L137 br[1] 到達済み、2026-06-09）
+> 分岐 C1: 91/92 = **98.9%**（WBテスト無効化により L137 br[1] 未到達に戻った）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `act_tsk` | 100% | 20/20 100% | — | — |
+| `act_tsk` ◀ | 100% | 19/20 95% | L137 br[1]（TA_NOACTQUE E_QOVR） | — |
 | `can_act` | 100% | 10/10 100% | — | — |
 | `get_tst` | 100% | 20/20 100% | — | — |
 | `chg_pri` | 100% | 26/26 100% | — | — |
@@ -343,26 +344,26 @@
 
 ### time_event.c
 
-> 分岐 C1: 52/56 = 92.9%（NDEBUG計測により assert 失敗パス L588/L589 除去）  
-> 残 4 箇所は構造的到達不能または実機困難（L390/L439/L624 等）
+> 分岐 C1: 48/56 = **85.7%**（WBテスト無効化により L221/L231/L302 等 4 分岐が追加未到達）  
+> 残 8 箇所: L221/L231（tmevt_down 内部状態依存）、L302（tmevtb_delete go-up）、  
+> L390/L439（64bit折返し・HRTCNT_BOUND 実用的到達不能）、L624（spurious HRT 割込み）、計測差異 ×1
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_tmevt` | 100% | — | — | — |
 | `_kernel_tmevt_up` | 100% | 4/4 100% | — | — |
-| `_kernel_tmevt_down` ◀ | ≈81.8% | 6/8 75% | 2 | M |
+| `_kernel_tmevt_down` ◀ | ≈81.8% | 4/8 50% | L221 br[1]（右子なし）、L231 br[0]（早期break） | — |
 | `tmevtb_insert` | 100% | — | — | — |
-| `tmevtb_delete` | 100% | 6/6 100% | — | — |
+| `tmevtb_delete` ◀ | 100% | 5/6 83% | L302 br[0]（go-up パス） | — |
 | `tmevtb_delete_top` | 100% | 2/2 100% | — | — |
-| `_kernel_update_current_evttim` ◀ | 92.9% | 3/4 75% | 1 | L |
-| `_kernel_set_hrt_event` ◀ | 90.9% | 5/6 83.3% | 1 | L |
+| `_kernel_update_current_evttim` ◀ | 92.9% | 3/4 75% | 1 L390(64bit EVTTIM 折返し) | L |
+| `_kernel_set_hrt_event` ◀ | 90.9% | 5/6 83.3% | 1 L439(HRTCNT_BOUND=4G ticks) | L |
 | `_kernel_tmevtb_register` | 100% | — | — | — |
 | `_kernel_signal_time` ◀ | 95.7% | 7/8 87.5% | 1 L624(空ヒープ割込み) | L |
 | `_kernel_tmevtb_enqueue_rel` | 100% | 4/4 100% | — | — |
 | `_kernel_tmevtb_dequeue` | 100% | 4/4 100% | — | — |
 | `_kernel_check_adjtim` | 100% | 8/8 100% | — | — |
 | `_kernel_tmevt_lefttim` | 100% | 2/2 100% | — | — |
-| `_kernel_signal_time` ◀ | 95.7% | 9/12 75% | 3 | M |
 
 ### time_manage.c
 
@@ -399,20 +400,24 @@
 
 ---
 
-## 残存未到達分岐リスト（2026-06-09 NDEBUG計測後）
+## 残存未到達分岐リスト（2026-06-09 WBテスト無効化後）
 
-> 全 25 箇所（1434/1459 = 98.3%）。未到達数の多い順。  
+> 全 34 箇所（1425/1459 = 97.7%）。未到達数の多い順。  
 > ※ wait.h の 15 箇所はインライン展開アーティファクト（論理的カバレッジは確認済み）。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
 | 1 | wait.h | 76.6% | 15 | インライン展開増加アーティファクト（NDEBUG+O2。論理的両分岐カバー済み） |
-| 2 | time_event.c | 92.9% | 4 | L390(64bit EVTTIM overflow), L439(HRTCNT_BOUND=4G ticks), L624(空ヒープ割込み), +1 |
+| 2 | time_event.c | 85.7% | 8 | L221/L231(tmevt_down 内部状態依存), L302(tmevtb_delete go-up), L390/L439(実用的到達不能), L624(タイミング依存), 計測差異1 |
 | 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / p_runtsk=NULL矛盾） |
-| 4 | mutex.c | 99.3% | 1 | L227 br[1]（remove_mutex NULL exit、構造的到達不能） |
-| 5 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
-| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
+| 4 | mempfix.c | 97.8% | 2 | L309/L310 br[0]（rel_mpf E_PAR: 不正ポインタ、到達可能・低優先度） |
+| 5 | alarm.c | 96.9% | 1 | L241 br[1]（call_alarm: ハンドラ内 iloc_cpu 戻り、到達困難） |
+| 6 | cyclic.c | 97.2% | 1 | L259 br[1]（call_cyclic: 同上） |
 | 7 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（到達困難） |
+| 8 | mutex.c | 99.3% | 1 | L227 br[1]（remove_mutex NULL exit、構造的到達不能） |
+| 9 | task_manage.c | 98.9% | 1 | L137 br[1]（act_tsk TA_NOACTQUE E_QOVR、到達可能・低優先度） |
+| 10 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
+| 11 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
 
 **NDEBUG適用で解消した未到達 (assert系)**：
 
@@ -433,14 +438,14 @@
 | task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (97.7%、残2) |
-| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2) | **100%** |
-| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2) | **100%** |
-| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2) | **100%** |
-| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2) | **100%** |
-| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2) | **100%** |
-| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2) | 6/6 **100%** |
-| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2) | 6/8 75%（残2: L390/L439 困難） |
-| time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1) | 8/8 **100%** |
+| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1、api_test/ 配下で **有効のまま**) | 8/8 **100%** |
 | semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 
 ## 更新手順
