@@ -25,14 +25,28 @@ on:
 env:
   # UPSTREAM_KERNEL.md と一致させること（再現性のため版を固定）
   ASP3_ZIP_URL: "https://www.toppers.jp/download.cgi/asp3_zybo_z7_gcc-20260520.zip"
+  # FMP3 は git管理版（exshonda/fmp3）を commit で固定（SVN trunk import＋TTSP3向け修正）
+  FMP3_GIT_URL: "https://github.com/exshonda/fmp3"
+  FMP3_COMMIT: "223ed7e"
   QEMU_VERSION: "11.0.0"
   QEMU_PREFIX: "/opt/qemu-ttsp3"
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    # ASP3 と FMP3 を matrix で並列実行（QEMU/ツールチェーン手順は共通）。
+    # ASP3: 公式ZIP取得＋scripts/ci_run.sh ／ FMP3: git版取得＋scripts/ci_run_fmp.sh。
     # テストは並列ドライバ化済み（32コアローカルで34秒、4vCPUランナーでも数分想定）。
     # 支配項は初回のQEMUビルド（キャッシュミス時のみ約8分）。
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: ASP
+            run_script: scripts/ci_run.sh
+          - profile: FMP
+            run_script: scripts/ci_run_fmp.sh
+    name: "build-and-test (${{ matrix.profile }})"
     timeout-minutes: 60
     steps:
       # 本リポジトリを ws/ttsp3 に取得（兄弟配置にするためサブパスへ）
@@ -86,8 +100,9 @@ jobs:
           echo "${QEMU_PREFIX}/bin" >> "$GITHUB_PATH"
           "${QEMU_PREFIX}/bin/qemu-system-arm" --version | head -1
 
-      # ---- 被テストカーネル（兄弟 ../asp3）----
+      # ---- 被テストカーネル（兄弟ディレクトリ）----
       - name: Fetch standard ASP3 (ZIP, pinned; sibling dir)
+        if: matrix.profile == 'ASP'
         run: |
           curl -sL -o asp3.zip "${ASP3_ZIP_URL}"
           mkdir asp3_extract
@@ -99,22 +114,30 @@ jobs:
           ls -d ttsp3 asp3   # 兄弟配置の確認
           grep -m1 'Release' asp3/doc/version.txt
 
+      - name: Fetch FMP3 (git, pinned commit; sibling dir)
+        if: matrix.profile == 'FMP'
+        run: |
+          git clone "${FMP3_GIT_URL}" fmp3
+          git -C fmp3 checkout "${FMP3_COMMIT}"
+          ls -d ttsp3 fmp3   # 兄弟配置の確認
+          git -C fmp3 log -1 --format='FMP3 commit: %h %s'
+          grep -m1 '対応バージョン' fmp3/doc/version.txt || true
+
       # ---- 実行 ----
-      - name: Run TTSP3 (target-dependent check -> API) on QEMU
+      - name: Run TTSP3 (${{ matrix.profile }}) on QEMU
         working-directory: ttsp3
         env:
           CI_MODE: ${{ github.event.inputs.ci_mode || 'full' }}
         run: |
-          bash scripts/ci_run.sh
+          bash ${{ matrix.run_script }}
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ttsp3-logs
+          name: ttsp3-logs-${{ matrix.profile }}
           path: |
             ttsp3/ci_*.log
-            ttsp3/obj/**/execute.log
-            ttsp3/obj/**/result_ttg.log
-            ttsp3/obj/api_test/config_error/result_conf_err.log
+            ttsp3/obj*/**/execute.log
+            ttsp3/obj*/**/result_ttg.log
           if-no-files-found: warn

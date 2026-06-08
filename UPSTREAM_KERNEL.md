@@ -6,14 +6,15 @@
 ## 取得方法
 
 ASP3 は TOPPERS 公式の**簡易パッケージ（ZIP配布物）**で版を固定する（SVNチェックアウト不要）。
-CI（`.github/workflows/ci.yml`）も同じURLから取得する。
+FMP3 は **git管理版（`exshonda/fmp3`）**で版を固定する（SVN trunk からインポート＋TTSP3向け修正
+を含む）。CI（`.github/workflows/ci.yml`）も同じ版を取得する。
 
-| カーネル | 対応バージョン | 取得URL（版固定） | 配布物 |
+| カーネル | 対応バージョン | 取得方法（版固定） | 配布物／コミット |
 |---|---|---|---|
 | ASP3 | Release 3.7.2 | https://www.toppers.jp/download.cgi/asp3_zybo_z7_gcc-20260520.zip | asp3_zybo_z7_gcc-20260520.zip（ZYBO-Z7簡易パッケージ） |
-| FMP3 | （記入） | （記入） | |
-| HRP3 | （記入） | （記入） | |
-| HRMP3 | （記入） | （記入） | |
+| FMP3 | Release 3.4.0 | `git clone git@github.com:exshonda/fmp3`（または https）。CIは commit で固定 | `223ed7e`（Import from svn fmp3_trunk rev 479．set_dspflg空キュー修正・POSIXポート修正等を含む。調査記録は fmp3 `issues/`） |
+| HRP3 | （後回し） | — | HRMP3/HRP3対応は後回し（DIVERGENCE_MAP 開発方針） |
+| HRMP3 | （後回し） | — | 同上 |
 
 TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 

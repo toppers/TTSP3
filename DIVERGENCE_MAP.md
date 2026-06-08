@@ -79,6 +79,8 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `library/HRP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止） | 済（2026-06-08） |
 | `scripts/ttsp_parallel_cfgerr.sh`（HRP分岐 APPL_COBJS_COMMON） | 改変 | HRP cfg-error の TECSアダプタ obj 名を tecsgen 1.8.0 実生成名へ修正。旧名 `tHRPSVCPlugin_sXxxSVCCaller_Yyy_eZzz_tecsgen.{c,o}` は当該 tecsgen が生成せず「No rule to make target …_tecsgen.c」で停止していた（3.4→3.7 の tecsgen 名称差分）。最小 out.cdl に対する gen/Makefile.tecsgen の実出力に合わせ `tHRPSVCBody_*`／`tHRPSVCCaller_*` 系へ置換。検証：`ttsp_parallel_cfgerr.sh ../hrp3_3.4/ HRP obj_hrp_cfgerr` で **OK=113 NG=0**（DEF_INH_c も含め全通過）。cfg-error は configurator 段で期待エラーを検出する負テストで、HRP集合は実質 ASP staticAPI（ASP で 113/113 確認済）＋HRP独自分0件のため divergence の新規カバレッジは無いが、HRP でも E_ID 等が正しく検出されることを確認 | 済（2026-06-08） |
 | `ttb.sh`（HRP正系API用 APPL_COBJS_COMMON） | （後回し） | HRP正系APIテスト用の `tHRPSVCPlugin_*`（旧tecsgen名）が obsolete だが，正系cdlは tecsgen 1.8.0 で**27個**のTECSオブジェクトを生成（cfg-errorの12個より多い）．Makefile(line217)は `$(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)` で自動導出できるが，ttb.shの`make APPL_COBJS=`コマンドライン上書きが抑制する設計課題．正しい対応は「TECSプロファイルでは自動導出に委ね，ハーネス固有obj(ttsp_test_lib.o/ttsp_mem_obj_*)のみ別途渡す」だが正系ビルドハーネス整備が前提＝**HRMP3/HRP3後回し方針により保留**（2026-06-08調査済） | 後回し |
+| `scripts/ci_run_fmp.sh` ＋ `.github/workflows/ci.yml`（matrix化） | NEW/改変 | CIに FMP3 zybo を追加（A案）．ci.yml を ASP/FMP の matrix 並列に拡張（QEMU/ツールチェーン共通・ASP挙動不変）．FMP3 は `exshonda/fmp3`(commit固定)を git clone．ci_run_fmp.sh は check_library(3)＋API(20)＋cfg-error を判定し，cfg-error の既知残 DEF_INH_c を許容（CFGERR_ALLOW_NG）．ローカル検証 PASS=182/FAIL=0 | 済（2026-06-08） |
+| `UPSTREAM_KERNEL.md`（FMP3行） | 改変 | FMP3版固定を記入：`exshonda/fmp3` commit 223ed7e（svn rev479 import＋修正） | 済（2026-06-08） |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
 
