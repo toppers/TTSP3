@@ -1,9 +1,11 @@
 # DIVERGENCE_MAP.md — 差分台帳
 
 > **開発方針（2026-06-08）**：当面は **ASP3 / FMP3 を対象**に進め，**HRMP3 / HRP3 対応は後回し**。
+> **基本ターゲットは zybo_z7_gcc（QEMU）**。POSIX(linux_gcc)は実装が不安定なため副次扱いとし，
+> POSIX固有の残課題（FMP POSIX API残7グループ・cfg-error残10件）は zybo で緑なら深追いしない。
 > HRMP3/HRP3 固有の課題（正系API立ち上げ・ttb.shのTECSオブジェクト自動導出化・
 > HRMP3 zybo+QEMU ブート問題等）は本台帳に記録のみ残し，着手しない。
-> 既着手の HRMP/HRP cfg-error 対応・set_dspflg 波及調査は完了済み（深追いしない）。
+> 既着手の HRMP/HRP cfg-error 対応・set_dspflg 波及調査・FMP POSIXポート修正は完了済み（深追いしない）。
 
 > 2つの差分を管理する。
 > A) **仕様差分**：TTSP3 R3.1.0（仕様3.4.0）↔ 被テスト標準ASP3（3.7.2）
