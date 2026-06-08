@@ -88,6 +88,7 @@ TTSP3 R3.1.0 に無い 3.7 新機能の網羅テストを追加する（仕様�
 
 - **P2-1. サブ優先度（subprio）固有テスト** … 3.6→3.7の仕様変更（優先度上昇状態中の
   サブ優先度の扱い等）。chg_spr/サブ優先度付き優先度のTESRY追加＋TTG対応。
+  → 詳細設計は下記「P2-1 設計サブプラン」。
 - **P2-2. モノトニックタイマ拡張パッケージ** … get_utm系。任意パッケージのため
   カーネル側のpkg有効化が前提。
 - **P2-3. 優先度継承拡張パッケージ** … 既存mutex系の拡張。任意pkg。
@@ -98,6 +99,46 @@ TTSP3 R3.1.0 に無い 3.7 新機能の網羅テストを追加する（仕様�
 ### P3. TTG の 3.7 生成対応（残）
 - 現状 TA_EDGE/int_trigger_atr（POSIX用）は対応済。zybo生成は緑。
 - P2 で新機能テストを足す場合に、対応する生成ロジック（サブ優先度の静的API等）を追加。
+
+### P2-1 設計サブプラン（サブ優先度テスト・2026-06-08調査）
+
+**前提・調査結果**
+- サブ優先度は ASP3 の**拡張パッケージ**（`asp3/extension/subprio/`）。標準 zybo 簡易
+  パッケージ（CI基準カーネル）には**含まれない**。
+- 有効化＝拡張オーバーレイ：asp3ソースツリー先頭で `cp -r extension/subprio/* .`
+  （本体ファイルを上書き）。`TOPPERS_SUPPORT_SUBPRIO` が kernel.h で定義される。
+- 追加API：`ER chg_spr(ID tskid, uint_t subpri)`（サブ優先度変更）。T_RTSK に
+  `uint_t subpri` フィールド追加。サブ優先度は task の現在優先度内の順序付け。
+- 拡張に参照テストあり：`extension/subprio/test/test_subprio{1,2,3}.{c,cfg}`＋
+  `test_subprio.txt`（TESRY/期待値の設計モデルになる）。
+- TTSP3 R3.1.0 には**サブ優先度専用テストは無い**（ref_tsk.txt が subpri フィールドに
+  言及する程度）＝完全な新規カバレッジ。
+
+**実装ステップ（提案）**
+1. **カーネル変種の確立**：subprioオーバーレイ済み asp3 を別ツリー（例 `../asp3_subprio`、
+   または exshonda 配下の git版に subprio 適用ブランチ）として用意し，zybo QEMU で
+   ビルド可能にする。まず拡張同梱の `test_subprio1` を zybo QEMU で緑にして
+   **実現可能性を証明**する（最重要・最初の関門）。
+2. **TESRY 追加**：`test_subprio.txt` を参考に，TTSP3 形式の TESRY を作成。
+   - chg_spr 異常系：E_ID（不正tskid）/ E_PAR（subpri範囲外）/ E_OBJ（休止状態）等
+   - chg_spr 正常系：同一優先度内の順序変更が ref_tsk.subpri / スケジューリングに反映
+   - サブ優先度付き優先度でのディスパッチ順（優先度上昇状態の扱い含む＝3.7変更点）
+   - 配置：`api_test/ASP/task_manage/chg_spr/` 等（要 TTSP_SUPPORT_SUBPRIO ガード）
+3. **TTG 対応**：サブ優先度を使う静的API生成／chg_spr 呼出し生成。サブ優先度有効時のみ
+   生成するよう条件分岐（既存の int_trigger_atr 追加と同様の手法）。
+4. **ハーネス**：subprio カーネル変種を指すビルド構成（configure or 専用 OBJ_DIR）。
+   既存の `ttsp_parallel_api.sh` を subprio 変種でも回せるようにする。
+5. **CI**：subprio カーネル変種の job を追加するか判断（標準パッケージと別カーネルのため）。
+
+**判断ゲート（着手前に要確認）**
+- (G1) **公式の3.7対応TTSP3が存在しないか**（AGENTS.md・重複作業回避）。存在すれば本作業は
+  不要/差し替え。
+- (G2) **subprioカーネル変種をどう供給・維持するか**：標準zyboパッケージに無いため，
+  ①asp3に拡張適用したツリーをCI用にどこから取得するか（exshonda git版に subprio ブランチ？），
+  ②CIに subprio job を増やすか。FMP3 を exshonda/fmp3 git版にしたのと同様の整備が要る。
+
+**規模感**：中〜大。最初の関門（subprio拡張カーネルを zybo QEMU で緑）を超えれば，
+あとは TESRY authoring が主。G1/G2 の確認・決定が前提。
 
 ### スコープ外・後回し
 - **POSIX(linux_gcc)固有の残**：API残7（割込み異常系・adj_tim実時間・CRE_TSK stk）、
