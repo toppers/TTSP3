@@ -16,6 +16,20 @@ TTSP3 R3.1.0（仕様3.4.0）↔ 被テスト ASP3 3.7.2 / FMP3 3.4.0。
 FMP オートコード20・cfg-error 159、CI matrix 緑）。本書の残作業は主に
 (a) 一部の期待値・新仕様の確認、(b) 3.7新機能の正系テスト追加（任意）。
 
+> **再実証（2026-06-08）**：台帳の主張が現状でも保たれるか独立に再検証した（残作業#1）。
+> ローカル zybo QEMU（a9gtimerパッチ適用済バイナリ）で全区間を実走：
+> - **ASP3：`ci_run.sh` full → PASS=141 / FAIL=0**（target-dep 3〔exception/interrupt/**timer**〕＋
+>   API auto_code 20＋scratch 5＋cfg-error **113/113**）。
+> - **FMP3：`ci_run_fmp.sh` → PASS=182 / FAIL=0**（target-dep 3＋API auto_code 20＋
+>   cfg-error **OK=159・unexpected NG=0**。既知残 `DEF_INH_c` は CFGERR_ALLOW_NG で許容＝想定どおり）。
+> いずれも execute.log の合否（`All check points passed.`／期待エラーコードgrep）を根拠とする実出力。
+> 結論：**台帳の「✅影響なし/対応済」は現状でも実出力で成立**。
+
+> **棚卸しの記録穴（2026-06-08 照合で発見・影響なし扱い）**：3.6→3.7 の
+> 「ARM依存部のFPUサポートに、常にFPUを使用する実装を追加」は本書1章の表に行が無かった。
+> TTSP3 はカーネルのデフォルトFPU構成を使用し、専用テストも無いため**影響なし**（上記再実証の
+> 全緑で間接的に裏付け）。下表 3.6.0→3.7.0 に行を追記して記録穴を埋めた。
+
 ---
 
 ## 1. 棚卸し（3.4.0 → 3.7.2 の全差分 × TTSP3影響 × 状態）
@@ -49,6 +63,7 @@ FMP オートコード20・cfg-error 159、CI matrix 緑）。本書の残作業
 | objdumpダンプ形式対応 | cfg/ビルド | ✅ 影響なし確認 |
 | arm.c廃止（arm.hに統合） | target KERNEL_COBJS | ✅ 全ターゲットで arm.o 削除済 |
 | ARM GIC EOI仕様変更 | target（zybo割込み） | ✅ zybo割込みチェック緑 |
+| ARM依存部に「常にFPUを使用する実装」を追加（FPUサポート選択肢の拡張） | カーネルビルド構成（TTSP3はデフォルト構成を使用） | ✅ 影響なし確認（2026-06-08。TTSP3はFPU構成を指定せずカーネル既定に従う。専用テストなし。再実証の全緑で裏付け） |
 
 ### 3.7.0 → 3.7.1
 | 差分 | TTSP3影響 | 状態 |
