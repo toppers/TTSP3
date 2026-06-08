@@ -8,13 +8,14 @@
 #  結果は scripts/ttsp_gcov_report.py で /asp3/kernel/ にフィルタして統合する．
 #
 #  使い方:
-#    ./scripts/coverage_gcov_asp.sh [smoke|full]
+#    ./scripts/coverage_gcov_asp.sh [smoke|bb|all]
 #      smoke: check_libraryのみ（既定．数分）
-#      full : APIオートコード20分割も含む（並列ドライバ使用で数十分程度）
+#      bb   : APIオートコード20分割も含む・BBテストのみ（並列ドライバ使用で数十分程度）
+#      all  : bb に加え whitebox_archive/ の手書き WBテストも実行
 #
 #  環境変数:
 #    OBJ_DIR      : ワークディレクトリ（既定 obj_asp_gcov）
-#    API_DIV_NUM  : full時の分割数（既定 20）
+#    API_DIV_NUM  : bb/all時の分割数（既定 20）
 #    QEMU_TIMEOUT : QEMU 1実行のタイムアウト秒（既定 1800）
 #
 #  ビルドオプション:
@@ -26,6 +27,10 @@ set -u
 cd "$(dirname "$0")/.."
 
 MODE="${1:-smoke}"
+case "$MODE" in
+	smoke|bb|all) ;;
+	*) echo "ERROR: unknown mode '$MODE' (smoke|bb|all)"; exit 1 ;;
+esac
 OBJ_DIR="${OBJ_DIR:-obj_asp_gcov}"
 DIV_NUM="${API_DIV_NUM:-20}"
 QEMU_TIMEOUT="${QEMU_TIMEOUT:-1800}"
@@ -63,7 +68,7 @@ for d in exception interrupt timer; do
 	dirs="$dirs $dir"
 done
 
-if [ "$MODE" = "full" ]; then
+if [ "$MODE" = "bb" ] || [ "$MODE" = "all" ]; then
 	echo "===== build & run: API auto-code (${DIV_NUM}-way, GCOV, parallel) ====="
 	TTSP_MAKE_OPT="ENABLE_GCOV=true" \
 		bash scripts/ttsp_parallel_api.sh ../asp3/ ASP "$OBJ_DIR" "$DIV_NUM"
@@ -71,6 +76,38 @@ if [ "$MODE" = "full" ]; then
 		dir=$OBJ_DIR/api_test/auto_code_$i
 		[ -f "$dir/asp" ] && dirs="$dirs $dir"
 	done
+fi
+
+if [ "$MODE" = "all" ]; then
+	REF_MK="$OBJ_DIR/api_test/auto_code_1/Makefile"
+	if [ -f "$REF_MK" ] && compgen -G "api_test/ASP/whitebox_archive/*/*/" > /dev/null 2>&1; then
+		echo "===== build & run: WB tests (whitebox_archive, manual) ====="
+		source ./configure.sh
+		source "./library/ASP/target/${TARGET_NAME}/ttsp_target.sh"
+		WB_KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o"
+		WB_APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
+		for wb_src in api_test/ASP/whitebox_archive/*/*/; do
+			wb_name=$(basename "$wb_src")
+			wb_dir="$OBJ_DIR/api_test/wb_${wb_name}"
+			mkdir -p "$wb_dir/objs"
+			cp "$REF_MK" "$wb_dir/Makefile"
+			cp "${wb_src}out.c" "$wb_dir/out.c"
+			cp "${wb_src}out.h" "$wb_dir/out.h"
+			cp "${wb_src}out.cfg" "$wb_dir/out.cfg"
+			( cd "$wb_dir" && make ENABLE_GCOV=true -j4 \
+				KERNEL_COBJS="$WB_KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
+				APPL_COBJS="$WB_APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
+				> /tmp/gcov_build_wb_$$.log 2>&1 )
+			if [ -f "$wb_dir/asp" ]; then
+				run_qemu "$wb_dir"
+				last=$(tr -d '\r' < "$wb_dir/execute.log" | tail -1)
+				echo "run wb/$wb_name: $last"
+				dirs="$dirs $wb_dir"
+			else
+				echo "BUILD FAIL: wb/$wb_name"; tail -10 /tmp/gcov_build_wb_$$.log
+			fi
+		done
+	fi
 fi
 
 echo ""
