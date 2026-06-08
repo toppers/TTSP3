@@ -8,7 +8,8 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1382/1405 = 98.4%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1386/1405 = 98.6%  (C1, 2026-06-09 最終)
+  ※alarm/cyclic/mempfix WBテスト追加後: 1386/1405 = 98.6%（alarm/cyclic/mempfix 100%）
   ※time_event.c WBテスト追加後: 1382/1405 = 98.4%（time_event.c 90.0%, 残6は到達不能/実機困難）
   ※mutex.c WBテスト追加後: 1377/1405 = 98.0%（mutex.c 97.2%, 残4は到達不能）
   ※act_tsk_W-a追加直後:    1366/1405 = 97.2%（task_manage.c 100%）
@@ -36,6 +37,16 @@
 - `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
+**2026-06-09 追加した WBテスト（alarm/cyclic/mempfix、方式2: 手書き）**:
+- `alarm_W-a` — call_alarm: ハンドラが iloc_cpu() で返る → lock_cpu() スキップ（alarm.c L241 br[1]）
+  配置: `api_test/ASP/whitebox/alarm/alarm_W-a/`（out.c/h/cfg）
+- `cyclic_W-a` — call_cyclic: ハンドラが iloc_cpu() で返る → lock_cpu() スキップ（cyclic.c L259 br[1]）
+  配置: `api_test/ASP/whitebox/cyclic/cyclic_W-a/`（out.c/h/cfg）
+- `mempfix_W-a` — rel_mpf: ミスアライメントポインタ → E_PAR（mempfix.c L309 br[0]）
+  配置: `api_test/ASP/whitebox/mempfix/mempfix_W-a/`（out.c/h/cfg）
+- `mempfix_W-b` — rel_mpf: blkidx >= unused → E_PAR（mempfix.c L310 br[0]）
+  配置: `api_test/ASP/whitebox/mempfix/mempfix_W-b/`（out.c/h/cfg）
+
 **2026-06-09 追加した WBテスト（time_event.c、方式2: 手書き）**:
 - `time_event_W-a` — tmevt_down: 右兄弟なし + 早期break（time_event.c L221 br[1] + L231 br[0]）
   配置: `api_test/ASP/whitebox/time_event/time_event_W-a/`（out.c/h/cfg）
@@ -57,13 +68,13 @@
 
 | ファイル | 行 C0 | 到達分岐 | 全分岐 | C1 |
 |---|---|---|---|---|
-| alarm.c | 70/70 100% | 31 | 32 | 96.9% ◀ |
-| cyclic.c | 74/74 100% | 35 | 36 | 97.2% ◀ |
+| alarm.c | 70/70 100% | 32 | 32 | **100%** |
+| cyclic.c | 74/74 100% | 36 | 36 | **100%** |
 | dataqueue.c | 253/253 100% | 152 | 152 | **100%** |
 | eventflag.c | 165/165 100% | 120 | 120 | **100%** |
 | exception.c | 7/7 100% | 4 | 6 | 66.7% ◀ |
 | interrupt.c | 108/110 98.2% | 57 | 58 | 98.3% ◀ |
-| mempfix.c | 150/150 100% | 86 | 88 | 97.7% ◀ |
+| mempfix.c | 150/150 100% | 88 | 88 | **100%** |
 | mutex.c | 209/209 100% | 138 | 142 | 97.2% ◀ |
 | pridataq.c | 243/244 99.6% | 148 | 148 | **100%** |
 | semaphore.c | 121/121 100% | 76 | 76 | **100%** |
@@ -79,7 +90,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
 | wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2443/2451 99.7%** | **1382** | **1405** | **98.4%** |
+| **TOTAL** | **2443/2451 99.7%** | **1386** | **1405** | **98.6%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -87,15 +98,19 @@
 
 ### alarm.c
 
+> 分岐 C1: 32/32 = **100%**（alarm_W-a (WB) で L241 br[1] 到達済み、2026-06-09）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_alarm` | 100% | 2/2 100% | — | — |
 | `sta_alm` | 100% | 10/10 100% | — | — |
 | `stp_alm` | 100% | 8/8 100% | — | — |
 | `ref_alm` | 100% | 10/10 100% | — | — |
-| `_kernel_call_alarm` ◀ | 100% | 1/2 50% | 1 | L |
+| `_kernel_call_alarm` | 100% | 2/2 100% | — | — |
 
 ### cyclic.c
+
+> 分岐 C1: 36/36 = **100%**（cyclic_W-a (WB) で L259 br[1] 到達済み、2026-06-09）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -103,7 +118,7 @@
 | `sta_cyc` | 100% | 10/10 100% | — | — |
 | `stp_cyc` | 100% | 10/10 100% | — | — |
 | `ref_cyc` | 100% | 10/10 100% | — | — |
-| `_kernel_call_cyclic` ◀ | 100% | 1/2 50% | 1 | L |
+| `_kernel_call_cyclic` | 100% | 2/2 100% | — | — |
 
 ### dataqueue.c
 
@@ -160,16 +175,19 @@
 
 ### mempfix.c
 
+> 分岐 C1: 88/88 = **100%**（mempfix_W-a/b (WB) で L309/L310 到達済み、2026-06-09）  
+> ※ per-API 内訳は旧値のまま（get_mpf_k + mempfix_W-a/b 追加後、ファイル全体は 100%）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_mempfix` | 100% | 2/2 100% | — | — |
 | `_kernel_get_mpf_block` | 100% | 2/2 100% | — | — |
-| `get_mpf` ◀ | 100% | 15/16 93.8% | 1 | L |
+| `get_mpf` | 100% | 16/16 100% | — | — |
 | `pget_mpf` | 100% | 10/10 100% | — | — |
-| `tget_mpf` ◀ | 100% | 18/20 90% | 2 | M |
-| `rel_mpf` ◀ | 100% | 16/20 80% | 4 | M |
+| `tget_mpf` | 100% | 20/20 100% | — | — |
+| `rel_mpf` | 100% | 20/20 100% | — | — |
 | `ini_mpf` | 100% | 10/10 100% | — | — |
-| `ref_mpf` ◀ | 53.3% | 3/8 37.5% | 5 | **H** |
+| `ref_mpf` | 100% | 8/8 100% | — | — |
 
 ### mutex.c
 
@@ -367,7 +385,7 @@
 
 ## 残存未到達分岐リスト（2026-06-09 最終）
 
-> 全 23 箇所（1382/1405 = 98.4%）。未到達数の多い順。
+> 全 19 箇所（1386/1405 = 98.6%）。未到達数の多い順。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
@@ -375,14 +393,11 @@
 | 2 | mutex.c | 97.2% | 4 | L227 br[1](remove_mutex NULL exit, 到達不能), L375/423/474 br[0](assert失敗, 到達不能) |
 | 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / task文脈+p_runtsk=NULL矛盾） |
 | 4 | task.c | 96.8% | 2 | `assert` 失敗パス（L268/L274、構造的到達不能） |
-| 5 | mempfix.c | 97.7% | 2 | `rel_mpf`(L309/L310: 不正ブロックオフセット), `tget_mpf`/`ref_mpf` 要確認 |
-| 6 | alarm.c | 96.9% | 1 | `_kernel_call_alarm`: nfyhdr内でloc_cpu呼出し後に割込みブロック → WBテスト要 |
-| 7 | cyclic.c | 97.2% | 1 | `_kernel_call_cyclic`: 同上 |
-| 8 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
-| 9 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
-| 10 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
-| 11 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
-| 12 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
+| 5 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
+| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
+| 7 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
+| 8 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
+| 9 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
 
 **BBテストで解消済み（100%到達）**：
 
@@ -392,7 +407,11 @@
 | task_term.c (`ena_ter`) | ena_ter_c | **100%** |
 | task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
-| mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (**97.7%**、残2) |
+| mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (97.7%、残2) |
+| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2) | **100%** |
+| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2) | **100%** |
+| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2) | **100%** |
+| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2) | **100%** |
 | task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2) | **100%** |
 | time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2) | 6/6 **100%** |
 | time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2) | 6/8 75%（残2: L390/L439 困難） |
