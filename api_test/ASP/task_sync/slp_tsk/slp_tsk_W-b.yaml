@@ -3,7 +3,7 @@ ASP_task_sync_slp_tsk_W_b:
   # target_branch: kernel/task_sync.c:131 CHECK_DISPATCH br[3] sense_lock()=T→E_CTX
   # slp_tsk_a-2 と同等（CPUロック→E_CTX）だが WB ラベル付き．
   # 根拠: a-2 を含む auto_code グループがタイムアウトし br[3] が未到達のため追加．
-  note: 【NGKI3489】CPUロック状態で呼び出して E_CTX が返ること（CHECK_DISPATCH sense_lock=T 経路）
+  note: 【NGKI3489 / ASP3 3.7.2】CPUロック状態で呼び出してE_CTXが返ること（CHECK_DISPATCH sense_lock()=T 経路）
 
   pre_condition:
     TASK1:

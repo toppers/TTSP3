@@ -134,14 +134,11 @@ tslp_tsk	起床待ち（タイムアウト付き）〔T〕【NGKI1253】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 2. カバレッジ誘導テスト（ホワイトボックス）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【改変】2026-06-08 Shinya Honda：ホワイトボックステストケース (W-*) を追加．
-
-(W-a) raster=T かつ wupcnt=1 のとき，NGKI3455 が NGKI1259 より優先されること．
-      【NGKI3455優先】raster チェック（task_sync.c:134）が wupque チェックより先に
-      評価されるため，E_RASTER が返り wupcnt は消費されないこと．
+(W-a) [ASP3 3.7.2] タスク終了要求フラグがセットされた状態で起床要求キューイング数が1のとき，
+      NGKI3455がNGKI1259より優先してE_RASTERを返し，起床要求キューイング数を消費しないこと．
       target_branch: task_sync.c:134 if(p_runtsk->raster)→T
 
-(W-b) CPUロック状態で呼び出して E_CTX が返ること．
+(W-b) [ASP3 3.7.2] CPUロック状態で呼び出してE_CTXが返ること．
       【NGKI3489】CHECK_DISPATCH の sense_lock()=T 経路（task_sync.c:131 br[3]）．
       slp_tsk_a-2 と同等だが，a-2 を含む auto_code グループがタイムアウトし
       当該分岐が未到達のため，バックアップとして追加．

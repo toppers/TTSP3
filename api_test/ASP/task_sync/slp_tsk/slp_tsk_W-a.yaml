@@ -1,7 +1,8 @@
 version: "wb-2026-06-08"
 ASP_task_sync_slp_tsk_W_a:
-  # target_branch: kernel/task_sync.c:134 if(p_runtsk->raster)→T (raster=T かつ wupcnt=1 同時成立)
-  note: 【NGKI3455優先】raster=T のとき wupcnt=1 があっても NGKI1259(wupque消費)より優先して E_RASTER を返し wupcnt を消費しないこと
+  # target_branch: kernel/task_sync.c:134 if(p_runtsk->raster)→T
+  #   (タスク終了要求フラグがセットされた状態 かつ 起床要求キューイング数が1 が同時成立)
+  note: 【NGKI3455優先 / ASP3 3.7.2】タスク終了要求フラグがセットされた状態で起床要求キューイング数が1のとき，NGKI3455がNGKI1259より優先してE_RASTERを返し，起床要求キューイング数を消費しないこと
 
   pre_condition:
     TASK1:
