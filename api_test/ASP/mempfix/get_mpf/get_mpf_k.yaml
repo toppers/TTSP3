@@ -1,0 +1,44 @@
+version: "bb-2026-06-09"
+ASP_mempfix_get_mpf_k:
+  note: 【NGKI2307 補足説明】get_mpf呼出し時に解放済みブロックのフリーリスト（freelist≠INDEX_NULL）が存在する場合，フリーリストから固定長メモリブロックを取得すること
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        blk:
+          type: void*
+
+    MPF1:
+      type   : MEMORYPOOL
+      blkcnt : 2
+      fblkcnt: 2
+      blksz  : ANY_BLKSZ
+
+  do_0:
+    id     : TASK1
+    syscall: TTSP_GET_MPF(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_0:
+    MPF1:
+      fblkcnt: 1
+
+  do_1:
+    id     : TASK1
+    syscall: TTSP_REL_MPF(MPF1, blk)
+    ercd   : E_OK
+
+  post_condition_1:
+    MPF1:
+      fblkcnt: 2
+
+  do_2:
+    id     : TASK1
+    syscall: get_mpf(MPF1, &blk)
+    ercd   : E_OK
+
+  post_condition_2:
+    MPF1:
+      fblkcnt: 1

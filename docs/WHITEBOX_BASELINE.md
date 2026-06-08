@@ -8,7 +8,8 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1363/1405 = 97.0%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1365/1405 = 97.2%  (C1, 2026-06-09 最終)
+  ※ras_ter_g追加直後:      1363/1405 = 97.0%（chg_ipm_e/get_mpf_k 未追加）
   ※2026-06-08:             1362/1405 = 96.9%（ras_ter L180(f) 未到達）
   ※旧バグ版(max集計):      1059/1405 = 75.4%（グループ間 union が取れていなかった）
   ※BBテスト追加前:          1051/1405 = 74.8%（group17 失敗 + バグ）
@@ -17,6 +18,8 @@
 
 **2026-06-09 追加した BBテスト（全20グループ PASS）**:
 - `ras_ter_g.yaml` — actcnt=1かつ再起動優先度が呼出しタスクより高い場合にディスパッチ発生（task_term.c L180 (f)分岐）
+- `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
+- `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -32,8 +35,8 @@
 | dataqueue.c | 253/253 100% | 152 | 152 | **100%** |
 | eventflag.c | 165/165 100% | 120 | 120 | **100%** |
 | exception.c | 7/7 100% | 4 | 6 | 66.7% ◀ |
-| interrupt.c | 108/110 98.2% | 56 | 58 | 96.6% ◀ |
-| mempfix.c | 148/150 98.7% | 85 | 88 | 96.6% ◀ |
+| interrupt.c | 108/110 98.2% | 57 | 58 | 98.3% ◀ |
+| mempfix.c | 150/150 100% | 86 | 88 | 97.7% ◀ |
 | mutex.c | 204/209 97.6% | 127 | 142 | 89.4% ◀ |
 | pridataq.c | 243/244 99.6% | 148 | 148 | **100%** |
 | semaphore.c | 121/121 100% | 76 | 76 | **100%** |
@@ -49,7 +52,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
 | wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2429/2451 99.1%** | **1363** | **1405** | **97.0%** |
+| **TOTAL** | **2431/2451 99.2%** | **1365** | **1405** | **97.2%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -125,7 +128,7 @@
 | `clr_int` | 100% | 8/8 100% | — | — |
 | `ras_int` | 100% | 8/8 100% | — | — |
 | `prb_int` | 100% | 8/8 100% | — | — |
-| `chg_ipm` ◀ | 90% | 12/14 85.7% | 2 | M |
+| `chg_ipm` ◀ | 90% | 13/14 92.9% | 1 | M |
 | `get_ipm` | 100% | 4/4 100% | — | — |
 
 ### mempfix.c
@@ -133,7 +136,7 @@
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_mempfix` | 100% | 2/2 100% | — | — |
-| `_kernel_get_mpf_block` ◀ | 83.3% | 1/2 50% | 1 | M |
+| `_kernel_get_mpf_block` | 100% | 2/2 100% | — | — |
 | `get_mpf` ◀ | 100% | 15/16 93.8% | 1 | L |
 | `pget_mpf` | 100% | 10/10 100% | — | — |
 | `tget_mpf` ◀ | 100% | 18/20 90% | 2 | M |
@@ -328,34 +331,36 @@
 
 ---
 
-## 残存未到達分岐リスト（2026-06-08 最終）
+## 残存未到達分岐リスト（2026-06-09 最終）
 
-> 全 43 箇所（1362/1405 = 96.9%）。未到達数の多い順。
+> 全 40 箇所（1365/1405 = 97.2%）。未到達数の多い順。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
-| 1 | mutex.c | 90.7% | 13 | L161/173(ceiling優先度), L202/227(whileループ), L228/263/265(drop処理), L315/558 他 |
-| 2 | time_event.c | 84.5% | 9 | L221/231(ヒープdown処理), L302/390/439, L533(adj_tim負), L588/589(assert), L624 |
-| 3 | interrupt.c | 96.6% | 2 | 要 wb_branch_report 確認 |
-| 4 | exception.c | 66.7% | 2 | `xsns_dpn`（CPU例外コンテキスト外・CPU非ロック、計2分岐） |
-| 5 | task.c | 96.8% | 2 | 要 wb_branch_report 確認 |
-| 6 | mempfix.c | 96.6% | 3 | 要 wb_branch_report 確認 |
-| 7 | alarm.c | 96.9% | 1 | `_kernel_call_alarm` |
-| 8 | cyclic.c | 97.2% | 1 | `_kernel_call_cyclic` |
-| 9 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch未使用ケース） |
-| 10 | task_manage.c | 98.9% | 1 | `act_tsk` L137 br[1]（TA_NOACTQUE属性タスクへの再起動） |
-| 11 | task_term.c | 98.4% | 1 | `ras_ter` L180 br[0]（dispatch不要パス、到達不能） |
-| 12 | time_manage.c | 95.5% | 1 | 要 wb_branch_report 確認 |
-| 13 | wait.c | 90.0% | 1 | 要 wb_branch_report 確認 |
-| 14 | wait.h | 93.8% | 1 | 要 wb_branch_report 確認 |
+| 1 | mutex.c | 89.4% | 15 | L161/173(ceiling優先度), L202/227(whileループ), L228/263/265(drop処理), L315/558 他 |
+| 2 | time_event.c | 81.7% | 11 | L221/231(ヒープdown処理), L302/390/439, L533(adj_tim負), L588/589(assert), L624 |
+| 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / task文脈+p_runtsk=NULL矛盾） |
+| 4 | task.c | 96.8% | 2 | `assert` 失敗パス（L268/L274、構造的到達不能） |
+| 5 | mempfix.c | 97.7% | 2 | `rel_mpf`(L309/L310: 不正ブロックオフセット), `tget_mpf`/`ref_mpf` 要確認 |
+| 6 | alarm.c | 96.9% | 1 | `_kernel_call_alarm`: nfyhdr内でloc_cpu呼出し後に割込みブロック → WBテスト要 |
+| 7 | cyclic.c | 97.2% | 1 | `_kernel_call_cyclic`: 同上 |
+| 8 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
+| 9 | task_manage.c | 98.9% | 1 | `act_tsk` L137 br[1]（TA_NOACTQUE属性タスクへの再起動）→ WBテスト要 |
+| 10 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
+| 11 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
+| 12 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
+| 13 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
 
 **BBテストで解消済み（100%到達）**：
 
-| ファイル | 状態 |
-|---|---|
-| sys_manage.c | **100%** — ena_dsp_b-3/b-4 で完了 |
-| task_term.c (`ena_ter`) | **100%** — ena_ter_c で完了 |
-| semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | **100%** — 既存テストで到達済み |
+| ファイル・API | BBテスト | 状態 |
+|---|---|---|
+| sys_manage.c | ena_dsp_b-3/b-4 | **100%** |
+| task_term.c (`ena_ter`) | ena_ter_c | **100%** |
+| task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
+| interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
+| mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (**97.7%**、残2) |
+| semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 
 ## 更新手順
 
