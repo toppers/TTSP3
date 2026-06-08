@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+#  pre-commit: ステージされた api_test 配下の *.xlsx を MarkItDown(pandas) で
+#  *.xlsx.md に変換し、md もコミットに含める（Excelとmdをセットで登録）。
+#  参考: https://blog.dominosoft.co.jp/entry/2024/12/20/200607
+#
+#  導入: bash scripts/install_hooks.sh
+#  無効化したい単発コミット: git commit --no-verify
+#
+set -u
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root" || exit 0
+
+# ステージされた api_test 配下の .xlsx（追加/変更）を抽出
+#（git pathspec の ** 解釈差を避け、シェルでフィルタする）
+mapfile -t xlsx < <(git diff --cached --name-only --diff-filter=ACM | grep -E '^api_test/.*\.xlsx$')
+[ "${#xlsx[@]}" -eq 0 ] && exit 0
+
+PY=${PYTHON:-python3}
+for f in "${xlsx[@]}"; do
+	[ -f "$f" ] || continue
+	if ! "$PY" scripts/xlsx_to_md.py "$f" >/dev/null 2>/tmp/xlsx2md_err; then
+		echo "pre-commit: xlsx_to_md.py 失敗（$f）。markitdown[xlsx]/pandas 未導入か？" >&2
+		cat /tmp/xlsx2md_err >&2
+		echo "  導入: python3 -m pip install --user 'markitdown[xlsx]'  /  回避: git commit --no-verify" >&2
+		exit 1
+	fi
+	git add "$f.md"
+	echo "pre-commit: 再生成しステージ -> $f.md"
+done
+exit 0
