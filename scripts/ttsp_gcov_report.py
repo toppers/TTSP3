@@ -44,13 +44,14 @@ def collect_dir(d, acc):
                 rec = acc.setdefault(path, {})
                 for line in filerec.get("lines", []):
                     ln = line["line_number"]
-                    cnt, br_tot, br_cov = rec.get(ln, (0, 0, 0))
+                    cnt, br_tot, br_cov_set = rec.get(ln, (0, 0, set()))
                     branches = line.get("branches", [])
+                    covered = {i for i, b in enumerate(branches)
+                               if b.get("count", 0) > 0}
                     rec[ln] = (
                         cnt + line.get("count", 0),
                         max(br_tot, len(branches)),
-                        max(br_cov,
-                            sum(1 for b in branches if b.get("count", 0) > 0)),
+                        br_cov_set | covered,
                     )
     return len(gcdas)
 
@@ -84,7 +85,7 @@ def main():
         lt = len(rec)
         lc = sum(1 for c, _, _ in rec.values() if c > 0)
         bt = sum(b for _, b, _ in rec.values())
-        bc = sum(c for _, _, c in rec.values())
+        bc = sum(len(s) for _, _, s in rec.values())
         tl += lt; cl += lc; tb += bt; cb += bc
         line_part = f"{os.path.basename(path):24s} {lc:5d}/{lt:<5d} {100*lc/lt:5.1f}%"
         if bt:
