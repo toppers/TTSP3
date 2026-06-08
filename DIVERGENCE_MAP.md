@@ -35,7 +35,8 @@ ASP3変更履歴から、TTSP3のテスト/TTG/TESRYに影響しうる項目。�
 > ただしツール側で ruby 3.x 対応が必要だった（B表のTTG改変）。
 | ARMコア依存部見直し：`arm.c` 廃止（`arm.h`に統合） | 3.6→3.7 | `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` の `KERNEL_COBJS_TARGET`（`objs/arm.o` 参照でリンク前に make が停止） | **対応済**（arm.o削除・改変明記。check_library 3モジュールのビルド成功を確認） |
 
-> 3.5→3.6 の項目は `asp3/doc/version.txt` を確認して追記すること。
+> 3.4→3.7.2 全5区間の棚卸しと実装計画は **`docs/SPEC37_PLAN.md`** に集約（2026-06-08）。
+> 3.5→3.6 の主項目（EXINF型変更＝影響なし確認）も同書に記載。
 > 着手前に、3.7対応済みの公式TTSP3が無いか確認（重複作業回避）。
 
 ---
