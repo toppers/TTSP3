@@ -141,5 +141,11 @@ tslp_tsk	起床待ち（タイムアウト付き）〔T〕【NGKI1253】
       評価されるため，E_RASTER が返り wupcnt は消費されないこと．
       target_branch: task_sync.c:134 if(p_runtsk->raster)→T
 
+(W-b) CPUロック状態で呼び出して E_CTX が返ること．
+      【NGKI3489】CHECK_DISPATCH の sense_lock()=T 経路（task_sync.c:131 br[3]）．
+      slp_tsk_a-2 と同等だが，a-2 を含む auto_code グループがタイムアウトし
+      当該分岐が未到達のため，バックアップとして追加．
+      target_branch: task_sync.c:131 CHECK_DISPATCH sense_lock()=T
+
 
 以上．
