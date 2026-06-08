@@ -80,13 +80,13 @@ fi
 
 if [ "$MODE" = "all" ]; then
 	REF_MK="$OBJ_DIR/api_test/auto_code_1/Makefile"
-	if [ -f "$REF_MK" ] && compgen -G "api_test/ASP/whitebox/*/*/" > /dev/null 2>&1; then
-		echo "===== build & run: WB tests (whitebox, manual) ====="
+	if [ -f "$REF_MK" ] && compgen -G "api_test/ASP/*/*_W-*/" > /dev/null 2>&1; then
+		echo "===== build & run: WB tests (manual, *_W-* dirs) ====="
 		source ./configure.sh
 		source "./library/ASP/target/${TARGET_NAME}/ttsp_target.sh"
 		WB_KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o"
 		WB_APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
-		for wb_src in api_test/ASP/whitebox/*/*/; do
+		for wb_src in api_test/ASP/*/*_W-*/; do
 			wb_name=$(basename "$wb_src")
 			wb_dir="$OBJ_DIR/api_test/wb_${wb_name}"
 			mkdir -p "$wb_dir/objs"
