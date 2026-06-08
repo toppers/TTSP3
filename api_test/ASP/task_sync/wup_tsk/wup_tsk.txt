@@ -206,5 +206,17 @@ tskidで指定したタスク（対象タスク）を起床する．具体的な
                   グループがタイムアウトし当該分岐が未到達のため，バックアップ
                   として追加．
 
+(W-c) CPUロック状態で呼び出してE_CTXが返ること
+      （CHECK_UNL の sense_lock()=T となる経路）．
+      ・狙う分岐 : kernel/task_sync.c:210  CHECK_UNL() = if(sense_lock()) の T側（br[0]）
+      ・到達手順 : CPUロック状態で wup_tsk(TASK2) を呼び出す
+      ・分類     : (i) API到達可
+      ・関連NGKI : 【NGKI1265】
+      ・yaml     : wup_tsk_W-c.yaml （内部キー ASP_task_sync_wup_tsk_W_c）
+      ・備考     : (a)（CPUロック→E_CTX）と同等だが，(a)を含む auto_code グループが
+                  タイムアウトし当該分岐が未到達のため，バックアップとして追加．
+                  本YAMLを含む auto_code グループも同様にタイムアウトするため，
+                  L210 br[0] は引き続き未到達（グループのタイムアウト原因は別テスト）．
+
 
 以上．
