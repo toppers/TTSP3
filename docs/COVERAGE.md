@@ -138,8 +138,114 @@ check_library 3 + APIオートコード20グループ統合
 100%/C1主要部の未カバーは exception.c の分岐(50%)・wait.c の分岐(58.3%)・
 interrupt.c(行92.7%/分岐67.0%) などに残る。`--uncovered` で行単位の特定が可能。
 
+## ASP3 の GCOV 方式（行＋分岐カバレッジ、2026-06-08 整備）
+
+ホワイトボックステスト開発（`docs/WHITEBOX_PLAN.md` P0）のため、
+ASP3 にも FMP3 と同方式の gcov(C1) 計測基盤を導入した。
+
+```
+ENABLE_GCOV=true でビルド（--coverage -fprofile-info-section）
+   │  テスト終了時（software_term_hook）
+   ▼
+__gcov_info_to_gcda() が .gcov_info セクションを走査
+   │  librdimon（セミホスティング）の fopen/fwrite
+   ▼
+ホスト側の各テストディレクトリ objs/*.gcda
+   │  scripts/ttsp_gcov_report.py（arm-none-eabi-gcov --json-format で解析・統合）
+   ▼
+asp3/kernel/ の行＋分岐カバレッジ
+```
+
+使い方：
+
+```bash
+./scripts/coverage_gcov_asp.sh           # check_libraryのみ（smoke, 数分）
+./scripts/coverage_gcov_asp.sh full      # APIオートコード含む（フル計測）
+```
+
+### ASP3 側の変更点（asp3/target/zybo_z7_gcc/）
+
+ASP3 は標準パッケージだが `zybo_z7_gcc` ターゲット依存部は変更可とし、
+FMP3 実績の方式を以下のように移植した：
+
+| ファイル | 変更内容 |
+|---|---|
+| `Makefile.target` | `ifeq ($(ENABLE_GCOV),true)` ブロック追加：`--coverage -fprofile-info-section`・`-DTOPPERS_ENABLE_GCOV`・`-specs=rdimon.specs`・`-lgcov -lrdimon`。ASP3 はシングルコアのため `-fprofile-update=atomic` は省略 |
+| `zybo_z7.ld` | `.gcov_info` セクション収集（`__gcov_info_start/end`）追加、`_heap`/`_heap_limit` シンボル追加（`_sbrk` 用） |
+| `target_kernel_impl.c` | weak 版 `software_term_hook` を `#ifndef TOPPERS_ENABLE_GCOV` でラップ。`#ifdef TOPPERS_ENABLE_GCOV` ブロックに `_sbrk`・gcov コールバック・`toppers_gcov_start/end`・`software_init_hook`・`software_term_hook` を追加。FMP3 版のマスタ PE ガードはシングルコアのため不要 |
+
+TTSP3 側の変更：
+
+| ファイル | 変更内容 |
+|---|---|
+| `library/ASP/target/zybo_z7_gcc/ttsp_target.sh` | `MAKE_OPT="${TTSP_MAKE_OPT:-}"` に変更（FMP3版と同方式。`TTSP_MAKE_OPT=ENABLE_GCOV=true` を common.sh の make 呼び出しへ伝播） |
+| `scripts/coverage_gcov_asp.sh` | 新規。FMP3 版の移植。`--filter /asp3/kernel/`・`-smp 1`・バイナリ名 `asp` に対応 |
+
+### 既知の制限
+
+- **check_library/exception がタイムアウト**：`initialise_monitor_handles()`（librdimon）が
+  semihosting の例外ベクタを設定し、TOPPERS の CPU 例外ハンドラと競合する可能性がある。
+  check_library/exception の gcda は取得できるが、チェックポイント 2 以降が通らない。
+  `exception.c` の分岐 C1 は 0% のまま（別途調査課題）。
+- **auto_code グループの一部が QEMU タイムアウト**：gcov 計装のオーバーヘッドにより
+  一部グループが QEMU_TIMEOUT（既定 1800s）内に完了しない場合がある（今回 6/20 が finish=0）。
+  当該グループの gcda は部分データとなる。
+
+### ASP3 kernel/ カバレッジベースライン（2026-06-08）
+
+check_library 3（exception はタイムアウト）+ APIオートコード 20 グループ統合
+（auto_code_4/11/12/13/14/15 が QEMU タイムアウトにより部分データ）：
+
+```
+行カバレッジ:   2354/2451 = 96.0%  （C0）
+分岐カバレッジ: 1012/1405 = 72.0%  （C1）
+```
+
+ファイル別内訳（C1 昇順）：
+
+| ファイル | 行 C0 | 分岐 C1 | 未到達分岐数 |
+|---|---|---|---|
+| exception.c | 0.0% | 0.0% | 6 ※例外タイムアウト |
+| mempfix.c | 94.0% | 59.1% | 36/88 |
+| mutex.c | 92.3% | 62.0% | 54/142 |
+| task_term.c | 80.9% | 62.5% | 24/64 |
+| task_refer.c | 94.9% | 62.9% | 13/35 |
+| task_manage.c | 95.0% | 65.2% | 32/92 |
+| semaphore.c | 92.6% | 65.8% | 26/76 |
+| sys_manage.c | 94.1% | 66.1% | 21/62 |
+| task_sync.c | 99.4% | 71.2% | 34/118 |
+| time_manage.c | 98.2% | 72.7% | 6/22 |
+| cyclic.c | 100.0% | 72.2% | 10/36 |
+| interrupt.c | 97.3% | 74.1% | 15/58 |
+| alarm.c | 100.0% | 75.0% | 8/32 |
+| eventflag.c | 100.0% | 75.8% | 29/120 |
+| time_event.c | 92.9% | 80.0% | 12/60 |
+| wait.c | 100.0% | 80.0% | 2/10 |
+| pridataq.c | 98.8% | 79.7% | 30/148 |
+| dataqueue.c | 100.0% | 81.6% | 28/152 |
+| startup.c | 100.0% | 100.0% | — |
+| task.c | 99.1% | 91.9% | 5/62 |
+| wait.h | 100.0% | 93.8% | 1/16 |
+| task.h | 100.0% | 50.0% | 1/2 |
+| **TOTAL** | **96.0%** | **72.0%** | **393/1405** |
+
+C1 未到達 393 分岐のうち `exception.c` 6 件を除く 387 件がホワイトボックステストの対象。
+優先順位は `docs/WHITEBOX_PLAN.md §7` を参照（mempfix.c→mutex.c→task_term.c 等）。
+
+`--uncovered` オプションで行単位の未カバー一覧を取得できる：
+
+```bash
+python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/ --uncovered \
+    obj_asp_gcov/check_library/* obj_asp_gcov/api_test/auto_code_*
+```
+
 ## 更新手順
 
-カーネル版数更新・テスト追加時は `./scripts/coverage_run.sh`（ASP/drcov）
-または `./scripts/coverage_gcov_fmp.sh`（FMP/gcov）を再実行し、
+カーネル版数更新・テスト追加時は各スクリプトを再実行し、
 本ファイルのスナップショットを更新する。
+
+| 対象 | スクリプト | カバレッジ種別 |
+|---|---|---|
+| ASP3（行 C0） | `./scripts/coverage_run.sh` | drcov（C0、カーネル無改変） |
+| ASP3（分岐 C1） | `./scripts/coverage_gcov_asp.sh full` | gcov（C0+C1、計装ビルド） |
+| FMP3（分岐 C1） | `./scripts/coverage_gcov_fmp.sh full` | gcov（C0+C1、計装ビルド） |
