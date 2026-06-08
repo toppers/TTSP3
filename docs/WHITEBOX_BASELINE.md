@@ -8,7 +8,8 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1377/1405 = 98.0%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1382/1405 = 98.4%  (C1, 2026-06-09 最終)
+  ※time_event.c WBテスト追加後: 1382/1405 = 98.4%（time_event.c 90.0%, 残6は到達不能/実機困難）
   ※mutex.c WBテスト追加後: 1377/1405 = 98.0%（mutex.c 97.2%, 残4は到達不能）
   ※act_tsk_W-a追加直後:    1366/1405 = 97.2%（task_manage.c 100%）
   ※ras_ter_g追加直後:      1363/1405 = 97.0%（chg_ipm_e/get_mpf_k 未追加）
@@ -35,7 +36,15 @@
 - `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
-**2026-06-09 追加した WBテスト（方式2: 手書き）**:
+**2026-06-09 追加した WBテスト（time_event.c、方式2: 手書き）**:
+- `time_event_W-a` — tmevt_down: 右兄弟なし + 早期break（time_event.c L221 br[1] + L231 br[0]）
+  配置: `api_test/ASP/whitebox/time_event/time_event_W-a/`（out.c/h/cfg）
+- `time_event_W-b` — tmevtb_delete go-up: lastノードが親より小さい（time_event.c L302 br[0]）
+  配置: `api_test/ASP/whitebox/time_event/time_event_W-b/`（out.c/h/cfg）
+- `adj_tim_W-a.yaml` — check_adjtim else-fall-through: adjtim=0 → false（time_event.c L533 br[1]）
+  配置: `api_test/ASP/time_manage/adj_tim/adj_tim_W-a.yaml`
+
+**2026-06-09 追加した WBテスト（task_manage.c、方式2: 手書き）**:
 - `act_tsk_W-a` — TA_NOACTQUE属性タスクへのact_tsk→E_QOVR（task_manage.c L137 br[1]）
   配置: `api_test/ASP/whitebox/task_manage/act_tsk_W-a/`（out.c/h/cfg）
 
@@ -66,11 +75,11 @@
 | task_refer.c | 78/78 100% | 34 | 35 | 97.1% ◀ |
 | task_sync.c | 169/169 100% | 118 | 118 | **100%** |
 | task_term.c | 94/94 100% | 64 | 64 | **100%** |
-| time_event.c | 131/141 92.9% | 49 | 60 | 81.7% ◀ |
+| time_event.c | 138/141 97.9% | 54 | 60 | 90.0% ◀ |
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
 | wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2451/2451 100%** | **1377** | **1405** | **98.0%** |
+| **TOTAL** | **2443/2451 99.7%** | **1382** | **1405** | **98.4%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -306,20 +315,23 @@
 
 ### time_event.c
 
+> 分岐 C1: 54/60 = 90.0%（WBテスト time_event_W-a/b + adj_tim_W-a 追加後）  
+> 残 6 箇所は構造的到達不能または実機困難（L390/L439/L588/L589/L624 等）
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `_kernel_initialize_tmevt` | 100% | — | — | — |
 | `_kernel_tmevt_up` | 100% | 4/4 100% | — | — |
-| `_kernel_tmevt_down` ◀ | 63.6% | 4/8 50% | 4 | **H** |
+| `_kernel_tmevt_down` ◀ | ≈81.8% | 6/8 75% | 2 | M |
 | `tmevtb_insert` | 100% | — | — | — |
-| `tmevtb_delete` ◀ | 81.2% | 5/6 83.3% | 1 | L |
+| `tmevtb_delete` | 100% | 6/6 100% | — | — |
 | `tmevtb_delete_top` | 100% | 2/2 100% | — | — |
 | `_kernel_update_current_evttim` ◀ | 92.9% | 3/4 75% | 1 | L |
 | `_kernel_set_hrt_event` ◀ | 90.9% | 5/6 83.3% | 1 | L |
 | `_kernel_tmevtb_register` | 100% | — | — | — |
 | `_kernel_tmevtb_enqueue_rel` | 100% | 4/4 100% | — | — |
 | `_kernel_tmevtb_dequeue` | 100% | 4/4 100% | — | — |
-| `_kernel_check_adjtim` ◀ | 100% | 7/8 87.5% | 1 | L |
+| `_kernel_check_adjtim` | 100% | 8/8 100% | — | — |
 | `_kernel_tmevt_lefttim` | 100% | 2/2 100% | — | — |
 | `_kernel_signal_time` ◀ | 95.7% | 9/12 75% | 3 | M |
 
@@ -355,11 +367,11 @@
 
 ## 残存未到達分岐リスト（2026-06-09 最終）
 
-> 全 28 箇所（1377/1405 = 98.0%）。未到達数の多い順。
+> 全 23 箇所（1382/1405 = 98.4%）。未到達数の多い順。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
-| 1 | time_event.c | 81.7% | 11 | L221/231(ヒープdown処理), L302/390/439, L533(adj_tim負), L588/589(assert), L624 |
+| 1 | time_event.c | 90.0% | 6 | L390(64bit EVTTIM overflow), L439(HRTCNT_BOUND=4G ticks), L588/589(assert失敗), L624(signal_time: 空ヒープ割込み), +1 |
 | 2 | mutex.c | 97.2% | 4 | L227 br[1](remove_mutex NULL exit, 到達不能), L375/423/474 br[0](assert失敗, 到達不能) |
 | 3 | exception.c | 66.7% | 2 | `xsns_dpn`（構造的到達不能: kerflg恒真 / task文脈+p_runtsk=NULL矛盾） |
 | 4 | task.c | 96.8% | 2 | `assert` 失敗パス（L268/L274、構造的到達不能） |
@@ -382,6 +394,9 @@
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (**97.7%**、残2) |
 | task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2) | **100%** |
+| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2) | 6/6 **100%** |
+| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2) | 6/8 75%（残2: L390/L439 困難） |
+| time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1) | 8/8 **100%** |
 | semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 
 ## 更新手順
