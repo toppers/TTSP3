@@ -8,7 +8,8 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1365/1405 = 97.2%  (C1, 2026-06-09 最終)
+分岐カバレッジ(kernel/): 1366/1405 = 97.2%  (C1, 2026-06-09 最終)
+  ※act_tsk_W-a追加直後:    1366/1405 = 97.2%（task_manage.c 100%）
   ※ras_ter_g追加直後:      1363/1405 = 97.0%（chg_ipm_e/get_mpf_k 未追加）
   ※2026-06-08:             1362/1405 = 96.9%（ras_ter L180(f) 未到達）
   ※旧バグ版(max集計):      1059/1405 = 75.4%（グループ間 union が取れていなかった）
@@ -20,6 +21,10 @@
 - `ras_ter_g.yaml` — actcnt=1かつ再起動優先度が呼出しタスクより高い場合にディスパッチ発生（task_term.c L180 (f)分岐）
 - `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
+
+**2026-06-09 追加した WBテスト（方式2: 手書き）**:
+- `act_tsk_W-a` — TA_NOACTQUE属性タスクへのact_tsk→E_QOVR（task_manage.c L137 br[1]）
+  配置: `api_test/ASP/whitebox/task_manage/act_tsk_W-a/`（out.c/h/cfg）
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -44,7 +49,7 @@
 | sys_manage.c | 152/152 100% | 62 | 62 | **100%** |
 | task.c | 110/111 99.1% | 60 | 62 | 96.8% ◀ |
 | task.h | 4/4 100% | 2 | 2 | **100%** |
-| task_manage.c | 119/119 100% | 91 | 92 | 98.9% ◀ |
+| task_manage.c | 119/119 100% | 92 | 92 | **100%** |
 | task_refer.c | 78/78 100% | 34 | 35 | 97.1% ◀ |
 | task_sync.c | 169/169 100% | 118 | 118 | **100%** |
 | task_term.c | 94/94 100% | 64 | 64 | **100%** |
@@ -52,7 +57,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 9 | 10 | 90.0% ◀ |
 | wait.h | 38/38 100% | 15 | 16 | 93.8% ◀ |
-| **TOTAL** | **2431/2451 99.2%** | **1365** | **1405** | **97.2%** |
+| **TOTAL** | **2431/2451 99.2%** | **1366** | **1405** | **97.2%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -237,11 +242,11 @@
 
 ### task_manage.c
 
-> 分岐 C1: 91/92 = 98.9%（残 1 箇所: `act_tsk` L137 br[1]、TA_NOACTQUE 属性タスクへの再起動要求）
+> 分岐 C1: 92/92 = 100%（act_tsk_W-a (WB) で L137 br[1] 到達済み、2026-06-09）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `act_tsk` ◀ | 100% | 19/20 95% | 1 | M |
+| `act_tsk` | 100% | 20/20 100% | — | — |
 | `can_act` | 100% | 10/10 100% | — | — |
 | `get_tst` | 100% | 20/20 100% | — | — |
 | `chg_pri` | 100% | 26/26 100% | — | — |
@@ -333,7 +338,7 @@
 
 ## 残存未到達分岐リスト（2026-06-09 最終）
 
-> 全 40 箇所（1365/1405 = 97.2%）。未到達数の多い順。
+> 全 39 箇所（1366/1405 = 97.2%）。未到達数の多い順。
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
@@ -345,11 +350,10 @@
 | 6 | alarm.c | 96.9% | 1 | `_kernel_call_alarm`: nfyhdr内でloc_cpu呼出し後に割込みブロック → WBテスト要 |
 | 7 | cyclic.c | 97.2% | 1 | `_kernel_call_cyclic`: 同上 |
 | 8 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
-| 9 | task_manage.c | 98.9% | 1 | `act_tsk` L137 br[1]（TA_NOACTQUE属性タスクへの再起動）→ WBテスト要 |
-| 10 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
-| 11 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
-| 12 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
-| 13 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
+| 9 | time_manage.c | 95.5% | 1 | `adj_tim` 32bit折返し（HRTCNT_BOUND越え）→ 困難 |
+| 10 | wait.c | 90.0% | 1 | `_kernel_make_wait_tmout` assert失敗パス（構造的到達不能） |
+| 11 | wait.h | 93.8% | 1 | `make_non_wait` assert失敗パス（構造的到達不能） |
+| 12 | interrupt.c | 98.3% | 1 | `chg_ipm` L371: raster&&enater=T時の自終了（pre_condition制約で到達不能） |
 
 **BBテストで解消済み（100%到達）**：
 
@@ -360,6 +364,7 @@
 | task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (**97.7%**、残2) |
+| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2) | **100%** |
 | semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 
 ## 更新手順
