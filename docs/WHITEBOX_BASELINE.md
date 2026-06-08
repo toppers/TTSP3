@@ -1,16 +1,43 @@
 # WHITEBOX_BASELINE.md — ASP3 kernel/ API別分岐カバレッジベースライン
 
-> 計測日: 2026-06-08  
-> 方式: gcov（`scripts/coverage_gcov_asp.sh full`）  
-> 対象: ASP3 3.7.2 `kernel/`、check_library 3 + APIオートコード 20グループ統合  
-> 制限: check_library/exception タイムアウト、auto_code 6/20 部分データ（→ `docs/COVERAGE.md`）
+> 計測日: 2026-06-08（初回）→ 2026-06-08 修正再計測  
+> 方式: gcov（`python3 scripts/wb_branch_report.py <source>`）  
+> 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合  
+> 修正: `RAISE_CPU_EXCEPTION` を `0x06000010`（EQ条件付き，Z=0でスキップ）から
+>        `0xf0500090`（ARMv7無条件未定義命令）に変更し，6グループのタイムアウトを解消。
+>        all 20/20 グループ PASS。
 
 ## 全体サマリ
 
 ```
-行カバレッジ:   2354/2451 = 96.0%  (C0)
-分岐カバレッジ: 1012/1405 = 72.0%  (C1)   ← 未到達 393 分岐
+分岐カバレッジ(kernel/): 1336/1381 = 96.7%  (C1)   ← 未到達 45 分岐
+  ※修正前: 1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
 ```
+
+### ファイル別サマリ（修正後）
+
+| ファイル | 到達 | 全分岐 | C1 |
+|---|---|---|---|
+| alarm.c | 31 | 32 | 96.9% |
+| cyclic.c | 35 | 36 | 97.2% |
+| dataqueue.c | 152 | 152 | **100%** |
+| eventflag.c | 119 | 120 | 99.2% |
+| exception.c | 4 | 6 | 66.7% |
+| interrupt.c | 56 | 58 | 96.6% |
+| mempfix.c | 84 | 88 | 95.5% |
+| mutex.c | 127 | 140 | 90.7% |
+| pridataq.c | 148 | 148 | **100%** |
+| semaphore.c | 76 | 76 | **100%** |
+| startup.c | 4 | 4 | **100%** |
+| sys_manage.c | 59 | 62 | 95.2% |
+| task.c | 60 | 62 | 96.8% |
+| task_manage.c | 90 | 92 | 97.8% |
+| task_refer.c | 34 | 35 | 97.1% |
+| task_sync.c | 118 | 118 | **100%** |
+| task_term.c | 60 | 62 | 96.8% |
+| time_event.c | 49 | 58 | 84.5% |
+| time_manage.c | 21 | 22 | 95.5% |
+| wait.c | 9 | 10 | 90.0% |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -75,7 +102,7 @@
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `xsns_dpn` ◀ | 0% | 0/6 0% | 6 | ※タイムアウト起因、別途調査 |
+| `xsns_dpn` ◀ | 100% | 4/6 66.7% | 2 | M |
 
 ### interrupt.c
 
@@ -212,14 +239,14 @@
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
-| `slp_tsk` ◀ | 100% | 9/10 90% | 1 | L |
-| `tslp_tsk` ◀ | 100% | 11/14 78.6% | 3 | M |
-| `wup_tsk` ◀ | 100% | 19/20 95% | 1 | L |
-| `can_wup` ◀ | 100% | 11/12 91.7% | 1 | L |
+| `slp_tsk` | 100% | 10/10 100% | — | — |
+| `tslp_tsk` | 100% | 14/14 100% | — | — |
+| `wup_tsk` | 100% | 20/20 100% | — | — |
+| `can_wup` | 100% | 12/12 100% | — | — |
 | `rel_wai` | 100% | 14/14 100% | — | — |
-| `sus_tsk` ◀ | 100% | 22/24 91.7% | 2 | M |
-| `rsm_tsk` ◀ | 95% | 13/14 92.9% | 1 | L |
-| `dly_tsk` ◀ | 100% | 9/10 90% | 1 | L |
+| `sus_tsk` | 100% | 24/24 100% | — | — |
+| `rsm_tsk` | 100% | 14/14 100% | — | — |
+| `dly_tsk` | 100% | 10/10 100% | — | — |
 
 ### task_term.c
 
@@ -283,16 +310,18 @@
 
 ## 優先度 H の作業リスト（ホワイトボックステスト追加対象）
 
-| # | ファイル | API | 分岐 C1 | 未到達 | 状態 |
+> ※ RAISE_CPU_EXCEPTION 修正（2026-06-08）後の再計測値。semaphore/pridataqが解消。
+
+| # | ファイル | API | 分岐 C1 (修正後) | 未到達 | 状態 |
 |---|---|---|---|---|---|
-| 1 | task_term.c | `ena_ter` | 0% (0/8) | 8 | 未着手 |
-| 2 | mutex.c | `_kernel_mutex_check_ceilpri` | 41.7% (5/12) | 7 | 未着手 |
-| 3 | mempfix.c | `ref_mpf` | 37.5% (3/8) | 5 | 未着手 |
-| 4 | semaphore.c | `ref_sem` | 37.5% (3/8) | 5 | 未着手 |
-| 5 | mutex.c | `mutex_calc_priority` | 25.0% (1/4) | 3 | 未着手 |
-| 6 | time_event.c | `_kernel_tmevt_down` | 50.0% (4/8) | 4 | 未着手 |
-| 7 | task_manage.c | `get_inf` | 25.0% (1/4) | 3 | **P1 作業中** |
-| 8 | task_manage.c | `get_tst` | 80.0% (16/20) | 4 | **P1 作業中** |
+| 1 | mutex.c | `_kernel_mutex_check_ceilpri` | 41.7%→要再計測 | 要再計測 | 未着手 |
+| 2 | mutex.c | `mutex_calc_priority` | 25.0%→要再計測 | 要再計測 | 未着手 |
+| 3 | time_event.c | `_kernel_tmevt_down` | 50.0%→要再計測 | 要再計測 | 未着手 |
+| 4 | mempfix.c | `ref_mpf` | 要再計測（file:95.5%） | 要再計測 | 未着手 |
+| 5 | task_term.c | `ena_ter` | 要再計測（file:96.8%） | 要再計測 | 未着手 |
+| 6 | task_manage.c | `get_inf` / `get_tst` | 要再計測（file:97.8%） | 要再計測 | **P1 作業中** |
+| — | semaphore.c | `ref_sem` | **100%** → 解消 | 0 | ✓ 完了 |
+| — | task_sync.c | 全API | **100%** → 解消 | 0 | ✓ 完了 |
 
 ## 更新手順
 

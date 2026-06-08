@@ -213,10 +213,11 @@ tskidで指定したタスク（対象タスク）を起床する．具体的な
       ・分類     : (i) API到達可
       ・関連NGKI : 【NGKI1265】
       ・yaml     : wup_tsk_W-c.yaml （内部キー ASP_task_sync_wup_tsk_W_c）
-      ・備考     : (a)（CPUロック→E_CTX）と同等だが，(a)を含む auto_code グループが
-                  タイムアウトし当該分岐が未到達のため，バックアップとして追加．
-                  本YAMLを含む auto_code グループも同様にタイムアウトするため，
-                  L210 br[0] は引き続き未到達（グループのタイムアウト原因は別テスト）．
+      ・備考     : (a)（CPUロック→E_CTX）と同等のバックアップ．追加当初は(a)の
+                  auto_code グループも本YAMLの auto_code グループも CPU例外テスト
+                  （RAISE_CPU_EXCEPTION のEQ条件バグ）でタイムアウトしていたが，
+                  2026-06-08 に RAISE_CPU_EXCEPTION を 0xf0500090（ARMv7無条件）に
+                  修正し全グループが通過，L210 br[0] は到達済み（task_sync.c 100%）．
 
 
 以上．

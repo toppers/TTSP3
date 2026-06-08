@@ -49,8 +49,11 @@
 
 /*
  *  CPU例外を発生させる命令
+ *  [改変] 2026-06-08: 0x06000010（EQ条件付き，Z=0でスキップ）を0xf0500090
+ *  （ARMv7無条件未定義命令，ASP3 arch/arm_gcc/common/core_kernel.h の
+ *  RAISE_CPU_EXCEPTION_UNDEF と同一）に変更．QEMUで確実に例外発生させるため．
  */
-#define RAISE_CPU_EXCEPTION     Asm(".long 0x06000010");
+#define RAISE_CPU_EXCEPTION     Asm(".word 0xf0500090");
 
 /*
  *  [改変] 2026-06-08: 仕様差分3.4→3.5対応（フェイタルデータアボートのCPU例外化・
