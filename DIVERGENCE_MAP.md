@@ -18,6 +18,8 @@ ASP3変更履歴から、TTSP3のテスト/TTG/TESRYに影響しうる項目。�
 | サブ優先度の仕様変更 | 3.6→3.7 | task優先度系API・TTG（サブ優先度） | **影響なし確認**（2026-06-06。既存スイートの範囲。サブ優先度固有の新規テストは将来課題） |
 | 優先度継承拡張パッケージ追加 | 3.6→3.7 | mutex 系（任意） | 対象外（任意パッケージ・既存mutex系テストは緑） |
 | `CRE_XXX` のID衝突をエラー化 | 3.6→3.7 | 静的APIテスト（CRE_*のTESRY期待値） | **影響なし確認**（2026-06-06。コンフィグエラーテスト113/113 OK。TTG生成cfgはID一意で衝突せず） |
+| 不正クラスIDのエラーチェック方法変更（静的APIへのチェック廃止→クラスの囲みに対してチェック） | FMP3 3.3.0 | コンフィグエラーテスト（`*_F-b`＝不正クラス指定の期待値） | **TESRY更新で対応済**（2026-06-08。`TTSP_INVALID_PRC_CLASS` 指定時の期待を `E_RSATR`→`E_ID`(illegal class) に変更．対象17件＝全`*_F-b`の不正クラス系＋`CRE_SPN_F-c`．zybo NG19→2／POSIX NG27→11．B表参照） |
+| 【NGKI3682】の削除：サブ優先度使用のceilpri指定によるE_ILUSEエラーの廃止 | 3.6→3.7（サブ優先度仕様の刷新に伴う） | `CRE_MTX_F-c`（負テスト・FMP固有，`ASP:-`） | **精査確定（2026-06-08）→ テスト無効化の判断待ち**．旧spec3.4のNGKI3682「サブ優先度をサポートするカーネルでceilpriがサブ優先度使用の優先度ならE_ILUSE」を検証する負テスト．3.7では本制限が**削除**され当該組合せは有効（asp3 3.7.2／fmp3 3.4.0の`mutex.trb`は共にE_PAR範囲チェックのみでE_ILUSE検査なし．`asp3/doc/mutex_design.txt`はサブ優先度×ceiling昇格の相互作用を正式設計＝サポート対象）．CRE_MTX_F-cはエラー・警告0でkernel_cfg生成成功＝3.7で正当．cfg-errorフレームワークは「エラーコード期待」のみで「正常ビルド期待」を表現できないため，**テスト削除/無効化が必要**（期待値差替では対応不可） |
 | objdumpダンプ形式対応 | 3.6→3.7 | cfg/ビルド（影響小） | **影響なし確認**（2026-06-06。全ビルド成功） |
 | macOS/Linux POSIXシミュ追加 | 3.6→3.7 | 後段 host ターゲットで活用 | 後段 |
 
@@ -62,7 +64,13 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `api_test/ASP/staticAPI/{DEF_INH/DEF_INH_e,CFG_INT/CFG_INT_d-1}.yaml` | 改変 | `intatr: TA_NULL`直書きを`ANY_ATT_INH`マクロ化（既定TA_NULLで従来ターゲット不変） | 済（2026-06-07） |
 | `library/FMP/check_library/interrupt/out.cfg`＋zyboヘッダ | 改変 | CFG_INTトリガ属性を`TTSP_INT_TRIGGER_ATTR`マクロ化（zybo=TA_NULL，linux=TA_EDGE） | 済（2026-06-07） |
 | `configure.sh`／`scripts/ttsp_parallel_api.sh` | 改変 | `TTSP_TARGET_NAME`環境変数でターゲット切替／linux_gccのネイティブ実行対応 | 済（2026-06-07） |
-| api_test/* TESRY | 改変 | 3.4→3.7仕様差分対応 | 予定 |
+| `api_test/FMP/staticAPI/{ATT_INI,ATT_TER,CFG_INT,CRE_ALM,CRE_CYC,CRE_DTQ,CRE_FLG,CRE_ISR,CRE_MPF,CRE_MTX,CRE_PDQ,CRE_SEM,CRE_TSK,DEF_EXC,DEF_ICS,DEF_INH}/*_F-b/err_code.txt` ＋ `CRE_SPN/CRE_SPN_F-c/err_code.txt`（計17件） | 改変 | 3.4→3.7仕様差分対応：不正クラスID（`TTSP_INVALID_PRC_CLASS`）指定時の期待エラーを `E_RSATR`→`E_ID` に更新（FMP3 3.3.0の不正クラスIDチェック方式変更に追従）。検証：zybo cfg-error NG19→2・POSIX NG27→11（A表参照） | 済（2026-06-08） |
+| api_test/* TESRY（残り） | 改変 | 3.4→3.7仕様差分対応の残：`CRE_MTX_F-c`（サブ優先度ceilpri・要精査）／POSIX固有のDEF_ICS・CRE_TSKスタック系（ターゲット特性） | 予定 |
+| `scripts/ttsp_parallel_cfgerr.sh` | 改変 | HRP/HRMPプロファイル対応（KERNEL_COBJS/APPL_COBJSリスト追加。ttb.shより転記） | 済（2026-06-08） |
+| `library/HRMP/test/ttsp_test_lib.c` | 改変 | HRMP3 3.4.0対応：`make_non_runnable` の3引数→2引数に追従（FMPと同根） | 済（2026-06-08） |
+| `library/HRMP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRMP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止）／CONFIG_OPTに`-S serial_cfg.o`追加（ASP/FMPと同根）。これらでHRMP cfg-error NG38→1（残DEF_INH_cはzybo INHNO差・全プロファイル共通） | 済（2026-06-08） |
+| `library/HRP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止） | 済（2026-06-08） |
+| `scripts/ttsp_parallel_cfgerr.sh`（HRP分岐 APPL_COBJS_COMMON） | 改変 | HRP cfg-error の TECSアダプタ obj 名を tecsgen 1.8.0 実生成名へ修正。旧名 `tHRPSVCPlugin_sXxxSVCCaller_Yyy_eZzz_tecsgen.{c,o}` は当該 tecsgen が生成せず「No rule to make target …_tecsgen.c」で停止していた（3.4→3.7 の tecsgen 名称差分）。最小 out.cdl に対する gen/Makefile.tecsgen の実出力に合わせ `tHRPSVCBody_*`／`tHRPSVCCaller_*` 系へ置換。検証：`ttsp_parallel_cfgerr.sh ../hrp3_3.4/ HRP obj_hrp_cfgerr` で **OK=113 NG=0**（DEF_INH_c も含め全通過）。cfg-error は configurator 段で期待エラーを検出する負テストで、HRP集合は実質 ASP staticAPI（ASP で 113/113 確認済）＋HRP独自分0件のため divergence の新規カバレッジは無いが、HRP でも E_ID 等が正しく検出されることを確認 | 済（2026-06-08） |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
 
@@ -91,23 +99,64 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 
 ---
 
-## E. FMP3 POSIXターゲット（linux_gcc）対応の状況（2026-06-07）
+## E. FMP3 POSIXターゲット（linux_gcc）対応の状況（最終更新 2026-06-08）
 
 TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
 **FUNC_TIME="false"**（実時間駆動・時刻停止不可），IRC=グローバル，例外=シグナル（SIGFPE）．
 
-| 項目 | 状態 |
+### 全テスト結果（fmp3側修正4件適用後）
+
+| 項目 | 結果 |
 |---|---|
 | check_library 例外/割込み | ✅ 2/2 All check points passed（timerはFUNC_TIME=false対象外） |
 | API TTG生成・cfg・ビルド | ✅ 20/20グループ（TTGにTA_EDGE対応・`int_trigger_atr` 追加で解消） |
-| API 実行 | 🔶 4〜5/20グループ緑．**残失敗はカーネルPOSIXポートのシェイクアウト項目**（下記） |
+| API 実行 | ✅ **13/20グループ緑（5周連続で安定）**．残7グループは下記の既知差分のみ（各1件） |
+| コンフィグエラーテスト | ✅ TESRY更新後 **POSIX OK=149/160・zybo OK=159/161**（2026-06-08）．残NGは下記の要精査1件＋ターゲット特性のみ |
+| 実行時間 | 全テスト一式 **約30秒**（check 2本＋API 20グループ＋cfg 160本）．prcid修正（fmp3側）による誤配送解消で**API実行が数分→1秒未満（200倍以上）** |
 
-カーネル側（fmp3メンテナ向け）残課題：
-1. `arch/posix_gcc/thread_ctrl.c:125 Assertion 'false'`（resume対象スレッドの不正状態）— 再現例: FMP_pridataq_snd_pdq_F_f_2_1, FMP_dataqueue_rcv_dtq_F_f_1_1_3
-2. `kernel/task.c:126 Assertion 'bitmap != 0U'`（レディキュー不整合）— 再現例: FMP_task_manage_mact_tsk_F_h_2_6_4（マイグレーション系）
-3. clr_int/prb_int の異常系戻り値差（FMP_interrupt_clr_int_F_a: E_OK，prb_int_F_a: E_OBJ(-41) vs 期待E_PAR）
-4. ASP_staticAPI_CRE_TSK_h_1: `rtsk.stk==指定スタック` 期待 — USE_TSKINICTXBターゲット（stk未保持）では成立せず（TTG/TESRYの除外条件追加が将来課題）
-5. adj_tim系・tloc_mtx系の実時間タイミング依存（時間マクロのネイティブ粒度チューニング継続）
+### fmp3側で解決済みの問題（2026-06-07〜08，計4件）
+
+調査記録の正本は fmp3 リポジトリの issues/ に移動：
+- カーネル共通部（set_dspflg 空レディキュー）：`fmp3/issues/20260607-1918_*_set-dspflg-empty-ready-queue/`
+- POSIXポート3件（thread_ctrl RUN過渡＋述語待機／dispatch_and_migrate の stale runtsk／
+  **prcid汚染（間欠ハングの根本原因・スレッド切替時のプロセッサID取得元の誤り）**）：
+  `fmp3/target/linux_gcc/issues/20260607-2150_*_posix-smp-thread-switch/`
+
+従来「残課題」としていた間欠ハング（eventflag等）・テスト内タイムアウトの
+間欠フレーク（mempfix/dataqueue系）は，いずれも prcid 汚染の一過性誤配送が
+原因と判明し，修正により消滅．
+
+### API実行の残差分（7グループ・全て既知の仕様差/ターゲット特性）
+
+1. clr_int系の異常系戻り値差（g6/g7/g14/g20: E_OK が返る）
+2. prb_int の戻り値差（g15: E_OBJ(-41) vs 期待E_PAR）
+3. ASP_staticAPI_CRE_TSK_h_1（g3）: `rtsk.stk==指定スタック` 期待 —
+   USE_TSKINICTXBターゲット（stk未保持）では成立せず（TTG/TESRYの除外条件追加が将来課題）
+4. adj_tim系の実時間タイミング依存（g9）
+
+### コンフィグエラーテストNGの分類（当初 POSIX 27件／zybo 19件，2026-06-08）
+
+**A. 仕様差分（zybo・POSIX共通＝ターゲット非依存）→ TESRY期待値の3.7系更新**
+- **不正クラスID系17件（全`*_F-b`の不正クラス指定＋`CRE_SPN_F-c`）：対応済**．
+  TTSP3の期待 `E_RSATR` を `E_ID`（illegal class）に更新．FMP3 3.3.0の仕様変更
+  （不正クラスIDの検査を静的APIからクラスの囲みに対するチェックへ移行）に追従．
+  → zybo NG19→2，POSIX NG27→11（B表に改変記録）
+- **CRE_MTX_F-c（TA_CEILING×サブ優先度）：精査確定＝obsolete負テスト**．
+  【NGKI3682】（サブ優先度使用ceilpri→E_ILUSE）が3.7のサブ優先度刷新で削除され，
+  当該組合せは3.7で有効（kernel_cfg生成成功・エラー0）．FMP固有テスト（ASP:-）．
+  cfg-errorフレームワークでは正常ビルド期待を表現できないため**テスト削除/無効化が必要**
+  （A表参照．zybo/POSIX共通の残NG）
+
+**B. POSIXターゲット特性（POSIXのみ，10件・残NG）**
+- DEF_ICS系7件（a-1〜3,b,c,F-a,F-c）：OMIT_ISTK（非タスクコンテキストスタックは
+  pthread管理）のため istksz/istk の検査が成立しない
+- CRE_TSK_d-2/d-3/e：スタック指定不可ターゲット（USE_TSKINICTXB）のため
+  stksz最小値・stkの検査が成立しない．
+  ※付随発見：linux_gcc は CRE_TSK で stk≠NULL を黙って受理する
+  （target_user.txt 制約(5)はNULL必須）．target_check.trb への検査追加が
+  fmp3側の改善候補
+
+**C. zyboのみ（残NG，1件）**：DEF_INH_c（INHNO有効範囲のターゲット差）
 
 ---
 
