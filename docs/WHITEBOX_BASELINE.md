@@ -1,43 +1,50 @@
 # WHITEBOX_BASELINE.md — ASP3 kernel/ API別分岐カバレッジベースライン
 
-> 計測日: 2026-06-08（初回）→ 2026-06-08 修正再計測  
-> 方式: gcov（`python3 scripts/wb_branch_report.py <source>`）  
-> 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合  
-> 修正: `RAISE_CPU_EXCEPTION` を `0x06000010`（EQ条件付き，Z=0でスキップ）から
->        `0xf0500090`（ARMv7無条件未定義命令）に変更し，6グループのタイムアウトを解消。
->        all 20/20 グループ PASS。
+> 計測日: 2026-06-08（初回）→ 2026-06-08 修正再計測 → 2026-06-08 BBテスト追加後再計測  
+> 方式: gcov（`python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
+> 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
+> ※ per-API テーブルは初回計測時の `wb_branch_report.py` 値（ファイル集計とは基準が異なる）
 
-## 全体サマリ
+## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py）
 
 ```
-分岐カバレッジ(kernel/): 1336/1381 = 96.7%  (C1)   ← 未到達 45 分岐
-  ※修正前: 1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
+分岐カバレッジ(kernel/): 1059/1405 = 75.4%  (C1, 2026-06-08 BBテスト追加後)
+  ※BBテスト追加前（group17失敗）: 1051/1405 = 74.8%
+  ※RAISE_CPU_EXCEPTION修正前:     1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
 ```
 
-### ファイル別サマリ（修正後）
+**2026-06-08 追加した BBテスト（グループ17に集約→全20グループ PASS）**:
+- `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
+- `ena_dsp_b-4.yaml` — raster&&enater=T時の自タスク終了（sys_manage.c L400 (f)分岐）
+- `ena_ter_c.yaml`   — raster&&dspflg=T時の自タスク終了（task_term.c L250 (t)分岐、group 1）
 
-| ファイル | 到達 | 全分岐 | C1 |
-|---|---|---|---|
-| alarm.c | 31 | 32 | 96.9% |
-| cyclic.c | 35 | 36 | 97.2% |
-| dataqueue.c | 152 | 152 | **100%** |
-| eventflag.c | 119 | 120 | 99.2% |
-| exception.c | 4 | 6 | 66.7% |
-| interrupt.c | 56 | 58 | 96.6% |
-| mempfix.c | 84 | 88 | 95.5% |
-| mutex.c | 127 | 140 | 90.7% |
-| pridataq.c | 148 | 148 | **100%** |
-| semaphore.c | 76 | 76 | **100%** |
-| startup.c | 4 | 4 | **100%** |
-| sys_manage.c | 59 | 62 | 95.2% |
-| task.c | 60 | 62 | 96.8% |
-| task_manage.c | 90 | 92 | 97.8% |
-| task_refer.c | 34 | 35 | 97.1% |
-| task_sync.c | 118 | 118 | **100%** |
-| task_term.c | 60 | 62 | 96.8% |
-| time_event.c | 49 | 58 | 84.5% |
-| time_manage.c | 21 | 22 | 95.5% |
-| wait.c | 9 | 10 | 90.0% |
+### ファイル別サマリ（gcov 全分岐、BBテスト追加後）
+
+| ファイル | 行 C0 | 到達分岐 | 全分岐 | C1 |
+|---|---|---|---|---|
+| alarm.c | 70/70 100% | 24 | 32 | 75.0% |
+| cyclic.c | 74/74 100% | 26 | 36 | 72.2% |
+| dataqueue.c | 253/253 100% | 124 | 152 | 81.6% |
+| eventflag.c | 165/165 100% | 91 | 120 | 75.8% |
+| exception.c | 7/7 100% | 3 | 6 | 50.0% |
+| interrupt.c | 108/110 98.2% | 47 | 58 | 81.0% |
+| mempfix.c | 148/150 98.7% | 57 | 88 | 64.8% |
+| mutex.c | 204/209 97.6% | 90 | 142 | 63.4% |
+| pridataq.c | 243/244 99.6% | 122 | 148 | 82.4% |
+| semaphore.c | 121/121 100% | 57 | 76 | 75.0% |
+| startup.c | 25/25 100% | 4 | 4 | **100%** |
+| sys_manage.c | 152/152 **100%** | 45 | 62 | 72.6% |
+| task.c | 110/111 99.1% | 59 | 62 | 95.2% |
+| task.h | 4/4 100% | 2 | 2 | **100%** |
+| task_manage.c | 119/119 **100%** | 64 | 92 | 69.6% |
+| task_refer.c | 78/78 100% | 22 | 35 | 62.9% |
+| task_sync.c | 169/169 100% | 88 | 118 | 74.6% |
+| task_term.c | 93/94 98.9% | 46 | 64 | 71.9% |
+| time_event.c | 131/141 92.9% | 48 | 60 | 80.0% |
+| time_manage.c | 55/56 98.2% | 17 | 22 | 77.3% |
+| wait.c | 61/61 100% | 9 | 10 | 90.0% |
+| wait.h | 38/38 100% | 14 | 16 | 87.5% |
+| **TOTAL** | **2428/2451** | **1059** | **1405** | **75.4%** |
 
 ## API（関数）別 分岐カバレッジ
 
@@ -188,6 +195,8 @@
 
 ### sys_manage.c
 
+> BBテスト追加後: 行カバレッジ 100%（152/152）、分岐 45/62 = 72.6%
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `rot_rdq` ◀ | 100% | 10/12 83.3% | 2 | M |
@@ -197,7 +206,7 @@
 | `loc_cpu` | 100% | 2/2 100% | — | — |
 | `unl_cpu` ◀ | 100% | 1/2 50% | 1 | M |
 | `dis_dsp` | 100% | 4/4 100% | — | — |
-| `ena_dsp` ◀ | 82.4% | 6/10 60% | 4 | M |
+| `ena_dsp` ◀ | 100% ✓ | +2分岐追加（b-3/b-4）| 要再計測 | M |
 | `sns_ctx` | 0% | — | — | ※到達不能の可能性 |
 | `sns_loc` | 100% | — | — | — |
 | `sns_dsp` | 100% | — | — | — |
@@ -250,12 +259,15 @@
 
 ### task_term.c
 
+> BBテスト追加後: 行カバレッジ 93/94（98.9%）、分岐 46/64（71.9%）  
+> `ena_ter_c.yaml` 追加（group 1）: L250 (t)分岐（raster&&dspflg=T→自タスク終了）を追加
+
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
 | `ext_tsk` ◀ | 82.4% | 9/10 90% | 1 | L |
 | `ras_ter` ◀ | 96.6% | 21/24 87.5% | 3 | M |
 | `dis_ter` | 100% | 4/4 100% | — | — |
-| **`ena_ter`** ◀ | **0%** | **0/8 0%** | **8** | **H ← 完全未テスト** |
+| `ena_ter` ◀ | 要再計測 | +1分岐追加（ena_ter_c: L250(t)）| 要再計測 | M（改善） |
 | `sns_ter` ◀ | 100% | 3/4 75% | 1 | L |
 | `ter_tsk` ◀ | 100% | 12/14 85.7% | 2 | M |
 
@@ -310,18 +322,19 @@
 
 ## 優先度 H の作業リスト（ホワイトボックステスト追加対象）
 
-> ※ RAISE_CPU_EXCEPTION 修正（2026-06-08）後の再計測値。semaphore/pridataqが解消。
+> ※ 2026-06-08 BBテスト追加（ena_dsp_b-3/b-4, ena_ter_c）後の状態。
 
-| # | ファイル | API | 分岐 C1 (修正後) | 未到達 | 状態 |
-|---|---|---|---|---|---|
-| 1 | mutex.c | `_kernel_mutex_check_ceilpri` | 41.7%→要再計測 | 要再計測 | 未着手 |
-| 2 | mutex.c | `mutex_calc_priority` | 25.0%→要再計測 | 要再計測 | 未着手 |
-| 3 | time_event.c | `_kernel_tmevt_down` | 50.0%→要再計測 | 要再計測 | 未着手 |
-| 4 | mempfix.c | `ref_mpf` | 要再計測（file:95.5%） | 要再計測 | 未着手 |
-| 5 | task_term.c | `ena_ter` | 要再計測（file:96.8%） | 要再計測 | 未着手 |
-| 6 | task_manage.c | `get_inf` / `get_tst` | 要再計測（file:97.8%） | 要再計測 | **P1 作業中** |
-| — | semaphore.c | `ref_sem` | **100%** → 解消 | 0 | ✓ 完了 |
-| — | task_sync.c | 全API | **100%** → 解消 | 0 | ✓ 完了 |
+| # | ファイル | API | gcov C1（ファイル計） | 状態 |
+|---|---|---|---|---|
+| 1 | mutex.c | `_kernel_mutex_check_ceilpri` | 63.4%（file） | 未着手 |
+| 2 | mutex.c | `mutex_calc_priority` | 63.4%（file） | 未着手 |
+| 3 | time_event.c | `_kernel_tmevt_down` | 80.0%（file） | 未着手 |
+| 4 | mempfix.c | `ref_mpf` | 64.8%（file） | 未着手 |
+| 5 | task_manage.c | `get_inf` / `get_tst` | 69.6%（file） | P1 作業中 |
+| — | sys_manage.c | `ena_dsp` | **100% 行カバレッジ達成** | ✓ bb-3/bb-4 完了 |
+| — | task_term.c | `ena_ter` | L250(t)分岐追加済み | ✓ ena_ter_c 完了 |
+| — | semaphore.c | `ref_sem` | 75.0%（file, 改善） | ✓ 解消 |
+| — | task_sync.c | 全API | 74.6%（file） | — |
 
 ## 更新手順
 

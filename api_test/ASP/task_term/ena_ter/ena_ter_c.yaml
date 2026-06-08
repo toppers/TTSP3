@@ -1,0 +1,18 @@
+version: "bb-2026-06-08"
+ASP_task_term_ena_ter_c:
+  note: 【NGKI3491 補足説明】タスク終了処理要求フラグがセットされた状態でena_terを呼び出すと，タスク終了許可状態へ遷移した結果，自タスクが終了すること（ena_terからはリターンしない）
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+
+  do:
+    id     : TASK1
+    syscall: ena_ter()
+
+  post_condition:
+    TASK1:
+      tskstat: dormant
