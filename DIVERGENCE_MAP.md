@@ -1,5 +1,10 @@
 # DIVERGENCE_MAP.md — 差分台帳
 
+> **開発方針（2026-06-08）**：当面は **ASP3 / FMP3 を対象**に進め，**HRMP3 / HRP3 対応は後回し**。
+> HRMP3/HRP3 固有の課題（正系API立ち上げ・ttb.shのTECSオブジェクト自動導出化・
+> HRMP3 zybo+QEMU ブート問題等）は本台帳に記録のみ残し，着手しない。
+> 既着手の HRMP/HRP cfg-error 対応・set_dspflg 波及調査は完了済み（深追いしない）。
+
 > 2つの差分を管理する。
 > A) **仕様差分**：TTSP3 R3.1.0（仕様3.4.0）↔ 被テスト標準ASP3（3.7.2）
 > B) **改変台帳**：TTSP3 R3.1.0 upstream からの本リポジトリの変更
@@ -71,6 +76,7 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `library/HRMP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRMP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止）／CONFIG_OPTに`-S serial_cfg.o`追加（ASP/FMPと同根）。これらでHRMP cfg-error NG38→1（残DEF_INH_cはzybo INHNO差・全プロファイル共通） | 済（2026-06-08） |
 | `library/HRP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止） | 済（2026-06-08） |
 | `scripts/ttsp_parallel_cfgerr.sh`（HRP分岐 APPL_COBJS_COMMON） | 改変 | HRP cfg-error の TECSアダプタ obj 名を tecsgen 1.8.0 実生成名へ修正。旧名 `tHRPSVCPlugin_sXxxSVCCaller_Yyy_eZzz_tecsgen.{c,o}` は当該 tecsgen が生成せず「No rule to make target …_tecsgen.c」で停止していた（3.4→3.7 の tecsgen 名称差分）。最小 out.cdl に対する gen/Makefile.tecsgen の実出力に合わせ `tHRPSVCBody_*`／`tHRPSVCCaller_*` 系へ置換。検証：`ttsp_parallel_cfgerr.sh ../hrp3_3.4/ HRP obj_hrp_cfgerr` で **OK=113 NG=0**（DEF_INH_c も含め全通過）。cfg-error は configurator 段で期待エラーを検出する負テストで、HRP集合は実質 ASP staticAPI（ASP で 113/113 確認済）＋HRP独自分0件のため divergence の新規カバレッジは無いが、HRP でも E_ID 等が正しく検出されることを確認 | 済（2026-06-08） |
+| `ttb.sh`（HRP正系API用 APPL_COBJS_COMMON） | （後回し） | HRP正系APIテスト用の `tHRPSVCPlugin_*`（旧tecsgen名）が obsolete だが，正系cdlは tecsgen 1.8.0 で**27個**のTECSオブジェクトを生成（cfg-errorの12個より多い）．Makefile(line217)は `$(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)` で自動導出できるが，ttb.shの`make APPL_COBJS=`コマンドライン上書きが抑制する設計課題．正しい対応は「TECSプロファイルでは自動導出に委ね，ハーネス固有obj(ttsp_test_lib.o/ttsp_mem_obj_*)のみ別途渡す」だが正系ビルドハーネス整備が前提＝**HRMP3/HRP3後回し方針により保留**（2026-06-08調査済） | 後回し |
 | tools/ttg | 改変 | 3.7仕様への生成対応 | 予定 |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
 
