@@ -92,16 +92,20 @@ zyboで緑の項目を「偶然通っている / 仕様変更が期待値に影�
   を持たないため不変。
 - **P1-2. check_adjtim 条件式変更（3.4→3.5）** … ✅ 影響なし。adj_tim_b は
   `adj_tim(TMIN_ADJTIM-1/TMAX_ADJTIM+1)`→E_PAR の境界テストで zybo autocode緑。
-- **P1-3. フェイタルデータアボートEXCNO（3.4→3.5）** … ✅ 影響なし＋**専用テスト追加済（2026-06-08, ASP）**。
+- **P1-3. フェイタルデータアボートEXCNO（3.4→3.5）** … ✅ 影響なし＋**専用テスト追加済（2026-06-08, ASP/FMP両方）**。
   exceptionチェックは `TTSP_EXCNO_A=EXCNO_UNDEF`（未定義命令）でzybo緑。新EXCNOはtarget追加能力で
   既存テスト不変。
-  **追加した専用テスト（ASP zybo）**：3.5で割り付けられたフェイタルデータアボートのCPU例外番号
+  **追加した専用テスト**：3.5で割り付けられたフェイタルデータアボートのCPU例外番号
   `EXCNO_FATAL`（=`TTSP_EXCNO_C`）の配送を確認。`check_library/exception` を末尾拡張し、
   タスクコンテキストからフェイタルデータアボート（SP不正化＋未定義命令で誘発）を起こして
-  `DEF_EXC(EXCNO_FATAL)` ハンドラへ遷移、ハンドラは**復帰せず** `ttsp_check_finish` で完了する
-  （復帰不可仕様に準拠）。**実証**：zybo QEMU で check point 1→13・`All check points passed.`、
-  ASP full回帰 PASS=141/FAIL=0（cfg-error 113/113不変）。改変ファイルは B表参照。
-  **残**：FMP（多PE・バリア同期構成）への横展開は未（任意・別途判断）。
+  `DEF_EXC(EXCNO_FATAL)` ハンドラへ遷移、ハンドラは**復帰せず** `(ttsp_)check_finish` で完了する
+  （復帰不可仕様に準拠）。
+  - **ASP zybo**：check point 1→13・`All check points passed.`、ASP full回帰 PASS=141/FAIL=0。
+  - **FMP zybo**：DEF_EXC を master PE クラス(CLS_PRC1)に登録、バリア同期後に master(PE1)から
+    フェイタルを発生。`PE 1 : Check point 1→13`・`PE 1 : All check points passed.`、FMP full回帰
+    PASS=182/FAIL=0。実装上の知見：フェイタル経路ではカーネル状態が不整合となり得るため、ハンドラ内の
+    プロセッサID取得は `iget_pid`（カーネルサービス）ではなく `sil_get_pid`（MPIDR直読）を用いる。
+  - 改変ファイル・改変明記は B表参照。**P1-3は ASP/FMP とも完了**。
 
 ### P2. 3.7新機能の正系テスト（調査結果：既存カバレッジで充足／対象外を確定）
 

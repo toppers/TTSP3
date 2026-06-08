@@ -55,6 +55,17 @@
 #define RAISE_CPU_EXCEPTION     Asm(".long 0x06000010");
 
 /*
+ *  [改変] 2026-06-08: 仕様差分3.4→3.5対応（フェイタルデータアボートのCPU例外化・
+ *  例外ハンドラ番号割付＝EXCNO_FATAL）の専用テスト用に追加（ASP zybo と同型）．
+ *  スタックポインタを不正な番地(0xd0000000＝"I"即値制約を満たす不正データ番地)に
+ *  してから未定義命令を実行し，CPU例外入口でのフレーム退避を不正番地への書込みで
+ *  データアボートにして，フェイタルデータアボート(EXCNO_FATAL)を誘発する．
+ *  本CPU例外ハンドラからは復帰してはならない（asp3 arch/arm_gcc core_test.h 準拠）．
+ */
+#define RAISE_FATAL_CPU_EXCEPTION \
+				Asm("mov sp, %0\n\t.word 0xf0500090" :: "I"(0xd0000000U))
+
+/*
  *  TTSP3用の定義
  */
 
@@ -197,6 +208,8 @@
  */
 #define TTSP_EXCNO_A      (0x10000|EXCNO_UNDEF)       /* CPU例外発生元のコンテキストへreturn可能(未定義命令) */
 #define TTSP_EXCNO_B      (0x10000|EXCNO_SVC)         /* 本番号でCPU例外を発生させるテストケースはない(SVC) */
+/* [改変] 2026-06-08: 3.4→3.5差分対応．PE1のフェイタルデータアボート(復帰不可)のCPU例外番号 */
+#define TTSP_EXCNO_C      (0x10000|EXCNO_FATAL)       /* PE1フェイタルデータアボート(CPU例外ハンドラから復帰不可) */
 #define TTSP_EXCNO_PE2_A  (0x20000|EXCNO_UNDEF)       /* PE2未定義命令 */
 #define TTSP_EXCNO_PE2_B  (0x20000|EXCNO_SVC)         /* PE2SVC */
 

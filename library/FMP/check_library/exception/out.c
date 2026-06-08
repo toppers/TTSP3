@@ -112,7 +112,19 @@ void main_task(intptr_t exinf){
 	ttsp_barrier_sync(1, TNUM_PRCID);
 
 	if (TOPPERS_MASTER_PRCID == prcid) {
-		ttsp_mp_check_finish(prcid, 11);
+		ttsp_mp_check_point(prcid, 11);
+
+		/*
+		 *  [改変] 2026-06-08: 仕様差分3.4→3.5対応．
+		 *  master PE(PE1)のタスクコンテキストからフェイタルデータアボート
+		 *  (EXCNO_FATAL=TTSP_EXCNO_C)を発生させ，DEF_EXC(EXCNO_FATAL)ハンドラへの
+		 *  配送を確認する．フェイタル用CPU例外ハンドラからは復帰してはならないため，
+		 *  完了(All check points passed.)はハンドラ側の ttsp_mp_check_finish で行う．
+		 */
+		ttsp_mp_check_point(prcid, 12);
+		ttsp_cpuexc_raise(TTSP_EXCNO_C);
+
+		/* フェイタルデータアボートは復帰不可のため，ここには到達しない */
 	}
 }
 
@@ -165,6 +177,28 @@ void cyc(intptr_t exinf){
 	ttsp_mp_wait_check_point(prcid, 9);
 
 	ttsp_mp_check_point(prcid, 10);
+}
+
+/*
+ *  [改変] 2026-06-08: 仕様差分3.4→3.5対応．
+ *  フェイタルデータアボート(EXCNO_FATAL=TTSP_EXCNO_C)用のCPU例外ハンドラ(PE1)．
+ *  本ハンドラはCPUロック状態で実行され，CPU例外発生元へは復帰してはならない．
+ *  完了チェックポイントを記録し ttsp_mp_check_finish 内の ext_ker でカーネルを終了する．
+ */
+void exc_fatal(void* p_excinf){
+	ID prcid;
+	/*
+	 *  フェイタルデータアボート経路ではカーネル状態が不整合となり得るため，
+	 *  iget_pid（カーネルサービス）ではなく sil_get_pid（MPIDR直読・
+	 *  ttsp_mp_check_finish 自身と同じ取得元）でプロセッサIDを得る．
+	 */
+	sil_get_pid(&prcid);
+
+	ttsp_cpuexc_hook(TTSP_EXCNO_C, p_excinf);
+
+	syslog_1(LOG_NOTICE, "[TSK%d]ttsp_cpuexc_raise(TTSP_EXCNO_C : fatal data abort) : OK", prcid);
+
+	ttsp_mp_check_finish(prcid, 13);
 }
 
 void ttsp_test_lib_init(intptr_t exinf){
