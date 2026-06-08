@@ -131,6 +131,15 @@ tslp_tsk	起床待ち（タイムアウト付き）〔T〕【NGKI1253】
 
 ・【NGKI1272】は，wup_tskの仕様として記載されている．
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. カバレッジ誘導テスト（ホワイトボックス）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【改変】2026-06-08 Shinya Honda：ホワイトボックステストケース (W-*) を追加．
+
+(W-a) raster=T かつ wupcnt=1 のとき，NGKI3455 が NGKI1259 より優先されること．
+      【NGKI3455優先】raster チェック（task_sync.c:134）が wupque チェックより先に
+      評価されるため，E_RASTER が返り wupcnt は消費されないこと．
+      target_branch: task_sync.c:134 if(p_runtsk->raster)→T
 
 
 以上．
