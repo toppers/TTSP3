@@ -7,6 +7,8 @@ base_tesry: "$Id: act_tsk.txt 67 2020-02-04 09:15:32Z fujisft-shigihara $（TTSP
 last_updated: "2026-06-08"
 combinatorial_source: "act_tsk_matrix.md（act_tsk.xlsx を MarkItDown で md テーブル化）"
 test_dir: "../act_tsk/"
+changelog:            # シート単位の節目のみ（詳細は git log）。1イベント1行・コミット単位にしない
+  - { date: 2026-06-08, change: "md化（act_tsk.txt $Id:67 を凍結継承）・仕様3.7基準化・トレーサビリティ表/組合せ表(xlsx)を追加", ref: git }
 ---
 
 > **改変明記（ライセンス条件(2)）**：本ファイルは TTSP3 R3.1.0 の

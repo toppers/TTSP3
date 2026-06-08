@@ -18,8 +18,16 @@ API テストシートを以下へ改善する（ユーザ提示のベース案�
 ## 1. 追加提案（採用方針）
 
 1. **front-matter（メタ情報）**：API名／**対象プロファイル**（ASP/FMP/HRP/HRMP の◯×）／
-   準拠仕様版（3.7.0）／元TESRY由来（`$Id`）／最終更新／組合せ正本／テスト実体dir。
+   準拠仕様版（3.7.0）／元TESRY由来（`$Id`）／最終更新／組合せ正本／テスト実体dir／**変更履歴（`changelog`）**。
    ※プロファイル依存は実在（例：`chg_spr` は FMP/HRMP のみ。ASP/HRPはサブ優先度非搭載）。
+   - **変更履歴の置き場所＝層別（確定）**：①詳細な who/when/what は **git log（正本。AGENTS.md §7）**＝
+     シートに逐次コミットを写さない／②**シート単位の節目**（md化・3.7対応・WB観点追加・ケース廃止）は
+     **front-matter の `changelog:` ブロック**に1イベント1行で／③仕様駆動差分(3.4→3.7)の理由は
+     **DIVERGENCE_MAP** へ**リンク**（重複させない）／④ライセンス改変告知は**改変明記ヘッダ**（条件(2)）に分離
+     （履歴ではない）／⑤**xlsx由来 `.xlsx.md` には書かない**（再生成で消える。意味は手書きシートの `changelog` に1行）。
+   - 形式：`changelog: [ { date: YYYY-MM-DD, change: "...", ref: git | "DIVERGENCE_MAP.md" | "WHITEBOX_PLAN.md §x" } ]`。
+     粒度は**節目**（コミット粒度にしない＝git二重管理回避）。`base_tesry`($Id) は由来の凍結として保持し、
+     `changelog` は git 移行後から記録。`last_updated` は `changelog` 最新行の日付に一致させる。
 2. **トレーサビリティ表**：各ケース → テスト実体（dir/yaml）へのリンク＋期待値（yamlの`ercd`）＋
    NGKI＋zybo現状。単なるリンクより価値大。yaml から自動生成可能。
 3. **NGKIトレーサビリティ＋3.4→3.7差分注記**：エラーコード/機能のNGKIを明記し、追加/変更/削除を印示。
