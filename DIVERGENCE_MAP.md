@@ -75,7 +75,7 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | api_test/* TESRY（残り） | 改変 | 3.4→3.7仕様差分対応の残：`CRE_MTX_F-c`（サブ優先度ceilpri・要精査）／POSIX固有のDEF_ICS・CRE_TSKスタック系（ターゲット特性） | 予定 |
 | `scripts/ttsp_parallel_cfgerr.sh` | 改変 | HRP/HRMPプロファイル対応（KERNEL_COBJS/APPL_COBJSリスト追加。ttb.shより転記） | 済（2026-06-08） |
 | `library/HRMP/test/ttsp_test_lib.c` | 改変 | HRMP3 3.4.0対応：`make_non_runnable` の3引数→2引数に追従（FMPと同根） | 済（2026-06-08） |
-| `library/HRMP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRMP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止）／CONFIG_OPTに`-S serial_cfg.o`追加（ASP/FMPと同根）。これらでHRMP cfg-error NG38→1（残DEF_INH_cはzybo INHNO差・全プロファイル共通） | 済（2026-06-08） |
+| `library/HRMP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRMP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止）／CONFIG_OPTに`-S serial_cfg.o`追加（ASP/FMPと同根）。これらでHRMP cfg-error NG38→1（残DEF_INH_cはASPテスト×FMP/HRMPプロファイル相互作用＝E節C参照） | 済（2026-06-08） |
 | `library/HRP/target/zybo_z7_gcc/ttsp_target.sh` | 改変 | HRP3 3.4.0対応：`objs/arm.o`削除（arm.c廃止） | 済（2026-06-08） |
 | `scripts/ttsp_parallel_cfgerr.sh`（HRP分岐 APPL_COBJS_COMMON） | 改変 | HRP cfg-error の TECSアダプタ obj 名を tecsgen 1.8.0 実生成名へ修正。旧名 `tHRPSVCPlugin_sXxxSVCCaller_Yyy_eZzz_tecsgen.{c,o}` は当該 tecsgen が生成せず「No rule to make target …_tecsgen.c」で停止していた（3.4→3.7 の tecsgen 名称差分）。最小 out.cdl に対する gen/Makefile.tecsgen の実出力に合わせ `tHRPSVCBody_*`／`tHRPSVCCaller_*` 系へ置換。検証：`ttsp_parallel_cfgerr.sh ../hrp3_3.4/ HRP obj_hrp_cfgerr` で **OK=113 NG=0**（DEF_INH_c も含め全通過）。cfg-error は configurator 段で期待エラーを検出する負テストで、HRP集合は実質 ASP staticAPI（ASP で 113/113 確認済）＋HRP独自分0件のため divergence の新規カバレッジは無いが、HRP でも E_ID 等が正しく検出されることを確認 | 済（2026-06-08） |
 | `ttb.sh`（HRP正系API用 APPL_COBJS_COMMON） | （後回し） | HRP正系APIテスト用の `tHRPSVCPlugin_*`（旧tecsgen名）が obsolete だが，正系cdlは tecsgen 1.8.0 で**27個**のTECSオブジェクトを生成（cfg-errorの12個より多い）．Makefile(line217)は `$(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)` で自動導出できるが，ttb.shの`make APPL_COBJS=`コマンドライン上書きが抑制する設計課題．正しい対応は「TECSプロファイルでは自動導出に委ね，ハーネス固有obj(ttsp_test_lib.o/ttsp_mem_obj_*)のみ別途渡す」だが正系ビルドハーネス整備が前提＝**HRMP3/HRP3後回し方針により保留**（2026-06-08調査済） | 後回し |
@@ -164,7 +164,19 @@ TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
   （target_user.txt 制約(5)はNULL必須）．target_check.trb への検査追加が
   fmp3側の改善候補
 
-**C. zyboのみ（残NG，1件）**：DEF_INH_c（INHNO有効範囲のターゲット差）
+**C. FMP/HRMP の残NG（1件）：DEF_INH_c — ASPテスト×FMPプロファイルの相互作用（精査済 2026-06-08）**
+- DEF_INH_c は ASP の cfg-error テスト（`api_test/ASP/staticAPI/DEF_INH/DEF_INH_c`，
+  共有 err_code.txt = `E_PAR`，NGKI3056：DEF_INH の inthdr が先頭番地として不正）．
+- ASPプロファイル：意図どおり `E_PAR`（inthdr not aligned）→ **OK**．
+- FMP/HRMPプロファイル：同テストが `E_RSATR` で先に停止 → grep不一致で NG．
+  原因＝FMPの共有テスト囲み `ttsp_obj_head.cfg` は `CLASS(CLS_ALL_PRC1)`（全PE割付け）
+  だが，テスト中の `CFG_INT(TTSP_INTNO_B)` の `TTSP_INTNO_B` は **PE1専用割込み**
+  （0x10000|0x11）．「クラスの割付け可能プロセッサは割込み要求先の部分集合」という
+  FMPマルチプロセッサ制約に違反し，DEF_INH の E_PAR より先に CFG_INT の E_RSATR が発火．
+- 判定：**カーネルバグでも単純な3.4→3.7差分でもない**．ASPテストをFMPプロファイルで
+  流用した際のプロファイル相互作用．err_code.txt は ASP/FMP 共有（E_PAR は ASP で正当）
+  のため期待値差替では修正不可．FMP固有の割込み負テストは `DEF_INH_F-a`〜`F-d` が担う．
+  zybo基準方針により**文書化のみ（残置）**．
 
 ---
 
