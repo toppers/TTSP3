@@ -131,18 +131,40 @@ tslp_tsk	起床待ち（タイムアウト付き）〔T〕【NGKI1253】
 
 ・【NGKI1272】は，wup_tskの仕様として記載されている．
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2. カバレッジ誘導テスト（ホワイトボックス）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(W-a) [ASP3 3.7.2] タスク終了要求フラグがセットされた状態で起床要求キューイング数が1のとき，
-      NGKI3455がNGKI1259より優先してE_RASTERを返し，起床要求キューイング数を消費しないこと．
-      target_branch: task_sync.c:134 if(p_runtsk->raster)→T
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
-(W-b) [ASP3 3.7.2] CPUロック状態で呼び出してE_CTXが返ること．
-      【NGKI3489】CHECK_DISPATCH の sense_lock()=T 経路（task_sync.c:131 br[3]）．
-      slp_tsk_a-2 と同等だが，a-2 を含む auto_code グループがタイムアウトし
-      当該分岐が未到達のため，バックアップとして追加．
-      target_branch: task_sync.c:131 CHECK_DISPATCH sense_lock()=T
+2. 構造ベースのホワイトボックステスト
+
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+  本節は仕様(NGKI)からは導かれない，カーネル実装の未到達分岐(C1)を狙う
+  ケースを記す（gcov計測ベース．docs/WHITEBOX_PLAN.md）．
+  対象カーネル版（既定）: ASP3 Release 3.7.2（UPSTREAM_KERNEL.md 固定版
+  asp3_zybo_z7_gcc-20260520）．file:line は本版に対するもの．
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.1. 未到達分岐のテストケース
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(W-a) タスク終了要求フラグがセットされた状態で起床要求キューイング数が1のとき，
+      NGKI3455がNGKI1259より優先してE_RASTERを返し，起床要求キューイング数を
+      消費しないこと．
+      ・狙う分岐 : kernel/task_sync.c:134  if (p_runtsk->raster) の TRUE側
+      ・到達手順 : dis_ter() → 別タスクが wup_tsk(自タスク) [起床要求キューイング数=1]
+                  → 別タスクが ras_ter(自タスク) [タスク終了要求フラグセット，保留]
+                  → slp_tsk()
+      ・分類     : (i) API到達可
+      ・関連NGKI : 【NGKI3455】【NGKI1259】
+      ・yaml     : slp_tsk_W-a.yaml （内部キー ASP_task_sync_slp_tsk_W_a）
+
+(W-b) CPUロック状態で呼び出してE_CTXが返ること（sense_lock()=T経路）．
+      ・狙う分岐 : kernel/task_sync.c:131  CHECK_DISPATCH の sense_lock()=T のアーム
+                  （br[3]）
+      ・到達手順 : loc_cpu() → CPUロック状態 → slp_tsk()
+      ・分類     : (i) API到達可
+      ・関連NGKI : 【NGKI3489】
+      ・yaml     : slp_tsk_W-b.yaml （内部キー ASP_task_sync_slp_tsk_W_b）
+      ・備考     : (a-2)（CPUロック→E_CTX）と同等だが，(a-2)を含む auto_code グループ
+                  がタイムアウトし当該分岐が未到達のため，バックアップとして追加．
 
 
 以上．
