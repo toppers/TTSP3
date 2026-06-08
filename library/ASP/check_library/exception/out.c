@@ -86,7 +86,19 @@ void main_task(intptr_t exinf){
 	ercd = stp_cyc(CYC1);
 	check_ercd(ercd, E_OK);
 
-	ttsp_check_finish(11);
+	ttsp_check_point(11);
+
+	/*
+	 *  [改変] 2026-06-08: 仕様差分3.4→3.5対応．
+	 *  フェイタルデータアボート(EXCNO_FATAL=TTSP_EXCNO_C)のCPU例外配送を確認する．
+	 *  発生元はタスクコンテキスト．フェイタルデータアボート用CPU例外ハンドラからは
+	 *  復帰してはならないため，完了(All check points passed.)はハンドラ側の
+	 *  ttsp_check_finish で行う．
+	 */
+	ttsp_check_point(12);
+	ttsp_cpuexc_raise(TTSP_EXCNO_C);
+
+	/* フェイタルデータアボートは復帰不可のため，ここには到達しない */
 }
 
 void exception_ttsp_excno_a(void* p_excinf){
@@ -131,4 +143,19 @@ void cyc(intptr_t exinf){
 	ttsp_wait_check_point(9);
 
 	ttsp_check_point(10);
+}
+
+/*
+ *  [改変] 2026-06-08: 仕様差分3.4→3.5対応．
+ *  フェイタルデータアボート(EXCNO_FATAL=TTSP_EXCNO_C)用のCPU例外ハンドラ．
+ *  本ハンドラはCPUロック状態で実行され，CPU例外発生元へは復帰してはならない．
+ *  完了チェックポイントを記録し ttsp_check_finish 内の ext_ker でカーネルを終了する．
+ */
+void exception_ttsp_excno_fatal(void* p_excinf){
+
+	ttsp_cpuexc_hook(TTSP_EXCNO_C, p_excinf);
+
+	syslog_0(LOG_NOTICE, "[TSK]ttsp_cpuexc_raise(TTSP_EXCNO_C : fatal data abort) : OK");
+
+	ttsp_check_finish(13);
 }

@@ -142,6 +142,14 @@ ttsp_cpuexc_raise(EXCNO excno)
 	if (excno == TTSP_EXCNO_A) {
 		RAISE_CPU_EXCEPTION;
 	}
+	/*
+	 *  [改変] 2026-06-08: 3.4→3.5差分対応．フェイタルデータアボート
+	 *  (EXCNO_FATAL=TTSP_EXCNO_C)の発生．本マクロ実行後は当該コンテキストへ
+	 *  復帰せず，DEF_EXCで登録したフェイタル用CPU例外ハンドラへ遷移する．
+	 */
+	else if (excno == TTSP_EXCNO_C) {
+		RAISE_FATAL_CPU_EXCEPTION;
+	}
 }
 
 /*

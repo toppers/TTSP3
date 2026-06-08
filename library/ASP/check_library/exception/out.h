@@ -46,3 +46,5 @@ extern void main_task(intptr_t exinf);
 extern void exception_ttsp_excno_a(void* p_excinf);
 extern void alm(intptr_t exinf);
 extern void cyc(intptr_t exinf);
+/* [改変] 2026-06-08: 3.4→3.5差分(フェイタルデータアボートのCPU例外化)対応 */
+extern void exception_ttsp_excno_fatal(void* p_excinf);
