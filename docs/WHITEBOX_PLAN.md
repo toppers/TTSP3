@@ -60,16 +60,41 @@
 - drcov（案B近似）は**不採用**（真のC1が要るため）。既存のdrcov(C0)はトレンド把握に併用可。
 
 ## 5. 開発フロー（反復・1関数/1ファイル単位）
-1. **計測**：分岐C1レポート生成（案A）。
-2. **未到達分岐の抽出**：ファイル×行×分岐方向（taken/not-taken）の一覧。
-3. **分類**：
+
+> **ツール**: `scripts/wb_branch_report.py` — gcov集計＋未到達分岐レポートを1コマンドで出力。
+> 計測データは事前に `bash scripts/coverage_gcov_asp.sh full` で取得しておくこと。
+
+**手順:**
+
+1. **未到達分岐の確認**（1コマンド）：
+   ```bash
+   # ソース全体の未到達一覧
+   python3 scripts/wb_branch_report.py <source>
+   # 例: task_sync.c の未到達分岐一覧
+   python3 scripts/wb_branch_report.py task_sync
+
+   # 関数単位の全分岐カウント（行範囲指定）
+   python3 scripts/wb_branch_report.py task_sync --lines 203-248
+   ```
+   出力：`L<行>  br[N]  <ソース行>`（未到達）、`【0】` マーク付き（全分岐）、`◀` 印。
+
+2. **未到達分岐の分類**：
    - (i) API到達可：既存APIの引数/前提条件の組合せで通る → テストケース追加で対応。
    - (ii) 特殊内部状態要：待ち行列の特定順序・優先度境界・キューイング上限・割込み多重等 →
      API列＋cfg＋割込み注入で状態を構築。
    - (iii) 到達不能/防御コード：assert・「起こり得ない」分岐・ターゲット依存で固定の枝 →
      **正当化して文書化**（無理に通さない）。
-4. **テスト設計・追加**：§6 の形式で TESRY もしくはホワイトボックス専用テストを追加。
-5. **再計測→反復**：分岐が閉じるまで。閉じない分は (iii) として記録。
+
+3. **テスト設計・追加**：
+   - `(i)(ii)` → §6.1 の YAML（`<api>_W-<letter>.yaml`）を作成、§6.2 の形式で `.txt` に追記。
+   - `(iii)` → §8 到達不能リストに `file:line` ＋正当化を記録。
+
+4. **再計測→反復**：`coverage_gcov_asp.sh full` → `wb_branch_report.py` で残存確認。
+
+**利用可能ソース一覧:**
+```bash
+python3 scripts/wb_branch_report.py --list
+```
 
 ## 6. テストの形式・置き場所（決定）
 - **方式1：既存TESRYの拡張**。各APIシートにホワイトボックスケースを追加し TTG で生成。
