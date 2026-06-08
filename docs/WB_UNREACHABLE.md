@@ -3,7 +3,7 @@
 > 更新: 2026-06-09（WBテスト無効化後 再計測）  
 > 対象: ASP3 3.7.2 `kernel/`、残存 34 未到達分岐（1425/1459 = 97.7%）  
 > ビルド: `coverage_gcov_asp.sh` に `-DNDEBUG` 追加済み（`COPTS` 環境変数経由）  
-> WBテスト: `api_test/ASP/whitebox/` → `api_test/ASP/whitebox_archive/` に移動（無効化）
+> WBテスト: `api_test/ASP/whitebox/` → `api_test/ASP/whitebox/` に移動（無効化）
 
 **分類凡例:**
 - **構造的到達不能**: カーネルの不変条件（恒真 flag、整合性保証ポインタ等）により実行時に到達できない。
@@ -33,7 +33,7 @@
 
 ## WBテスト無効化の影響（2026-06-09）
 
-`api_test/ASP/whitebox/` を `api_test/ASP/whitebox_archive/` にリネームし、手書き WB テスト（方式2）を全て無効化した。これにより以下の分岐が未到達に戻った。
+`api_test/ASP/whitebox/` を `api_test/ASP/whitebox/` にリネームし、手書き WB テスト（方式2）を全て無効化した。これにより以下の分岐が未到達に戻った。
 
 | WBテスト | 対象分岐 | 影響ファイル |
 |---|---|---|
@@ -237,7 +237,7 @@ NDEBUG 適用により分岐ノード消滅。分岐の理由（構造的到達�
 
 ### 9-e. `_kernel_tmevt_down` L221 br[1]（**WBテスト無効化で追加**）
 
-> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox_archive/time_event/time_event_W-a/out.c)
+> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox/time_event/time_event_W-a/out.c)
 
 **ソース** (`asp3/kernel/time_event.c` L221–222):
 ```c
@@ -254,7 +254,7 @@ if (child + 1 <= LAST_INDEX()
 
 ### 9-f. `_kernel_tmevt_down` L231 br[0]（**WBテスト無効化で追加**）
 
-> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox_archive/time_event/time_event_W-a/out.c)（§9-e と同一テスト）
+> アーカイブ済み WBテスト: [`time_event_W-a`](../api_test/ASP/whitebox/time_event/time_event_W-a/out.c)（§9-e と同一テスト）
 
 **ソース** (`asp3/kernel/time_event.c` L231):
 ```c
@@ -269,7 +269,7 @@ if (EVTTIM_LE(evttim, HEAP_NODE(child)->evttim)) {
 
 ### 9-g. `_kernel_tmevtb_delete` L302 br[0]（**WBテスト無効化で追加**）
 
-> アーカイブ済み WBテスト: [`time_event_W-b`](../api_test/ASP/whitebox_archive/time_event/time_event_W-b/out.c)
+> アーカイブ済み WBテスト: [`time_event_W-b`](../api_test/ASP/whitebox/time_event/time_event_W-b/out.c)
 
 **ソース** (`asp3/kernel/time_event.c` L301–303):
 ```c
@@ -303,7 +303,7 @@ if (!sense_lock()) {
 
 **結論**: WB テストは不要（通常の API 使用パターンから外れるため）。
 
-> アーカイブ済み WBテスト: [`alarm_W-a`](../api_test/ASP/whitebox_archive/alarm/alarm_W-a/out.c)
+> アーカイブ済み WBテスト: [`alarm_W-a`](../api_test/ASP/whitebox/alarm/alarm_W-a/out.c)
 
 ---
 
@@ -324,7 +324,7 @@ if (!sense_lock()) {
 
 **結論**: WB テストは不要。
 
-> アーカイブ済み WBテスト: [`cyclic_W-a`](../api_test/ASP/whitebox_archive/cyclic/cyclic_W-a/out.c)
+> アーカイブ済み WBテスト: [`cyclic_W-a`](../api_test/ASP/whitebox/cyclic/cyclic_W-a/out.c)
 
 ---
 
@@ -345,7 +345,7 @@ CHECK_PAR(blkoffset / p_mpfcb->p_mpfinib->blksz < p_mpfcb->unused);  /* L310 */
 
 **補足**: 両分岐とも不正パラメータ検査（`E_PAR`）であり、仕様上のエラー処理の確認。テストは原理上可能だが、TESRY YAML 形式での任意アドレス指定は困難で手書きテストが必要。優先度は低く当面未対応で可。
 
-> アーカイブ済み WBテスト: [`mempfix_W-a`](../api_test/ASP/whitebox_archive/mempfix/mempfix_W-a/out.c)（L309）、[`mempfix_W-b`](../api_test/ASP/whitebox_archive/mempfix/mempfix_W-b/out.c)（L310）
+> アーカイブ済み WBテスト: [`mempfix_W-a`](../api_test/ASP/whitebox/mempfix/mempfix_W-a/out.c)（L309）、[`mempfix_W-b`](../api_test/ASP/whitebox/mempfix/mempfix_W-b/out.c)（L310）
 
 ---
 
@@ -363,7 +363,7 @@ else if ((p_tcb->p_tinib->tskatr & TA_NOACTQUE) != 0U || p_tcb->actque) {
 
 **結論**: BB テスト（`act_tsk` に `TA_NOACTQUE` 属性タスクを追加）で到達可能。優先度は低く当面未対応で可。
 
-> アーカイブ済み WBテスト: [`act_tsk_W-a`](../api_test/ASP/whitebox_archive/task_manage/act_tsk_W-a/out.c)
+> アーカイブ済み WBテスト: [`act_tsk_W-a`](../api_test/ASP/whitebox/task_manage/act_tsk_W-a/out.c)
 
 ---
 

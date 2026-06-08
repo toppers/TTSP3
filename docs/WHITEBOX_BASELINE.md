@@ -5,7 +5,7 @@
 > 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
 > ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
 > ※ **2026-06-09 NDEBUG 計測移行**: `coverage_gcov_asp.sh` に `-DNDEBUG` を追加し assert ブランチを計測対象外に変更。  
-> ※ **2026-06-09 WBテスト無効化**: `api_test/ASP/whitebox/` → `api_test/ASP/whitebox_archive/` に移動。手書き WBテスト（方式2）を無効化した状態でのベースライン。
+> ※ **2026-06-09 WBテスト無効化**: `api_test/ASP/whitebox/` → `api_test/ASP/whitebox/` に移動。手書き WBテスト（方式2）を無効化した状態でのベースライン。
 
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
@@ -438,13 +438,13 @@
 | task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (97.7%、残2) |
-| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
-| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、**whitebox_archive に移動**) | 未到達に戻った |
+| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、**whitebox に移動**) | 未到達に戻った |
+| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、**whitebox に移動**) | 未到達に戻った |
 | time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1、api_test/ 配下で **有効のまま**) | 8/8 **100%** |
 | semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 
