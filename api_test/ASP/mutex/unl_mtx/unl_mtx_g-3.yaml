@@ -1,0 +1,59 @@
+version: "ASP3 3.7.2"
+ASP_mutex_unl_mtx_g_3:
+  note: 【NGKI2092】【NGKI2093】【NGKI2094】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskbpri: TSK_PRI_LOW
+      tskstat: running
+      locmtx :
+        - MTX_B
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskbpri: TSK_PRI_LOW
+      tskstat: waiting
+      wobjid : MTX_B
+      locmtx :
+        - MTX_A
+
+    MTX_A:
+      type   : MUTEX
+      mtxstat: TMTX_LOC
+      mtxatr : TA_CEILING
+      ceilpri: TSK_PRI_HIGH
+      htskid : TASK2
+
+    MTX_B:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_CEILING
+      ceilpri : TSK_PRI_MID
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: unl_mtx(MTX_B)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: ready
+      tskpri : TSK_PRI_LOW
+      locmtx :
+
+    TASK2:
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      locmtx :
+        - MTX_A
+        - MTX_B
+
+    MTX_B:
+      htskid  : TASK2
+      wtsklist:

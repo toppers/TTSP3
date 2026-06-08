@@ -1,0 +1,38 @@
+version: "ASP3 3.7.2"
+ASP_task_manage_chg_pri_j_3:
+  note: 【NGKI1192】【NGKI1193】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskbpri: TSK_PRI_LOW
+      tskpri : TSK_PRI_MID
+      locmtx :
+        - MTX1
+
+    TASK2:
+      type   : TASK
+      tskstat: waiting
+      tskbpri: TSK_PRI_MID
+      tskpri : TSK_PRI_MID
+      wobjid : MTX1
+
+    MTX1:
+      type    : MUTEX
+      mtxstat : TMTX_LOC
+      mtxatr  : TA_CEILING
+      ceilpri : TSK_PRI_MID
+      htskid  : TASK1
+      wtsklist:
+        - TASK2:
+
+  do:
+    id     : TASK1
+    syscall: chg_pri(TASK2, TSK_PRI_LOW)
+    ercd   : E_OK
+
+  post_condition:
+    TASK2:
+      tskbpri: TSK_PRI_LOW
+      tskpri : TSK_PRI_LOW
