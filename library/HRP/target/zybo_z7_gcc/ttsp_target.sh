@@ -100,7 +100,9 @@ fi
 #
 # ターゲット依存部でKERNEL_COBJSへ追加するオブジェクトファイル
 #
-KERNEL_COBJS_TARGET="objs/arm.o objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
+# [改変] 2026-06-08: HRP3 3.4.0対応．3.7で廃止された arm.c 由来の objs/arm.o を削除
+#  （ASP/FMP/HRMPと同根）．
+KERNEL_COBJS_TARGET="objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
 APPL_COBJS_TARGET="objs/ttsp_target_test.o"
 
 #

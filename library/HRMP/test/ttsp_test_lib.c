@@ -40,6 +40,9 @@
  *  の責任を負わない．
  *
  *  $Id: ttsp_test_lib.c 72 2020-03-19 08:08:03Z fujisft-shigihara $
+ *
+ *  [改変] 2026-06-08: HRMP3 3.4.0対応．make_non_runnable のシグネチャ変更
+ *  （3引数→2引数，hrmp3/kernel/task.c:276）に追従．
  */
 
 /*
@@ -2202,7 +2205,7 @@ ttsp_sus_tsk(ID tskid)
 		 *  実行できる状態から強制待ち状態への遷移
 		 */
 		p_tcb->tstat = TS_SUSPENDED;
-		make_non_runnable(p_my_pcb, p_tcb, p_tcb->p_pcb);
+		make_non_runnable(p_my_pcb, p_tcb);
 		/* 他プロセッサからの呼出しを想定してプロセッサ間割込みを入れておく */
 		request_dispatch_prc(p_tcb->p_pcb->prcid);
 

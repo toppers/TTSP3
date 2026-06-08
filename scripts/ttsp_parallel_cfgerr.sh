@@ -39,8 +39,21 @@ if [ "$PROFILE_NAME" = "ASP" ]; then
 elif [ "$PROFILE_NAME" = "FMP" ]; then
 	KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o objs/spin_lock.o"
 	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
+elif [ "$PROFILE_NAME" = "HRP" ]; then
+	# ttb.sh より転記（HRP：保護機能・TECS）
+	KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o objs/messagebuf.o objs/svc_table.o objs/domain.o objs/mem_manage.o objs/memory.o"
+	# [改変] 2026-06-08: HRP cfg-error の TECS アダプタ obj 名を tecsgen 1.8.0 の実生成名に修正．
+	#   旧名 tHRPSVCPlugin_sXxxSVCCaller_Yyy_eZzz_tecsgen.{c,o} は当該 tecsgen が生成せず
+	#   "No rule to make target ..._tecsgen.c" で停止していた（3.4→3.7 の tecsgen 名称差分）．
+	#   cfg-error の最小 out.cdl に対する tecsgen 実出力（gen/Makefile.tecsgen の
+	#   TECS_*_COBJS）に合わせ tHRPSVCBody_* / tHRPSVCCaller_* 系へ置換．
+	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o objs/ttsp_mem_obj_kernel1.o objs/ttsp_mem_obj_kernel2.o objs/ttsp_mem_obj_user1.o objs/ttsp_mem_obj_user2.o objs/tSerialAdapter_tecsgen.o objs/tSysLogAdapter_tecsgen.o objs/tHRPSVCBody_sSysLog_rKernelDomain_tecsgen.o objs/tHRPSVCBody_sSerialPort_rKernelDomain_tecsgen.o objs/tHRPSVCBody_sSysLog.o objs/tHRPSVCBody_sSerialPort.o objs/tHRPSVCCaller_sSysLog_tecsgen.o objs/tHRPSVCCaller_sSerialPort_tecsgen.o objs/tHRPSVCCaller_sSysLog.o objs/tHRPSVCCaller_sSerialPort.o objs/tSerialAdapter.o objs/tSysLogAdapter.o"
+elif [ "$PROFILE_NAME" = "HRMP" ]; then
+	# ttb.sh より転記（HRMP：保護機能＋マルチプロセッサ・TECS）
+	KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o objs/messagebuf.o objs/svc_table.o objs/domain.o objs/mem_manage.o objs/memory.o objs/spin_lock.o"
+	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o objs/ttsp_mem_obj_kernel1.o objs/ttsp_mem_obj_kernel2.o objs/ttsp_mem_obj_user1.o objs/ttsp_mem_obj_user2.o objs/ttsp_mem_obj_kernel_dummy1.o objs/ttsp_mem_obj_kernel_dummy2.o objs/ttsp_mem_obj_user_dummy1.o objs/ttsp_mem_obj_user_dummy2.o"
 else
-	echo "ERROR: PROFILE=$PROFILE_NAME 未対応"; exit 1
+	echo "ERROR: PROFILE=$PROFILE_NAME 未対応（ASP/FMP/HRP/HRMP）"; exit 1
 fi
 
 ERR_DIR="$OBJECT_DIR/api_test/config_error"

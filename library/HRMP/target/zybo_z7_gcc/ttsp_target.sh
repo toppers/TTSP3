@@ -91,7 +91,9 @@ TTG_OPT=
 # (-T, -A, -U, -a, -LはTTSP3で使用するため使用不可)
 # (コーテーションを含むオプションは指定不可(例:"-d \"dir1 dir2\""))
 #
-CONFIG_OPT="-w -S syslog.o -S banner.o -S serial.o -S chip_serial.o -S logtask.o -S xuartps.o -o -Wno-unused-but-set-variable -o -DOMIT_CHECK_USTACK_OVERLAP"
+# [改変] 2026-06-08: HRMP3 3.4.0対応．serial.c から設定データが
+#  syssvc/serial_cfg.c に分離されたため -S serial_cfg.o を追加（ASP/FMPと同根）．
+CONFIG_OPT="-w -S syslog.o -S banner.o -S serial.o -S serial_cfg.o -S chip_serial.o -S logtask.o -S xuartps.o -o -Wno-unused-but-set-variable -o -DOMIT_CHECK_USTACK_OVERLAP"
 if [ "$USE_QEMU" == "true" ]
 then
 	CONFIG_OPT="$CONFIG_OPT -o -DTOPPERS_USE_QEMU"
@@ -100,7 +102,9 @@ fi
 #
 # ターゲット依存部でKERNEL_COBJSへ追加するオブジェクトファイル
 #
-KERNEL_COBJS_TARGET="objs/arm.o objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
+# [改変] 2026-06-08: HRMP3 3.4.0対応．3.7で廃止された arm.c 由来の objs/arm.o を削除
+#  （ASP/FMPと同根．arm.c は arm.h に統合済み）．
+KERNEL_COBJS_TARGET="objs/chip_kernel_impl.o objs/core_kernel_impl.o objs/gic_kernel_impl.o objs/pl310.o objs/target_kernel_impl.o objs/mpcore_kernel_impl.o objs/mpcore_timer.o"
 APPL_COBJS_TARGET="objs/ttsp_target_test.o"
 
 #
