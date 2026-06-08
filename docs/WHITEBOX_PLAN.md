@@ -173,6 +173,97 @@ ASP_task_term_ena_ter_W_a:
 **境界**：(iii)到達不能（防御コード）は yaml を作らず §8 到達不能リストに file:line＋正当化を記録
 （例 `ena_ter:253 E_SYS`）。
 
+#### 6.1.1 pre_condition 頻出パターン集（コピー用・ASP向け）
+
+> WBテスト設計で繰り返し使う `pre_condition` キー群。実値はAPIと狙う分岐に合わせて調整する。
+
+**パターン① CPUロック状態**（CHECK_UNL / E_CTX 経路）
+```yaml
+pre_condition:
+  TASK1:
+    type   : TASK
+    tskstat: running
+  TASK2:
+    type   : TASK
+    tskstat: ready
+  CPU_STATE:
+    type   : CPU_STATE
+    loc_cpu: true
+do:
+  id     : TASK1
+  syscall: <api>(TASK2)   # または自タスク対象なら TSK_SELF
+  ercd   : E_CTX
+```
+
+**パターン② 非タスクコンテキスト**（CHECK_TSKCTX / TSK_SELF in non-task / E_CTX or E_ID 経路）
+```yaml
+pre_condition:
+  DUMMY_ALM:
+    type     : ALARM
+    nfytype  : TNFY_HANDLER
+    nfy_info1: EXINF_A
+    almstat  : TALM_STP
+    hdlstat  : ACTIVATE   # アラームハンドラを起動状態にして API を呼ばせる
+  TASK1:
+    type   : TASK
+    tskstat: running
+do:
+  id     : DUMMY_ALM
+  syscall: <api>(TSK_SELF)   # または適切な引数
+  ercd   : E_CTX             # または E_ID（TSK_SELF が有効範囲外の場合）
+```
+
+**パターン③ ディスパッチ保留状態**（CHECK_DISPATCH / !dspflg 経路）
+```yaml
+pre_condition:
+  TASK1:
+    type   : TASK
+    tskstat: running
+  CPU_STATE:
+    type   : CPU_STATE
+    dis_dsp: true      # dis_dsp()によるディスパッチ禁止
+do:
+  id     : TASK1
+  syscall: <api>()
+  ercd   : E_CTX
+```
+
+**パターン④ タスク終了要求フラグ（raster=T）+ タスク終了禁止**（ras_ter/ena_ter 関連分岐）
+```yaml
+pre_condition:
+  TASK1:
+    type   : TASK
+    tskstat: running
+    dister : true      # dis_ter() 済み（タスク終了要求を保留させる）
+    raster : true      # ras_ter() 済み（終了要求フラグ）
+```
+
+**パターン⑤ 起床要求キューイング数（wupcnt=N）**（slp_tsk の NGKI1259/1260 切替・wup_tsk の E_QOVR 手前）
+```yaml
+pre_condition:
+  TASK1:
+    type   : TASK
+    tskstat: running
+    wupcnt : 1         # 0 または 1（TMAX_WUPCNT=1）
+```
+
+**パターン⑥ 待ち状態タスク各種**（sus_tsk・wup_tsk の状態分岐）
+```yaml
+pre_condition:
+  TASK2:
+    type   : TASK
+    tskstat: wait-slp    # 起床待ち（slp_tsk 呼出し中）
+    # または:
+    # tskstat: wait-dly  # 時間経過待ち（dly_tsk）
+    # tskstat: wait-sem  # セマフォ資源獲得待ち
+    # tskstat: sus       # 強制待ち（sus_tsk）
+    # tskstat: was       # 二重待ち（強制待ち + 起床待ち）
+```
+
+> **使い方**：`wb_branch_report.py task_sync --lines <行範囲>` で未到達分岐を確認し、
+> 該当する CHECK_* の種類からパターンを選んでコピー。`CPU_STATE` / `DUMMY_ALM` は TTG が
+> 認識する特殊タイプ（`type:` フィールドが必須）。
+
 ### 6.2 `.txt` シートへのホワイトボックス節の追記ルール（当面の方式・2026-06-08 確定）
 
 既存 `<api>.txt` は「`0. API仕様` → `1. 仕様ベースのブラックボックステスト`（1.1 エラー/1.2 正常、

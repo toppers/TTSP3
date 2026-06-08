@@ -12,9 +12,16 @@ gcov計測済みの obj_asp_gcov/ から全auto_codeグループを集計し，
 
   python3 scripts/wb_branch_report.py task_sync --lines 203-248
       指定行範囲の全分岐をカウント付きで表示（関数単位の分析用）
+      分岐方向マーク: (f)=asm-fallthrough  (t)=asm-jump
+      ※GCCが条件を反転コンパイルする場合あり（L210 の CHECK_UNL が典型）．
+        エラーパスが (f) になることがある．最終判断はソースを参照すること．
 
   python3 scripts/wb_branch_report.py task_sync --all
       ソース全体の全分岐をカウント付きで表示
+
+  python3 scripts/wb_branch_report.py task_sync --groups
+      このソースを含む auto_code グループの実行状況を表示
+      （タイムアウト起因で未到達か，テストが無いのかを判断する際に使う）
 
   python3 scripts/wb_branch_report.py --list
       計測可能なカーネルソース一覧
@@ -22,18 +29,11 @@ gcov計測済みの obj_asp_gcov/ から全auto_codeグループを集計し，
   python3 scripts/wb_branch_report.py task_sync --obj-dir obj_fmp_gcov
       FMP3等，別プロファイルのカバレッジデータを参照
 
-出力例（未到達分岐モード）:
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    task_sync.c  ブランチカバレッジ  (23グループ集計)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    全分岐: 118  到達: 117  未到達: 1  C1: 99.2%
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  未到達分岐  (1 箇所)
-
-  行      分岐       ソース行（先頭60文字）
-  ──────────────────────────────────────────────────────────────
-  L210    br[0]      CHECK_UNL();
+分岐方向ラベル（--lines/--all モードのみ表示）:
+  (f) = asm-fallthrough  (t) = asm-jump（アセンブリレベルの方向）
+  ※ GCC はエラーパスを「fallthrough」にコンパイルする場合がある（branch prediction 最適化）．
+     例: CHECK_UNL() では br[0](f)=CPUロックエラーパス（直感と逆）．
+     条件の意味は常にソースを参照して確認すること．
 """
 
 import argparse
@@ -75,6 +75,42 @@ def find_kernel_sources(obj_dir):
     return result
 
 
+def find_auto_dirs(obj_dir, basename):
+    """basename.gcno を持つ全 auto_code_N ディレクトリを返す"""
+    pattern = os.path.join(obj_dir, "api_test", "auto_code_*",
+                           "objs", f"{basename}.gcno")
+    return sorted(os.path.dirname(os.path.dirname(g)) for g in glob.glob(pattern))
+
+
+# ── グループ実行状況 ────────────────────────────────────────────────────────────
+
+def get_group_status(obj_dir, basename):
+    """
+    basename.gcno を持つ全グループの実行結果を返す．
+    戻り値: [(group_name, ok: bool, detail: str), ...]
+      ok=True  : 'All check points passed.'
+      ok=False : タイムアウト or 実行ログ無し
+      detail   : タイムアウト時は 'TIMEOUT CP<N>', 未実行は 'no execute.log'
+    """
+    results = []
+    for auto_dir in find_auto_dirs(obj_dir, basename):
+        name = os.path.basename(auto_dir)
+        log_path = os.path.join(auto_dir, "execute.log")
+        if not os.path.exists(log_path):
+            results.append((name, False, "no execute.log"))
+            continue
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            lines = [l.rstrip("\r\n") for l in f if l.strip()]
+        last = lines[-1] if lines else ""
+        if "All check points passed" in last:
+            results.append((name, True, "OK"))
+        else:
+            m = re.search(r"ttsp_wait_check_point\((\d+)\)", last)
+            cp = m.group(1) if m else "?"
+            results.append((name, False, f"TIMEOUT CP{cp}"))
+    return results
+
+
 # ── gcov 実行 & パース ──────────────────────────────────────────────────────────
 
 def run_gcov(auto_dir, src_rel):
@@ -88,24 +124,28 @@ def run_gcov(auto_dir, src_rel):
 
 def parse_gcov_file(gcov_path):
     """
-    .gcov ファイルを解析し，(branch_data, source_map) を返す．
+    .gcov ファイルを解析し，(branch_data, source_map, fall_map) を返す．
       branch_data : {lineno: {br_idx: count}}
       source_map  : {lineno: source_text}
+      fall_map    : {lineno: {br_idx: True}}  True=fallthrough（条件FALSE側）
     """
     branch_data = collections.defaultdict(dict)
     source_map = {}
+    fall_map = collections.defaultdict(dict)
     cur_line = None
     br_idx = 0
 
     with open(gcov_path, encoding="utf-8", errors="replace") as f:
         for raw in f:
             line = raw.rstrip("\n")
-            # branch行: "    branch  N  taken  M  ..."
+            # branch行: "    branch  N  taken  M  [(fallthrough)]"
             if re.match(r"\s*branch\s+\d+\s+taken\s+\d+", line):
                 parts = line.split()
                 try:
                     count = int(parts[3])
                     branch_data[cur_line][br_idx] = count
+                    if "(fallthrough)" in line:
+                        fall_map[cur_line][br_idx] = True
                     br_idx += 1
                 except (IndexError, ValueError):
                     pass
@@ -122,7 +162,7 @@ def parse_gcov_file(gcov_path):
                     br_idx = 0
                     source_map[lineno] = m.group(2)
 
-    return branch_data, source_map
+    return branch_data, source_map, fall_map
 
 
 # ── 全グループ集計 ──────────────────────────────────────────────────────────────
@@ -130,19 +170,17 @@ def parse_gcov_file(gcov_path):
 def aggregate(obj_dir, basename):
     """
     obj_dir 内の全 auto_code_N グループにわたって分岐カウントを集計する．
-    (branch_data, source_map, n_groups) を返す．
+    (branch_data, source_map, fall_map, n_groups) を返す．
       branch_data : {lineno: {br_idx: total_count}}
       source_map  : {lineno: source_text}
+      fall_map    : {lineno: {br_idx: True}}  最初のグループから取得（構造は不変）
       n_groups    : 処理したグループ数
     """
-    pattern = os.path.join(obj_dir, "api_test", "auto_code_*",
-                           "objs", f"{basename}.gcno")
-    auto_dirs = sorted(
-        os.path.dirname(os.path.dirname(g)) for g in glob.glob(pattern)
-    )
+    auto_dirs = find_auto_dirs(obj_dir, basename)
 
     total_br = collections.defaultdict(lambda: collections.defaultdict(int))
     source_map = {}
+    fall_map = {}
     n_ok = 0
 
     for auto_dir in auto_dirs:
@@ -150,20 +188,22 @@ def aggregate(obj_dir, basename):
         if run_gcov(auto_dir, src_rel):
             gcov_path = os.path.join(auto_dir, f"{basename}.c.gcov")
             if os.path.exists(gcov_path):
-                br, src = parse_gcov_file(gcov_path)
+                br, src, fall = parse_gcov_file(gcov_path)
                 for lineno, brs in br.items():
                     for idx, count in brs.items():
                         total_br[lineno][idx] += count
                 if not source_map:
                     source_map = src
+                if not fall_map:
+                    fall_map = {l: dict(d) for l, d in fall.items()}
                 n_ok += 1
 
-    return total_br, source_map, n_ok
+    return total_br, source_map, fall_map, n_ok
 
 
-# ── レポート表示 ────────────────────────────────────────────────────────────────
+# ── 表示ヘルパー ────────────────────────────────────────────────────────────────
 
-_W = 68
+_W = 72
 
 
 def _header(title):
@@ -171,6 +211,13 @@ def _header(title):
     print(f"\n{bar}")
     print(f"  {title}")
     print(bar)
+
+
+def _br_tag(count, is_fall):
+    """分岐1個の表示文字列を返す  例: '2268(f)'  '【0】(t)'"""
+    direction = "(f)" if is_fall else "(t)"
+    val = "【0】" if count == 0 else str(count)
+    return f"{val}{direction}"
 
 
 def print_summary(basename, n_groups, total, covered):
@@ -181,14 +228,26 @@ def print_summary(basename, n_groups, total, covered):
     print("━" * _W)
 
 
+def print_groups(groups):
+    """--groups: グループ実行状況を表示"""
+    print(f"\nグループ実行状況  ({len(groups)} グループ)\n")
+    w_name = max((len(g[0]) for g in groups), default=12) + 2
+    for name, ok, detail in groups:
+        mark = "✓" if ok else "✗"
+        print(f"  {name:<{w_name}}  {mark}  {detail}")
+    n_ok = sum(1 for _, ok, _ in groups if ok)
+    n_ng = len(groups) - n_ok
+    print(f"\n  合計: {n_ok} OK / {n_ng} TIMEOUT")
+    if n_ng:
+        print("  ※ タイムアウトグループのテストは gcda に記録されない場合あり")
+
+
 def print_uncovered(branch_data, source_map):
-    """未到達分岐のみ表示（既定モード）"""
+    """未到達分岐のみ表示（既定モード）。方向ラベルなし（GCC反転の誤解を避ける）"""
     uncov_lines = sorted(
         l for l, brs in branch_data.items() if any(c == 0 for c in brs.values())
     )
-    n_uncov = sum(
-        1 for brs in branch_data.values() for c in brs.values() if c == 0
-    )
+    n_uncov = sum(1 for brs in branch_data.values() for c in brs.values() if c == 0)
     if not uncov_lines:
         print("\n  ✓ 未到達分岐なし（C1カバレッジ 100%）")
         return
@@ -204,47 +263,37 @@ def print_uncovered(branch_data, source_map):
         print(f"L{lineno:<6}  {br_str:<12}  {src}")
 
 
-def print_range(branch_data, source_map, lo, hi):
-    """指定行範囲の全分岐をカウント付きで表示（関数単位の分析用）"""
-    lines_in_range = sorted(l for l in branch_data if lo <= l <= hi)
-    if not lines_in_range:
+def _print_branch_lines(branch_data, source_map, fall_map, lines_iter):
+    """指定行イテレータの全分岐をカウント付きで表示（--lines / --all 共通）"""
+    for lineno in lines_iter:
+        brs = branch_data[lineno]
+        fmap = fall_map.get(lineno, {})
+        src = (source_map.get(lineno) or "").strip()
+        parts = [_br_tag(brs[i], fmap.get(i, False)) for i in sorted(brs)]
+        br_str = "  ".join(parts)
+        uncov = any(c == 0 for c in brs.values())
+        flag = "  ◀" if uncov else ""
+        print(f"L{lineno:<6}  {src}")
+        print(f"          {br_str}{flag}")
+
+
+def print_range(branch_data, source_map, fall_map, lo, hi):
+    """指定行範囲の全分岐をカウント付きで表示"""
+    lines_in = sorted(l for l in branch_data if lo <= l <= hi)
+    if not lines_in:
         print(f"\n  L{lo}–L{hi} の範囲に分岐データがありません。")
         return
-
-    print(f"\nL{lo}–L{hi} 全分岐\n")
-    print(f"{'行':<8} {'分岐カウント':<45} {'ソース行'}")
-    print("─" * _W)
-    for lineno in lines_in_range:
-        brs = branch_data[lineno]
-        src = (source_map.get(lineno) or "").strip()
-        br_parts = []
-        for idx in sorted(brs):
-            c = brs[idx]
-            tag = "【0】" if c == 0 else str(c)
-            br_parts.append(f"br[{idx}]={tag}")
-        br_str = "  ".join(br_parts)
-        uncov = any(c == 0 for c in brs.values())
-        flag = "  ◀" if uncov else ""
-        print(f"L{lineno:<6}  {src}")
-        print(f"          {br_str}{flag}")
+    print(f"\nL{lo}–L{hi} 全分岐")
+    print(f"  (f)=asm-fallthrough  (t)=asm-jump  ※GCCが条件反転する場合あり，詳細はソース参照\n")
+    _print_branch_lines(branch_data, source_map, fall_map, lines_in)
 
 
-def print_all(branch_data, source_map):
+def print_all(branch_data, source_map, fall_map):
     """全ソース行の全分岐をカウント付きで表示"""
-    print(f"\n全分岐\n")
-    for lineno in sorted(branch_data):
-        brs = branch_data[lineno]
-        src = (source_map.get(lineno) or "").strip()
-        br_parts = []
-        for idx in sorted(brs):
-            c = brs[idx]
-            tag = "【0】" if c == 0 else str(c)
-            br_parts.append(f"br[{idx}]={tag}")
-        br_str = "  ".join(br_parts)
-        uncov = any(c == 0 for c in brs.values())
-        flag = "  ◀" if uncov else ""
-        print(f"L{lineno:<6}  {src}")
-        print(f"          {br_str}{flag}")
+    print(f"\n全分岐")
+    print(f"  (f)=asm-fallthrough  (t)=asm-jump  ※GCCが条件反転する場合あり，詳細はソース参照\n")
+    _print_branch_lines(branch_data, source_map, fall_map,
+                        sorted(branch_data.keys()))
 
 
 # ── main ────────────────────────────────────────────────────────────────────────
@@ -261,6 +310,8 @@ def main():
                     help="指定行範囲の全分岐を表示（例: --lines 203-248）")
     ap.add_argument("--all", action="store_true",
                     help="ソース全体の全分岐をカウント付きで表示")
+    ap.add_argument("--groups", action="store_true",
+                    help="このソースを含む auto_code グループの実行状況を表示")
     ap.add_argument("--obj-dir", default="obj_asp_gcov",
                     metavar="DIR",
                     help="gcovオブジェクトディレクトリ（既定: obj_asp_gcov）")
@@ -283,11 +334,17 @@ def main():
     available = find_kernel_sources(args.obj_dir)
     if basename not in available:
         print(f"ERROR: '{basename}.c' のデータが {args.obj_dir}/ に見つかりません。")
-        print("  --list で一覧を確認するか, coverage_gcov_asp.sh full を実行してください。")
+        print("  --list で一覧確認か, coverage_gcov_asp.sh full を実行してください。")
         sys.exit(1)
 
+    # --groups のみの場合は gcov 集計不要
+    if args.groups and not args.lines and not args.all:
+        _header(f"{basename}.c  グループ実行状況 ({args.obj_dir})")
+        print_groups(get_group_status(args.obj_dir, basename))
+        return
+
     print(f"[集計中: {args.obj_dir}/api_test/auto_code_*/]", file=sys.stderr)
-    branch_data, source_map, n_groups = aggregate(args.obj_dir, basename)
+    branch_data, source_map, fall_map, n_groups = aggregate(args.obj_dir, basename)
 
     if not branch_data:
         print("分岐データが取得できませんでした。gcovビルドを確認してください。")
@@ -300,16 +357,19 @@ def main():
 
     print_summary(basename, n_groups, total, covered)
 
+    if args.groups:
+        print_groups(get_group_status(args.obj_dir, basename))
+
     if args.lines:
         m = re.match(r"(\d+)-(\d+)$", args.lines)
         if not m:
-            print("ERROR: --lines は 'N-M' の形式で指定してください（例: --lines 203-248）")
+            print("ERROR: --lines は 'N-M' の形式で指定（例: --lines 203-248）")
             sys.exit(1)
         lo, hi = int(m.group(1)), int(m.group(2))
-        print_range(branch_data, source_map, lo, hi)
+        print_range(branch_data, source_map, fall_map, lo, hi)
     elif args.all:
-        print_all(branch_data, source_map)
-    else:
+        print_all(branch_data, source_map, fall_map)
+    elif not args.groups:
         print_uncovered(branch_data, source_map)
 
 
