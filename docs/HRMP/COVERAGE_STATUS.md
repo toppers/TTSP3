@@ -1,45 +1,40 @@
-# HRMP3 カバレッジ計測ステータス（移植進行中・gcdaダンプ直前で停止）
+# HRMP3 カバレッジ計測ステータス（gcovダンプ動作・API駆動のみ残）
 
-> **状態（2026-06-09）：計測未完了だが核心まで到達。** HRMP3 は HRP3 と異なり TTSP3 で
-> ビルド・実行でき、GCOV計装移植も動作（gcno生成）、リンクも全解決、テスト緑、
-> gcovダンプ（`toppers_gcov_end`）に到達するところまで確認。残るは **gcov支援データ
-> （計408バイト）が未マッピング領域に置かれ、ダンプ中にフォールトする**1点のみ。
+> **状態（2026-06-09）：check_library で gcov 完全動作（gcda生成・カバレッジ抽出成功）。**
+> HRMP3 の保護カーネルで gcov(C1) 計測の最難関（特権ダンプの未マッピングフォールト）を突破。
+> 残るは **API auto-code の並列ドライバ（ttsp_parallel_api.sh）が HRMP（保護多パスビルド）
+> 未対応**な点のみ。check_library のカバレッジは取得済み（startup.c 97%, task.c 52% 等）。
 
 ---
 
-## 最新の根本原因（2026-06-09 実測・確定）
+## 動作までの全解決チェーン（2026-06-09）
 
-gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）した結果：
+gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）で確定し，順に解決：
 
-1. **ダンプは特権(SVC)モードで動作**（CPSR=0xd3, mode[4:0]=0x13=SVC）。
-   → 権限違反ではなく，アクセス先メモリの**未マッピング（変換フォールト）**が原因。
-2. `__gcov_info_to_gcda`（libgcov）は `.text_shared`（0x1622e4・マッピング済み）に配置され
-   **実行は成功**。gcovカウンタはカーネルドメイン（マッピング済み）にあり特権ダンプから読める。
-   ヒープも `gcov_heap_pool`（.bss_kernel・マッピング済み静的配列）に変更済み。
-3. **唯一の未マッピング**＝リンカスクリプト固定部末尾に置いた2セクション（計408B, アドレス0x200000〜
-   ＝共有RW領域の終端 `__aend_mp_rwdata_shared=0x200000` の直後）：
-   - `.gcov_info`（180B）：gcov_info ポインタ配列（`__gcov_info_start/end`）
-   - `.gcov_libs`（228B）：`GROUP()` で**遅延に引かれた** `strlen`（libc）等。`__gcov_info_to_gcda`
-     内の `dump_string` が `strlen` を呼ぶ → 未マッピングへのフェッチ → **フォールト**。
-   - 遅延に引かれる理由：保護ドメインの配置パターン `libc.a(.text)`（非ワイルドカード）が
-     フルパス書庫にマッチせず，かつ `GROUP()` がドメイン配置確定後に引くため orphan 化し，
-     固定部末尾のワイルドカード catch（未マッピング）に落ちる。
+1. **計装・リンク**：`Makefile.target` に ENABLE_GCOV、`target_kernel_impl.c` に gcov ランタイム
+   （FMP雛形・特権SVCモードで動作）、`ldscript.trb` 末尾の `GROUP()` でライブラリ解決。
+2. **ライブラリ配置**（strlen 未マッピングフォールト対策）：`ldscript.trb` の `$modnameReplace` で
+   `libc.a`→`*libc.a:` 等ワイルドカード化。GROUP で遅延に引かれる libc/libgcov/librdimon の
+   メンバ（strlen 等）をフルパス書庫にマッチさせ、マッピング済みの `.text_shared` 等へ配置。
+3. **gcov_info 配置**（最重要）：`target_mem.cfg` に
+   `KERNEL_DOMAIN { ATT_SEC(".gcov_info", { TA_NOWRITE|TA_KEEP, "DDR" }); }` を追加。
+   - `TA_NOWRITE` で初期化済み読込専用データ扱い（`TA_MEMINI` 自動付与）＝**ロードされる**
+     `.rodata_kernel`（マッピング済み）に配置。当初 `TA_KEEP` のみでは NOLOAD の
+     `.noinit_kernel` に落ち、ポインタ値が**ロードされずダンプがフォールト**した。
+   - ヒープは `target_kernel_impl.c` の `.bss_kernel` 静的配列 `gcov_heap_pool`（マッピング済み）。
+4. **ラベル**：`ldscript.trb` で `__gcov_info_start/end` をコンフィギュレータ生成の
+   `__start_rodata_kernel_A1001`/`__end_` にエイリアス（check_library 全3種で同一＝安定）。
 
-## 残る単一タスク：408Bをマッピング済みドメイン領域へ
+→ **結果**：QEMU が正常終了し gcda 45ファイル生成、`/hrmp3/kernel/` のカバレッジ抽出に成功。
 
-ユーザ方針（2026-06-09）：**マッピング済みドメイン領域に配置**（特権ダンプなのでカーネル/共有いずれも可）。
+## 残るタスク：API auto-code の HRMP 対応
 
-候補アプローチ：
-- (a) `arch/arm_gcc/common/core_kernel.trb` の `.shared_code` と同様に，`.gcov_info` 等を
-  無所属(共有)RWセクションとして登録し，コンフィギュレータに共有領域（マッピング済み）へ
-  配置させる。strlen等の遅延 orphan は，共有テキスト領域のワイルドカード catch を
-  動的出力に加える必要がある。
-- (b) `target_mem.cfg`（target配下・編集可）に gcov 用の固定アドレスのカーネルアクセス可能
-  メモリ領域を定義し，`ldscript.trb` で `.gcov_info`/`.gcov_libs` を `> その領域` に置く。
-- いずれも HRMP の保護ドメイン/コンフィギュレータ機構の追加作業が必要。
+`scripts/ttsp_parallel_api.sh` が ASP/FMP のみ対応（PROFILE=HRMP でエラー）。HRMP は保護
+多パスビルド（cfg1→cfg2→cfg3、libkernel.a、TECS、保護ドメイン）で、ASP/FMP の単一パス
+直接makeモデルと異なるため、ドライバの HRMP 対応（または ttb.sh 経由のAPI生成）が必要。
+これが入れば API テスト全体のカバレッジが取得できる（計装・ダンプ機構は実証済み）。
 
-> 旧記述（multilib不一致）は誤診だった。実測では全ライブラリが同一 multilib
-> （thumb/v7-a+fp/hard）で，真因はリンク順序（解決済み）と上記の未マッピング配置。
+> 旧記述（multilib不一致／408B未マッピング）は調査途上の中間診断。最終的な真因と解決は上記。
 
 ---
 
