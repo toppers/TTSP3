@@ -1,8 +1,45 @@
-# HRMP3 カバレッジ計測ステータス（移植進行中・1点で停止）
+# HRMP3 カバレッジ計測ステータス（移植進行中・gcdaダンプ直前で停止）
 
-> **状態（2026-06-09）：計測未完了だが大きく前進。** HRMP3 は HRP3 と異なり TTSP3 で
-> ビルド・実行でき、GCOV計装の移植も動作（gcno生成）まで到達。残る単一ブロッカーは
-> 保護多パスリンク（cfg2_out）でのツールチェーン **multilib 不一致**。
+> **状態（2026-06-09）：計測未完了だが核心まで到達。** HRMP3 は HRP3 と異なり TTSP3 で
+> ビルド・実行でき、GCOV計装移植も動作（gcno生成）、リンクも全解決、テスト緑、
+> gcovダンプ（`toppers_gcov_end`）に到達するところまで確認。残るは **gcov支援データ
+> （計408バイト）が未マッピング領域に置かれ、ダンプ中にフォールトする**1点のみ。
+
+---
+
+## 最新の根本原因（2026-06-09 実測・確定）
+
+gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）した結果：
+
+1. **ダンプは特権(SVC)モードで動作**（CPSR=0xd3, mode[4:0]=0x13=SVC）。
+   → 権限違反ではなく，アクセス先メモリの**未マッピング（変換フォールト）**が原因。
+2. `__gcov_info_to_gcda`（libgcov）は `.text_shared`（0x1622e4・マッピング済み）に配置され
+   **実行は成功**。gcovカウンタはカーネルドメイン（マッピング済み）にあり特権ダンプから読める。
+   ヒープも `gcov_heap_pool`（.bss_kernel・マッピング済み静的配列）に変更済み。
+3. **唯一の未マッピング**＝リンカスクリプト固定部末尾に置いた2セクション（計408B, アドレス0x200000〜
+   ＝共有RW領域の終端 `__aend_mp_rwdata_shared=0x200000` の直後）：
+   - `.gcov_info`（180B）：gcov_info ポインタ配列（`__gcov_info_start/end`）
+   - `.gcov_libs`（228B）：`GROUP()` で**遅延に引かれた** `strlen`（libc）等。`__gcov_info_to_gcda`
+     内の `dump_string` が `strlen` を呼ぶ → 未マッピングへのフェッチ → **フォールト**。
+   - 遅延に引かれる理由：保護ドメインの配置パターン `libc.a(.text)`（非ワイルドカード）が
+     フルパス書庫にマッチせず，かつ `GROUP()` がドメイン配置確定後に引くため orphan 化し，
+     固定部末尾のワイルドカード catch（未マッピング）に落ちる。
+
+## 残る単一タスク：408Bをマッピング済みドメイン領域へ
+
+ユーザ方針（2026-06-09）：**マッピング済みドメイン領域に配置**（特権ダンプなのでカーネル/共有いずれも可）。
+
+候補アプローチ：
+- (a) `arch/arm_gcc/common/core_kernel.trb` の `.shared_code` と同様に，`.gcov_info` 等を
+  無所属(共有)RWセクションとして登録し，コンフィギュレータに共有領域（マッピング済み）へ
+  配置させる。strlen等の遅延 orphan は，共有テキスト領域のワイルドカード catch を
+  動的出力に加える必要がある。
+- (b) `target_mem.cfg`（target配下・編集可）に gcov 用の固定アドレスのカーネルアクセス可能
+  メモリ領域を定義し，`ldscript.trb` で `.gcov_info`/`.gcov_libs` を `> その領域` に置く。
+- いずれも HRMP の保護ドメイン/コンフィギュレータ機構の追加作業が必要。
+
+> 旧記述（multilib不一致）は誤診だった。実測では全ライブラリが同一 multilib
+> （thumb/v7-a+fp/hard）で，真因はリンク順序（解決済み）と上記の未マッピング配置。
 
 ---
 
@@ -35,31 +72,19 @@
 
 ---
 
-## 残る単一ブロッカー：multilib 不一致（cfg2_out 中間リンク）
+## 解決済みのリンク課題（履歴）
 
-HRMP は保護カーネルで **3パスリンク（cfg1→cfg2→cfg3）**。その cfg2_out 中間リンクで：
+保護多パスリンク（cfg1→cfg2→cfg3）で順に発生し解消した：
+1. `__gcov_merge_add`/`_open` が `/DISCARD/` で破棄 → libgcov.a/librdimon.a を ATT_MOD で
+   保護ドメインに配置（`library/HRMP/*/out.cfg`・`ttsp_obj_tail*.cfg`）して解消。
+2. `strlen` 未解決（リンク順序）→ `arch/gcc/ldscript.trb` 末尾の `GROUP( -lgcov -lrdimon -lc -lgcc )`
+   ＋ワイルドカード catch で解消（リンクは通る。ただし strlen が遅延 orphan 化し未マッピング配置に
+   なる副作用が，上記「最新の根本原因」§のランタイム・フォールトにつながっている）。
+3. `end` 未定義（librdimon の _sbrk が参照）→ _sbrk を `.bss_kernel` の静的配列 `gcov_heap_pool`
+   に置換し，librdimon の _sbrk を不要化して解消。
 
-```
-ld: libgcov.a(_gcov_info_to_gcda.o): undefined reference to `strlen'
-ld: librdimon.a(syscalls.o): undefined reference to `strlen'
-```
-
-エラーのライブラリパスが **`arm-none-eabi/13.2.1/thumb/v7-a+fp/hard/`**（thumb）である一方、
-カーネルは **`-mcpu=cortex-a9+nofp`（ARM）** でビルドされる。`-mcpu=cortex-a9+nofp` と
-`-mfloat-abi=hard -mfpu=vfpv3-d16` の組合せで，自動的に引かれる libgcov/librdimon の
-multilib variant がカーネル本体（および libc）と一致せず，`strlen`（libc）が解決できない。
-
-- 解決済みの先行エラー：`__gcov_merge_add`/`_open` の discard（→ ATT_MOD 配置で解消）、
-  `end` 未定義（→ ldscript の `PROVIDE(end)` で解消）。
-- 残課題はこの multilib 整合のみ。`-mcpu=cortex-a9+nofp` の `+nofp` がFP無しCPUを示す一方で
-  hard-float ABI を要求する矛盾が一因と見られる。
-
-### 解決の方向（将来）
-- cfg2_out リンクで libgcov/librdimon を **カーネルと同じ multilib**（arm cortex-a9 hard-float）から
-  引かせる（明示パス指定 or `-marm` 等のフラグ整合）。kernel ビルドフラグに触れるため要検証。
-- もしくは cfg2_out 中間リンクを gcov ライブラリ非依存にする（計装オブジェクトを cfg2 段で
-  含めない）方法の調査。
-- FMP3 は単一パスリンクのため本問題は発生しない（HRMP の保護多パス固有）。
+> ※当初「multilib 不一致」と誤診したが，実測では全ライブラリが同一 multilib
+> （thumb/v7-a+fp/hard）。真因はリンク順序（解決済み）と未マッピング配置（残課題）。
 
 ---
 
