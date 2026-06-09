@@ -1,10 +1,13 @@
-# HRP3 カバレッジ計測ステータス（計測完成・line 79.6%/branch 69.8%）
+# HRP3 カバレッジ計測ステータス（TESRY移行後・line 89.4%/branch 81.7%）
 
-> **状態（2026-06-09 更新・計測完成）：HRP3 で gcov(C1) 計測が完全動作。**
-> check_library + API 20分割（19/20 集計）で **line 79.6% (2653/3334) / branch 69.8% (1769/2533)**。
-> → 計測結果は [WB_COVERAGE.md](WB_COVERAGE.md)、未到達分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
+> **状態（2026-06-09 更新）：HRP3/HRMP3 アクセス許可仕様移行（TTG CPUState.rb sysstat2 追加
+> ＋ ter_tsk TESRY 44ファイル access2↔access3 入替）後、E_OACV 早期終了が解消。**
+> check_library + API 20分割（19/20 集計）で **line 89.4% (2982/3334) / branch 81.7% (2070/2533)**。
+> → 計測結果詳細は [WB_COVERAGE.md](WB_COVERAGE.md)、未到達分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
 > 主要な標準API（task/semaphore/eventflag/dataqueue/pridataq/mutex/mempfix/alarm/cyclic/
-> wait/interrupt）は line 90〜100%。残ギャップは保護ドメイン機能と E_OACV 早期終了（test-design）。
+> wait/interrupt）は line 90〜100%。残ギャップは保護ドメイン機能（domain.c/mem_manage.c）。
+>
+> （旧ベースライン 2026-06-09：line 79.6% (2653/3334) / branch 69.8% (1769/2533)。詳細は下記）
 >
 > 本ファイルは計測に至るまでの bring-up（方式A）・GCOV計装移植・真因記録を保持する。
 >
