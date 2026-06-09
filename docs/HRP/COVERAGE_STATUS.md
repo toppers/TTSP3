@@ -14,20 +14,42 @@
   ビルド成功（`hrp` 生成）。QEMU（単一コア、`-smp` 無し）で実行し
   **「All check points passed」**＝HRP3 は TTSP3 で実行可能。
 
-## ビルドの残課題：TECS SVCプラグイン命名の flaky
+## ビルドの残課題：HRP3 tecsgen の SVCプラグイン命名不整合（根本原因・2026-06-09 調査）
 
-- HRP3 の check_library/API ビルドは初回 make が
-  `No rule to make target 'tHRPSVCPlugin_sSysLogSVCCaller_SysLog_eSysLog_tecsgen.c'` で失敗する。
-  これは TECS の保護ドメイン間SVCプラグインが生成する **旧命名**（`tHRPSVCPlugin_<sig>SVCCaller_<cell>_<port>`）と
-  **新命名**（`tHRPSVCCaller_<sig>`）が実行間で揺れ、make が startup 時に stale な
-  `gen/Makefile.tecsgen` の OBJS（旧名）を掴むために起こる．
-- **二重make で通る場合があるが安定しない**（tecsgen 再実行で命名が旧/新に揺れるため）。
-  `scripts/common.sh` の `make_for_common`（RULE_BUILD）に失敗時1回リトライを追加したが、
-  クリーンビルドでは安定解消に至らない。
-- **HRMP3（同じ保護＋SVCプラグイン）は初回ビルドで成功**しており、本問題は HRP3 の
-  tecsgen 構成に固有と見られる（hrp3 は `tecsgen/tecslib/plugin/HRPSVC*Plugin.rb` を持つ）。
-- 信頼できる解消には HRP3 の tecsgen プラグイン命名の決定性確保（旧/新命名の統一）という
-  深い TECS 内部調査が必要。これが解ければ HRMP3 と同様に gcov 計測へ進める。
+### 構造的背景：HRP3 は syssvc が TECSコンポーネント化されている
+- **HRP3 の syssvc**：`tSysLogAdapter.c`/`tSysLog.c`/`tSerialAdapter.c` 等 TECS celltype（.cdl+.c）。
+- **HRMP3 の syssvc**：`syslog.c`/`syslog.cfg`/`syslog.h` の従来型（TECS celltype 無し）。
+- このため HRMP3 は初回ビルドで成功するが、HRP3 は TECS の celltype/SVC オブジェクトに強く依存。
+
+### 不具合の連鎖（2点）
+1. **tecsgen の SVCプラグイン命名不整合**：HRP3 の `tecsgen/tecslib/plugin/` で
+   - `HRPSVCSignaturePlugin.rb` は **新命名** `tHRPSVCCaller_<sig>` の celltype を生成（L63）。
+   - `HRPSVCThroughPlugin` 等は **旧命名** `tHRPSVCPlugin_<Sig>SVCCaller_<Cell>_<Entry>` の
+     セル/オブジェクトを参照する（コメントにも旧命名が残る）。
+   - 結果、make が `objs/tHRPSVCPlugin_sSysLogSVCCaller_SysLog_eSysLog_tecsgen.o`（旧名）を要求するが
+     その `.c` は生成されず（新名のみ）「No rule to make target ...」で失敗。どのファイルにも旧名は
+     無いのに make が要求＝tecsgen のプラグイン版不整合。再make でも安定解消しない。
+2. **APPL_COBJS 上書きによる celltype オブジェクトの脱落**：TTSP3 のビルドは
+   `make ... APPL_COBJS="out.o ttsp_test_lib.o ..."` で上書きするため、Makefile 既定の
+   `APPL_COBJS := ... $(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)`（celltype＝tSysLogAdapter.o 等）が
+   落ち、cfg生成 ldscript が参照するのに自動ビルドされず「cannot find tSysLogAdapter.o」で失敗。
+   （HRMP3 は celltype が無いため無関係。）
+
+### 確認された事実
+- 不足オブジェクトを**1つずつ明示ビルド**（`make objs/<name>.o`）して再リンクすれば hrp は完成し、
+  QEMU で緑になる（＝実行可能性は確証済み）。ただし ①の旧名不整合が初回makeを止めるため、
+  ビルドスクリプトのリトライだけでは安定して通せない。
+- `scripts/common.sh` への一時リトライ追加は ①に対して安定せず、共有コードを複雑化するため revert 済み。
+
+### 信頼できるビルドへの選択肢（将来）
+- (A) **hrp3 の tecsgen プラグイン命名を整合**（HRPSVCThroughPlugin と HRPSVCSignaturePlugin の
+  旧/新命名を統一）。最も根本的だが kernel(hrp3) 側 tecsgen の修正が必要。
+- (B) **HRP3 の syssvc を従来型（非TECS）に**（HRMP3 と同様 syslog.c 構成）。TTSP3 の HRP テスト
+  ターゲット構成変更で回避。
+- (C) ビルドドライバで TECS celltype オブジェクトを明示ビルドする手順を組み込む（②は
+  APPL_COBJS に `$(TECS_OUTOFDOMAIN_COBJS)` を SYSSVC 経路で追加、①は tecsgen 整合が前提）。
+
+いずれかで安定ビルドできれば、HRMP3 と同方式（`docs/HRP3_GCOV.md`、HRP3 は単一コア）で gcov 計測へ進める。
 
 ---
 

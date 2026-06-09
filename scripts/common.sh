@@ -527,14 +527,7 @@ make_for_common()
 		 ;;
 		$RULE_BUILD)
 		 header_single "$MAKE_BUILD $dir_name"
-		 # [改変] 2026-06-09: HRP/HRMP は TECS の初回 make で Makefile.tecsgen が
-		 # stale プラグイン名（旧 tHRPSVCPlugin_..._tecsgen.c）を参照して失敗する．
-		 # tecsgen が新名で再生成するため，初回が失敗したら同一COBJSで1回リトライする
-		 # （ASP/FMP や TECS不要時は初回で成功するためリトライは走らない）．
 		 make $MAKE_OPT KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" 2>&1 | tee $RESULT_MAKE
-		 if [ ${PIPESTATUS[0]} -ne 0 ]; then
-		 	make $MAKE_OPT KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" 2>&1 | tee $RESULT_MAKE
-		 fi
 		 ;;
 		$RULE_CLEAN)
 		 header_single "$MAKE_CLEAN $dir_name"
