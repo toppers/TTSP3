@@ -1,6 +1,6 @@
 # WB_COVERAGE.md — ASP3 kernel/ WBテスト（ホワイトボックステスト）カバレッジ
 
-> 更新: 2026-06-10  
+> 更新: 2026-06-10 (xsns_dpn_W-a 追加)  
 > 対象: ASP3 3.7.2 `kernel/`  
 > 方式: gcov（`bash scripts/coverage_gcov_asp.sh all`）  
 
@@ -8,13 +8,15 @@
 - BBテスト + WBテストを統合した最終カバレッジ → [`ALL_COVERAGE.md`](ALL_COVERAGE.md)  
 - WBテストでも到達しない残存分岐の分析 → [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md)
 
-**WBテストの位置づけ**: 自動生成 BBテスト（`bb` モード、1426/1459 = 97.7%）では到達できない分岐を、ソースを直接読んで設計した手書きテストで補う。WBテストを加えた `all` モードは 1434/1459 = 98.3%。
+**WBテストの位置づけ**: 自動生成 BBテスト（`bb` モード、1426/1459 = 97.7%）では到達できない分岐を、ソースを直接読んで設計した手書きテストで補う。WBテストを加えた `all` モードは 1435/1471 = 97.6%。
+
+> **補注（分母増加について）**: `all` モードの分母 1471 は `bb` モードの 1459 より 12 多い。これは WBテストのビルドが `-O2` の最適化判断の差異により `wait.c`（+2）・`wait.h`（+2）等の分岐数をわずかに多く報告することが原因で、計測アーティファクト。カバー済み分岐数（分子）の増加（1426→1435）が実質的な改善を表す。
 
 ---
 
 ## WBテストによるカバレッジ寄与サマリ
 
-WBテスト（方式2）は以下の 7 分岐を新規に到達させ、`bb` → `all` で **+8 分岐**（time_event の複合条件 L221 が 2 分岐相当）を追加する。
+WBテスト（方式2）は以下の 8 分岐を新規に到達させ、`bb` → `all` で **+9 分岐**（time_event の複合条件 L221 が 2 分岐相当、xsns_dpn_W-a が +1）を追加する。
 
 > `task_manage.c` L137 br[1]（`TA_NOACTQUE` → E_QOVR）は 2026-06-10 に BBテスト `act_tsk_c-3`（YAML 自動生成）が追加され、`bb` モードでも到達済みとなった。WBテスト `act_tsk_W-a` は削除し、本表から除外した。
 
@@ -22,9 +24,10 @@ WBテスト（方式2）は以下の 7 分岐を新規に到達させ、`bb` →
 |---|---|---|---|---|
 | alarm.c | 31/32 | 32/32 | +1 | `alarm_W-a` |
 | cyclic.c | 35/36 | 36/36 | +1 | `cyclic_W-a` |
+| exception.c | 4/6 | 5/6 | +1 | `xsns_dpn_W-a` |
 | mempfix.c | 88/90 | 90/90 | +2 | `rel_mpf_W-a` / `rel_mpf_W-b` |
 | time_event.c | 48/56 | 52/56 | +4 | `time_event_W-a`（L221 複合条件×2 + L231）/ `time_event_W-b`（L302） |
-| **合計** | **1426/1459 (97.7%)** | **1434/1459 (98.3%)** | **+8** | — |
+| **合計** | **1426/1459 (97.7%)** | **1435/1471 (97.6%)** | **+9** | — |
 
 > 補足: `adj_tim_W-a.yaml`（`api_test/ASP/time_manage/adj_tim/`）はホワイトボックス意図のテストだが **方式1（YAML 自動生成）** であり、`bb` モードに統合済み（check_adjtim L533 br[1] を到達済み）。本ファイルの方式2集計には含めない。
 
@@ -38,6 +41,7 @@ WBテスト（方式2）は以下の 7 分岐を新規に到達させ、`bb` →
 |---|---|---|---|
 | `alarm_W-a` | alarm.c L241 br[1] | 通知ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../wb_test/ASP/alarm/alarm_W-a/out.c) |
 | `cyclic_W-a` | cyclic.c L259 br[1] | 周期ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../wb_test/ASP/cyclic/cyclic_W-a/out.c) |
+| `xsns_dpn_W-a` | exception.c L102 br[1] | `ATT_INI` 初期化ルーチンから `xsns_dpn(NULL)` を呼び出す → `kerflg==false` で短絡評価 → `state=true` | [out.c](../../wb_test/ASP/exception/xsns_dpn_W-a/out.c) |
 | `rel_mpf_W-a` | mempfix.c L309 br[0] | `rel_mpf`: ミスアライメントポインタ → `E_PAR` | [out.c](../../api_test/ASP/mempfix/rel_mpf/rel_mpf_W-a/out.c) |
 | `rel_mpf_W-b` | mempfix.c L310 br[0] | `rel_mpf`: blkidx 範囲外 → `E_PAR` | [out.c](../../api_test/ASP/mempfix/rel_mpf/rel_mpf_W-b/out.c) |
 | `time_event_W-a` | time_event.c L221 / L231 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../../wb_test/ASP/time_event/time_event_W-a/out.c) |
@@ -151,7 +155,27 @@ L221 は `child + 1 <= LAST_INDEX()`（右子の有無）と `EVTTIM_LT(...)`（
 
 ---
 
-## 5. time_event.c — `tmevtb_delete` L302 br[0]（`time_event_W-b`）
+## 5. exception.c — `xsns_dpn` L102 br[1]（`xsns_dpn_W-a`）
+
+**ソース** (`asp3/kernel/exception.c` L101–102):
+```c
+state = (kerflg && exc_sense_intmask(p_excinf) && enadsp
+                        && p_runtsk != NULL) ? false : true;
+```
+
+`&&` の短絡評価による 6 分岐のうち、BB テストで 4/6 をカバー済み。残 2 分岐のうち 1 分岐を `xsns_dpn_W-a` でカバーする。
+
+| gcov 位置 | 条件 | BBテストで未到達の理由 |
+|---|---|---|
+| L102 br[1]（`-O2` 最適化後の短絡評価分岐） | `kerflg == false` → 短絡評価で `state=true` | `kerflg` はカーネルスケジューラ起動後（`startup.c` L125）に `true` にセットされる。BB テストのシナリオはすべてカーネル起動後であるため `kerflg==false` のパスは自動生成テストでは到達不能。 |
+
+> **gcov 分岐番号について**: `-O2` 最適化により、`kerflg=false` の短絡評価パスは `exception.c` の L101 ではなく L102 の分岐 br[1] として計装される。これは GCC が複合条件式を最適化した結果であり、実行パスとしては `xsns_dpn_W-a` が `kerflg=false` をカバーしていることに変わりはない。
+
+**WBテスト** [`xsns_dpn_W-a`](../../wb_test/ASP/exception/xsns_dpn_W-a/out.c): `ATT_INI` で登録した初期化ルーチン `xsns_dpn_W_a_init()` から `xsns_dpn(NULL)` を呼び出す。`startup.c` では初期化ルーチン呼出し（L112-113）が `kerflg=true`（L125）より前に行われるため、呼び出し時点で `kerflg==false`。短絡評価により `state=true` が返ることを初期化ルーチン内で `init_result` に保存し、後で `main_task` が `check_value` で検証する。
+
+---
+
+## 6. time_event.c — `tmevtb_delete` L302 br[0]（`time_event_W-b`）
 
 **ソース** (`asp3/kernel/time_event.c` L298–320):
 ```c

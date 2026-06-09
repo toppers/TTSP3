@@ -17,8 +17,9 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1434/1459 = 98.3%  (C1, 2026-06-09 NDEBUG計測、all モード WBテスト有効)
-  ※bbモード（WBテストなし）: 1426/1459 = 97.7%（手書き WBテスト alarm/cyclic/mempfix/time_event 含まず。task_manage.c L137 は BB `act_tsk_c-3` で到達済み）
+分岐カバレッジ(kernel/): 1435/1471 = 97.6%  (C1, 2026-06-10 NDEBUG計測、all モード WBテスト有効)
+  ※bbモード（WBテストなし）: 1426/1459 = 97.7%（手書き WBテスト alarm/cyclic/mempfix/time_event/exception 含まず。task_manage.c L137 は BB `act_tsk_c-3` で到達済み）
+  ※all分母1471 > bb分母1459: WBテストビルドの-O2最適化差異でwait.c/wait.h等の分岐数が増加（計測アーティファクト）。カバー済み分子1435が実質的な改善を表す。
   ※NDEBUG計測移行後: assert ブランチ除去により task.c/wait.c → 100%、mutex.c 99.3%
     wait.h が 16→64ブランチ（インライン展開増加による計測アーティファクト）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -32,6 +33,10 @@
   ※BBテスト追加前:          1051/1405 = 74.8%（group17 失敗 + バグ）
   ※RAISE_CPU_EXCEPTION修正前: 1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
 ```
+
+**2026-06-10 WBテスト追加（1434/1459 → 1435/1471）**:
+- `xsns_dpn_W-a`（`wb_test/ASP/exception/`）追加: `exception.c` 4/6 → 5/6（`kerflg==false` 短絡評価パス、`ATT_INI` 初期化ルーチン経由）
+- all モード分母が 1459→1471 に増加（WBテストビルドの最適化差異によるアーティファクト）
 
 **2026-06-10 テスト整理（カバレッジ数値変化なし: 1434/1459 = 98.3%）**:
 - `act_tsk_c-3.yaml` (BB) 追加 → `task_manage.c` L137 br[1] が bb モードでも到達（bb: 1425→1426）
