@@ -1,11 +1,33 @@
-# HRP3 カバレッジ計測ステータス（後段・延期中）
+# HRP3 カバレッジ計測ステータス（実行は可・ビルドが flaky）
 
-> **状態（2026-06-09）：未計測（延期）。** ASP3（docs/ASP/）・FMP3（docs/FMP/）と同条件の
-> gcov(C1)計測を試みたが、**計測の前提となるブロッカーが未解消**のため延期する。
-> 計画上も HRP/HRMP は後段扱い（`AGENTS.md`、`docs/WHITEBOX_PLAN.md` §11 Q4）。
->
-> 計測が可能になった時点で、本ファイルを ASP/FMP と同形式の
-> `WB_COVERAGE.md`（BBテスト計測結果）・`WB_UNREACHABLE.md`（未到達分岐分析）に置き換える。
+> **状態（2026-06-09 更新）：HRP3 は QEMU で実行可能（緑）であることを確認。**
+> check_library/exception を手動ビルド（後述の二重make）して QEMU 実行 →「All check points passed」。
+> ただし TTSP3 の通常ビルドは **TECS の SVCプラグイン命名 flaky** で安定して通らない（後述）。
+> gcov 計測の前提（GCOV計装）は HRMP3 と同方式で適用可能（`docs/HRP3_GCOV.md`、HRP3は単一コア）。
+
+---
+
+## 実行可能性の確認（2026-06-09）
+
+- HRMP3 の保護ビルド知見を適用し、check_library/exception を
+  `make KERNEL_COBJS=... APPL_COBJS=...`（HRP3用の全オブジェクト）で**二重make**したところ
+  ビルド成功（`hrp` 生成）。QEMU（単一コア、`-smp` 無し）で実行し
+  **「All check points passed」**＝HRP3 は TTSP3 で実行可能。
+
+## ビルドの残課題：TECS SVCプラグイン命名の flaky
+
+- HRP3 の check_library/API ビルドは初回 make が
+  `No rule to make target 'tHRPSVCPlugin_sSysLogSVCCaller_SysLog_eSysLog_tecsgen.c'` で失敗する。
+  これは TECS の保護ドメイン間SVCプラグインが生成する **旧命名**（`tHRPSVCPlugin_<sig>SVCCaller_<cell>_<port>`）と
+  **新命名**（`tHRPSVCCaller_<sig>`）が実行間で揺れ、make が startup 時に stale な
+  `gen/Makefile.tecsgen` の OBJS（旧名）を掴むために起こる．
+- **二重make で通る場合があるが安定しない**（tecsgen 再実行で命名が旧/新に揺れるため）。
+  `scripts/common.sh` の `make_for_common`（RULE_BUILD）に失敗時1回リトライを追加したが、
+  クリーンビルドでは安定解消に至らない。
+- **HRMP3（同じ保護＋SVCプラグイン）は初回ビルドで成功**しており、本問題は HRP3 の
+  tecsgen 構成に固有と見られる（hrp3 は `tecsgen/tecslib/plugin/HRPSVC*Plugin.rb` を持つ）。
+- 信頼できる解消には HRP3 の tecsgen プラグイン命名の決定性確保（旧/新命名の統一）という
+  深い TECS 内部調査が必要。これが解ければ HRMP3 と同様に gcov 計測へ進める。
 
 ---
 
