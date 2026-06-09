@@ -109,7 +109,10 @@ APPL_COBJS_TARGET="objs/ttsp_target_test.o"
 # make depend / make の追加オプション(必要な場合のみ)
 # (コーテーションを含むオプションは指定不可(例:"-d \"dir1 dir2\""))
 #
-MAKE_OPT=
+# 環境変数 TTSP_MAKE_OPT で上書き可能にした（ASP/FMP/HRMP と同様）．
+# 例) TTSP_MAKE_OPT="ENABLE_GCOV=true" でGCOV計装ビルド（hrp3側の
+#     target/zybo_z7_gcc の GCOV 対応を有効化）．
+MAKE_OPT="${TTSP_MAKE_OPT:-}"
 
 #
 # 実行モジュールの実行をシェルスクリプトで実装済みか

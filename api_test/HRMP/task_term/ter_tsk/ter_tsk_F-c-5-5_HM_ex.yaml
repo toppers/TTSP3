@@ -147,8 +147,8 @@ FMP_task_term_ter_tsk_F_c_5_5_HM3:
       prcid  : PRC_SELF
       domain : KERNEL
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:
@@ -209,8 +209,8 @@ FMP_task_term_ter_tsk_F_c_5_5_HM4:
       prcid  : PRC_SELF
       domain : DOM2
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:

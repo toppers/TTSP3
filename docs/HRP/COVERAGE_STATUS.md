@@ -1,8 +1,42 @@
-# HRP3 カバレッジ計測ステータス（check_library 緑・方式A実装）
+# HRP3 カバレッジ計測ステータス（計測完成・line 79.6%/branch 69.8%）
 
-> **状態（2026-06-09 更新）：HRP3 が TTSP3 の通常フロー（ttb.sh）で check_library 全3種を
-> ビルド・実行でき「All check points passed」を確認。** 方式A（下記）を実装して解決。
-> gcov 計測の前提（GCOV計装）は HRMP3 と同方式で適用可能（`docs/HRP3_GCOV.md`、HRP3は単一コア）。
+> **状態（2026-06-09 更新・計測完成）：HRP3 で gcov(C1) 計測が完全動作。**
+> check_library + API 20分割（19/20 集計）で **line 79.6% (2653/3334) / branch 69.8% (1769/2533)**。
+> → 計測結果は [WB_COVERAGE.md](WB_COVERAGE.md)、未到達分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
+> 主要な標準API（task/semaphore/eventflag/dataqueue/pridataq/mutex/mempfix/alarm/cyclic/
+> wait/interrupt）は line 90〜100%。残ギャップは保護ドメイン機能と E_OACV 早期終了（test-design）。
+>
+> 本ファイルは計測に至るまでの bring-up（方式A）・GCOV計装移植・真因記録を保持する。
+>
+> ---
+>
+> ## GCOV計装の移植（完了・2026-06-09）
+>
+> HRMP3 と同方式で HRP3 カーネル（`../hrp3_3.4/`、SVN・ttsp3 git 外）へ移植。HRP3 は単一コアの
+> ため prcid ガード／atomic 更新は不要。
+>
+> | ファイル | 内容 |
+> |---|---|
+> | `target/zybo_z7_gcc/Makefile.target` | `ENABLE_GCOV` ブロック（`--coverage -fprofile-info-section`, `-DTOPPERS_ENABLE_GCOV`, `-specs=rdimon.specs`） |
+> | `target/zybo_z7_gcc/target_kernel_impl.c` | ベアメタルgcovランタイム（`__gcov_info_to_gcda`＋セミホスティング, 静的 `gcov_heap_pool` `_sbrk`, `software_init/term_hook`） |
+> | `target/zybo_z7_gcc/target_ldscript.trb`（新規） | `GenerateProvide`（`$modnameReplace` ワイルドカード＋`__gcov_info_start/end`→`__start/__end_rodata_kernel_A1001` エイリアス）／`GcovLdscriptAppendGroup`。`target_{kernel,opt,mem}.trb` から IncludeTrb（`arch/gcc/ldscript.trb` は無変更） |
+> | `target/zybo_z7_gcc/target_mem.cfg` | `KERNEL_DOMAIN { ATT_SEC(".gcov_info", { TA_NOWRITE\|TA_KEEP, "DDR" }); }` |
+>
+> TTSP3側（本リポジトリ・git）：
+> - `library/HRP/check_library/{exception,interrupt,timer}/out.cfg`＋`library/HRP/test/ttsp_obj_tail.cfg`：`ATT_MOD("libgcov.a")`/`("librdimon.a")` 追記（非GCOV時は無害）
+> - `library/HRP/target/zybo_z7_gcc/ttsp_target.sh`：`MAKE_OPT="${TTSP_MAKE_OPT:-}"`
+> - `library/HRP/target/zybo_z7_gcc/ttsp_target_test.h`：`RAISE_CPU_EXCEPTION` に `teq r0, r0` 前置（下記）
+> - `scripts/ttsp_parallel_api.sh`：HRP 対応（TTGフラグ `-h`、方式A の COBJS 非上書き、libgcov 追記）
+> - `scripts/coverage_gcov_hrp.sh`（新規）：smoke/bb/all（単一コア `-smp 1`、`--filter /hrp3/kernel/`）
+>
+> ## 解決したGCOV固有バグ：CPU例外テストの条件付き未定義命令
+>
+> 計装版 check_library/exception が checkpoint 2 でタイムアウトした。QEMU `-d int` トレースで
+> **未定義命令例外が発火していない**ことを確認。`RAISE_CPU_EXCEPTION` は `.long 0x06000010`
+> ＝**条件フィールド EQ の未定義命令**で，Z=1 のときだけトラップする。非計装では直前の
+> `if (excno == TTSP_EXCNO_A)` 比較が残す Z=1 に依存して発火していたが，`--coverage` 計装では
+> ブロックのカウンタ加算が比較と本命令の間に挿入されて Z をクリアし，条件不成立で例外が
+> 起きなかった。`teq r0, r0` を前置して常に Z=1 を保証して解消（非計装の動作は不変）。
 
 ---
 

@@ -96,8 +96,8 @@ ASP_task_term_ter_tsk_e_5_H3:
       lefttmo: ANY_ELAPSED_TIME
       domain : KERNEL
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:
@@ -140,8 +140,8 @@ ASP_task_term_ter_tsk_e_5_H4:
       lefttmo: ANY_ELAPSED_TIME
       domain : DOM2
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:

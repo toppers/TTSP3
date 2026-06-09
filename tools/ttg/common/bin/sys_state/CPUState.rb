@@ -168,7 +168,7 @@ module CommonModule
 
       # HRP かつ アクセス許可パターンを設定している場合のみ
       if (@cConf.is_hrp?() && !@@aAccess1.empty?())
-        cElement.set_config("#{API_SAC_SYS}({#{@@aAccess1.join('|')}, #{@@aAccess2.join('|')}, #{@@aAccess3.join('|')}, #{@@aAccess4.join('|')}});", IMC_NO_CLASS, TTG_MAIN_DOMAIN) # [IMCodeElement]システム状態のアクセス許可ベクタを設定する静的API
+        cElement.set_config("#{API_SAC_SYS}({#{@@aAccess1.join('|')}, #{@@aAccess2.join('|')}, #{@@aAccess3.join('|')}, #{@@aAccess4.join('|')}}, {TACP_SHARED, TACP_SHARED, TACP_SHARED, TACP_SHARED});", IMC_NO_CLASS, TTG_MAIN_DOMAIN) # [IMCodeElement]システム状態のアクセス許可ベクタを設定する静的API（HRP3 3.4: sysstat2を明示）
       end
     end
   end

@@ -161,7 +161,7 @@
 /*
  *  ティック更新用割込み
  *
- *  [改変] 2026-06-09: HRMP3対応（FMPと同じ修正）．0x001e（PPI: ウォッチドッグ）から
+ *  HRMP3対応（FMPと同じ修正）．0x001e（PPI: ウォッチドッグ）から
  *  0x0004（SGI 4）に変更．gicd_raise_sgi()/raise_int() はプロセッサ間割込みとして
  *  SGI（INTID 0〜15）のみ発行可能で，PPIを指定すると GICD_SGIR のINTIDフィールド
  *  （4bit）で折り返され SGI 14 が誤発火し，「Unregistered interrupt occurs.」で

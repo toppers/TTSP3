@@ -1,9 +1,11 @@
-# HRMP3 カバレッジ計測ステータス（計測完成・line 75.4%/branch 63.7%）
+# HRMP3 カバレッジ計測ステータス（HRP3 3.3→3.4 アクセス許可仕様移行後・line 91.0%/branch 81.3%）
 
-> **状態（2026-06-09）：HRMP3 で gcov(C1) 計測が完全動作。check_library + API 20分割で
-> line 75.4% / branch 63.7%。** 保護カーネルの最難関（特権ダンプの未マッピングフォールト）
-> と IPI割込みバグ（SGI 14 誤発火）を解決。主要APIは 90%超が多数。
-> さらなる向上は HRMP固有ファイル（messagebuf/domain/spin_lock 等）と保護ドメイン対応テスト次第。
+> **状態（2026-06-09）：HRP3 3.3→3.4 アクセス許可仕様移行（TTG CPUState.rb sysstat2 追加
+> ＋ ter_tsk TESRY 80ファイル access2↔access3 入替）後、E_OACV 早期終了が大幅解消。
+> check_library + API 17分割で line 91.0% / branch 81.3%（ベースライン比 +15.6pp/+17.6pp）。**
+> 残E_OACVは `loc_spn`/`try_spn`（スピンロック acptn カテゴリ）のみ（3グループ）。
+>
+> （旧ベースライン 2026-06-09：line 75.4% / branch 63.7%。詳細は下記§「カバレッジ結果」）
 
 ---
 
@@ -39,13 +41,24 @@ gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）で
 → **全20分割 + check_library で gcda 生成・カバレッジ抽出に成功**（`bb` モード）。
 gcov_info のラベル（`__start_rodata_kernel_A1001`）は check_library/API で同一＝安定。
 
-## カバレッジ結果（2026-06-09 `bb`）
+## カバレッジ結果（2026-06-09 `bb` ＋ HRP3 3.3→3.4 アクセス許可仕様移行後）
 
-**line 75.4% (3510/4658) / branch 63.7% (1719/2697)**。
+**line 91.0% (4237/4658) / branch 81.3% (2193/2697)**。
+（旧ベースライン: line 75.4% (3510/4658) / branch 63.7% (1719/2697)）
 
-主要API は高カバレッジ：alarm 97.7%, cyclic 97.7%, dataqueue 95.5%, eventflag 98.3%,
-mempfix 98.0%, mutex 98.5%, pridataq 95.8%, semaphore 97.7%, task 89.1%, task_sync 97.9%,
-task_refer 91.8%, wait 98.6%, interrupt 92.1%。
+主要API は高カバレッジ：alarm 99.2%, cyclic 99.2%, dataqueue 95.5%, eventflag 98.3%,
+mempfix 98.0%, mutex 98.5%, pridataq 95.8%, semaphore 97.7%, task 98.7%, task_sync 98.3%,
+task_refer 91.8%, wait 100.0%, interrupt 93.5%, spin_lock 100.0%, messagebuf 90.1%。
+
+### ベースライン比較
+
+| ファイル | 旧 line | 新 line | 旧 branch | 新 branch |
+|---|---|---|---|---|
+| messagebuf.c | 4.1% | 90.1% | 2.0% | 53.5% |
+| sys_manage.c | 92.2% | 95.7% | 70.1% | 75.7% |
+| task_sync.c | 98.3% | 98.3% | 91.8% | 95.9% |
+| time_manage.c | 98.7% | 98.7% | 82.5% | 82.5% |
+| **TOTAL** | **75.4%** | **91.0%** | **63.7%** | **81.3%** |
 
 ### IPI割込みバグの修正（24%→75% に向上）
 当初 24%/13% で頭打ちだった主因は、ティック更新用プロセッサ間割込みの番号
@@ -57,11 +70,13 @@ alarm/cyclic/timer 等ティック更新を伴うテストが全滅していた�
 → check_library timer も「All check points passed」に回復。
 
 ### 残課題（さらなる向上）
-- 一部テストが `E_OACV`（オブジェクトアクセス違反＝HRMP保護違反）で途中終了。
-  ASP/FMP テストを保護カーネルHRMPで実行した際の**保護ドメイン意味論の差**（テスト設計起因）。
-- HRMP固有ファイルが低カバレッジ：messagebuf.c 4%, spin_lock.c 12%, domain.c 19%,
-  mem_manage.c 55%, memory.c 55%, time_manage.c 23%, svc_table.c 0%。
-  → これらを網羅する HRMP固有テスト／保護ドメイン対応テストの拡充が次段階。
+- **スピンロック E_OACV**（3グループ: auto_code_10/12/16）：`loc_spn`/`try_spn` が E_OACV。
+  ter_tsk と同様の acptn カテゴリ差分と推定（HRMP spin_lock TESRY の access2↔access3 確認要）。
+  → `api_test/HRMP/spin_lock/{loc_spn,try_spn}/*_HM_ex.yaml` を精査して次の移行層として対応。
+- **HRMPビルド失敗**（3グループ: auto_code_14/17/19）：`target_mem.cfg:36: E_SYS: memory objects overlap`
+  （gcov 計装による増大。HRPでも同様で gcov 固有）。非計装では正常ビルド可。
+- 低カバレッジ残存：domain.c 19%, mem_manage.c 58%, memory.c 55%, svc_table.c 0%。
+  → 保護ドメイン固有テストの拡充が次段階。
 - gcov 計装・ダンプ機構は全グループで完全動作（計測基盤は完成）。
 
 > 旧記述（multilib不一致／408B未マッピング）は調査途上の中間診断。最終的な真因と解決は上記。
@@ -114,6 +129,6 @@ alarm/cyclic/timer 等ティック更新を伴うテストが全滅していた�
 ---
 
 ## 参考
-- ASP3：`docs/ASP/`（98.3%）／FMP3：`docs/FMP/`（93.9%）／HRP3：`docs/HRP/COVERAGE_STATUS.md`（ビルド不可で延期）
+- ASP3：`docs/ASP/`（98.3%）／FMP3：`docs/FMP/`（93.9%）／HRP3：`docs/HRP/`（79.6%）
 - 計画・後段方針：`docs/WHITEBOX_PLAN.md` §10/§11 Q4
 - 計装の雛形：`../fmp3_3.4/target/zybo_z7_gcc/`

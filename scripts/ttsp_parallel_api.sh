@@ -62,14 +62,27 @@ elif [ "$PROFILE_NAME" = "HRMP" ]; then
 	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o objs/ttsp_mem_obj_kernel1.o objs/ttsp_mem_obj_kernel2.o objs/ttsp_mem_obj_user1.o objs/ttsp_mem_obj_user2.o objs/ttsp_mem_obj_kernel_dummy1.o objs/ttsp_mem_obj_kernel_dummy2.o objs/ttsp_mem_obj_user_dummy1.o objs/ttsp_mem_obj_user_dummy2.o"
 	KERNEL_NAME="hrmp"
 	QEMU_SMP="-smp $PROCESSOR_NUM"
+elif [ "$PROFILE_NAME" = "HRP" ]; then
+	# [改変] 2026-06-09: HRP対応（保護・単一コア・方式A）．HRP は syssvc が TECS化されており，
+	# KERNEL_COBJS/APPL_COBJS を破壊的に上書きすると Makefile 既定の TECS celltype オブジェクトが
+	# 落ちてリンク失敗する（docs/HRP/COVERAGE_STATUS.md）．テスト用追加オブジェクトは ttb.sh の
+	# 配線で configure -U（TEST_LIB_FILE）により APPLOBJS へ渡され，フェーズ1生成の Makefile に
+	# 含まれる．そこで HRP では make 時に COBJS を上書きしない（下の build_group / run_group で分岐）．
+	KERNEL_COBJS_COMMON=""
+	APPL_COBJS_COMMON=""
+	KERNEL_NAME="hrp"
+	QEMU_SMP=""
 else
-	echo "ERROR: PROFILE=$PROFILE_NAME 未対応（ASP/FMP/HRMP）"; exit 1
+	echo "ERROR: PROFILE=$PROFILE_NAME 未対応（ASP/FMP/HRP/HRMP）"; exit 1
 fi
 
 # TTGオプションの組み立て（scripts/api_test.sh より転記）
 TTG_BIN_ABS=$(realpath "./$TTG_BIN")
 if [ "$PROFILE_NAME" = "ASP" ]; then
 	TTG_OPT="-a $TTG_OPT --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION"
+elif [ "$PROFILE_NAME" = "HRP" ]; then
+	# [改変] 2026-06-09: HRP は TTG フラグ -h（単一コア・保護，--prc_num/--irc_arch なし）
+	TTG_OPT="-h $TTG_OPT --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION"
 elif [ "$PROFILE_NAME" = "HRMP" ]; then
 	# [改変] 2026-06-09: HRMP は TTG フラグ -H（FMPは -f）
 	TTG_OPT="-H $TTG_OPT --prc_num $PROCESSOR_NUM --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION --irc_arch $IRC_ARCH"
@@ -111,21 +124,41 @@ build_group() { # $1=group番号
 		grep -q 'libgcov.a' out.cfg || \
 			printf 'ATT_MOD("libgcov.a");\nATT_MOD("librdimon.a");\n' >> out.cfg
 	fi
-	make $TTSP_MAKE_OPT -j"$MAKE_J" \
-		KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
-		APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
-		> result_make.log 2>&1 || {
-		echo "MAKE FAIL: auto_code_$i"; return 1; }
+	# 実験用フック（既定オフ）: GCOV_GRANT_SYSSTAT2=1 のとき，TTG生成 out.cfg の SAC_SYS に
+	# システム状態許可ベクタ2(sysstat2)=TACP_SHARED を付与する．HRP では sus_tsk/rsm_tsk/
+	# ter_tsk 等が sysstat2_acvct を要求するが，TTG既定では sysstat2 がカーネルドメインのみで，
+	# ユーザドメインのASP由来テストが E_OACV で早期終了する（docs/HRP/WB_UNREACHABLE.md §1）．
+	# 単引数 SAC_SYS は sysstat2 を追記，SAC_SYS 無しなら KERNEL_DOMAIN へ全許可で挿入する．
+	if [ "${GCOV_GRANT_SYSSTAT2:-0}" = "1" ]; then
+		if grep -qE 'SAC_SYS\(\{[^}]*\}\);' out.cfg; then
+			perl -pi -e 's/SAC_SYS\((\{[^}]*\})\);/SAC_SYS($1, {TACP_SHARED, TACP_SHARED, TACP_SHARED, TACP_SHARED});/' out.cfg
+		elif grep -q 'KERNEL_DOMAIN {' out.cfg; then
+			perl -0pi -e 's/(KERNEL_DOMAIN \{\n)/$1\tSAC_SYS({TACP_SHARED, TACP_SHARED, TACP_SHARED, TACP_SHARED}, {TACP_SHARED, TACP_SHARED, TACP_SHARED, TACP_SHARED});\n/ if !$done++;' out.cfg
+		fi
+	fi
+	# [改変] 2026-06-09: HRP は方式A（COBJS 非上書き）．それ以外は従来どおり上書き．
+	if [ "$PROFILE_NAME" = "HRP" ]; then
+		make $TTSP_MAKE_OPT -j"$MAKE_J" \
+			> result_make.log 2>&1 || {
+			echo "MAKE FAIL: auto_code_$i"; return 1; }
+	else
+		make $TTSP_MAKE_OPT -j"$MAKE_J" \
+			KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
+			APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
+			> result_make.log 2>&1 || {
+			echo "MAKE FAIL: auto_code_$i"; return 1; }
+	fi
 	echo "BUILD OK: auto_code_$i"
 }
-# HRMP かつ GCOV計装時のみ out.cfg に libgcov/librdimon を追記する
+# 保護カーネル（HRP/HRMP）かつ GCOV計装時のみ out.cfg に libgcov/librdimon を追記する
 GCOV_ATTACH_LIBS=0
-if [ "$PROFILE_NAME" = "HRMP" ] && [[ "$TTSP_MAKE_OPT" == *ENABLE_GCOV=true* ]]; then
+if { [ "$PROFILE_NAME" = "HRMP" ] || [ "$PROFILE_NAME" = "HRP" ]; } && [[ "$TTSP_MAKE_OPT" == *ENABLE_GCOV=true* ]]; then
 	GCOV_ATTACH_LIBS=1
 fi
 export -f build_group
 export API_DIR TTG_BIN_ABS TTG_OPT MAKE_J KERNEL_COBJS_COMMON KERNEL_COBJS_TARGET \
-       APPL_COBJS_COMMON APPL_COBJS_TARGET TTSP_MAKE_OPT GCOV_ATTACH_LIBS
+       APPL_COBJS_COMMON APPL_COBJS_TARGET TTSP_MAKE_OPT GCOV_ATTACH_LIBS PROFILE_NAME \
+       GCOV_GRANT_SYSSTAT2
 
 echo "===== phase 2: parallel TTG+make (P=$PAR_GROUPS, make -j$MAKE_J) ====="
 t0=$(date +%s)

@@ -55,8 +55,16 @@
 
 /*
  *  CPU例外を発生させる命令
+ *
+ *  GCOV計装ビルド対応のため "teq r0, r0" を前置して Z=1 を設定する．
+ *  0x06000010 は条件フィールドが EQ（cond=0000）の未定義命令で，Z=1 のときだけ
+ *  未定義命令例外を発生させる．非計装時は直前の if(excno==TTSP_EXCNO_A) 比較で
+ *  Z=1 が残るため発火していたが，--coverage 計装ではブロックのカウンタ加算が
+ *  比較と本命令の間に挿入されて Z をクリアし，条件不成立で例外が発生しなかった
+ *  （ttsp_wait_check_point(2) タイムアウト）．teq r0,r0 で常に Z=1 を保証する．
+ *  非計装時の動作は変わらない（従来も Z=1 だった）．
  */
-#define RAISE_CPU_EXCEPTION     Asm(".long 0x06000010");
+#define RAISE_CPU_EXCEPTION     Asm("teq r0, r0\n\t" ".long 0x06000010");
 
 /*
  *  TTSP3用の定義

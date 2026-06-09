@@ -111,8 +111,8 @@ ASP_task_manage_ter_tsk_f_4_2_H3:
       wupcnt : 1
       domain : KERNEL
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:
@@ -161,8 +161,8 @@ ASP_task_manage_ter_tsk_f_4_2_H4:
       wupcnt : 1
       domain : DOM2
       access1: TACP_KERNEL
-      access2: TACP_KERNEL
-      access3: TACP(DOM1)
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
       access4: TACP_KERNEL
 
     SEM1:
