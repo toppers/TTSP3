@@ -130,18 +130,19 @@ module CommonModule
 
       sStk = @hState[TSR_PRM_STK]
       sSStk = @hState[TSR_PRM_SSTK]
+      sTskAtr = (@hState[TSR_PRM_NOACTQUE] == true) ? KER_TA_NOACTQUE : KER_TA_NULL
       if (!@cConf.is_hrp?())
         if (sStk.nil?)
           sStk = @nStackNum ? "ttg_stack_#{@nStackNum}" : "NULL"
         end
-        cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS])
+        cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{sTskAtr}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS])
       else
         if (@cConf.is_fmp?())  # HRMP
           if (belong_kernel?())
             if (sStk.nil?)
               sStk = @nStackNum ? "&ttg_sstack_prc#{@hState[TSR_PRM_PRCID]}[#{@nStackNum - 1}][0]" : "NULL"
             end
-            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{sTskAtr}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
           else
             if (sStk.nil?)
               sStk = @nStackNum ? "&ttg_ustack_prc#{@hState[TSR_PRM_PRCID]}[#{@hState[TSR_PRM_DOMAIN]} - 1][#{@nStackNum - 1}][0]" : "NULL"
@@ -149,14 +150,14 @@ module CommonModule
             if (sSStk.nil?)
               sSStk = @nStackNum ? "&ttg_sstack_prc#{@hState[TSR_PRM_PRCID]}[#{@nStackNum - 1}][0]" : "NULL"
             end
-            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}, #{@hState[TSR_PRM_SSTKSZ]}, #{sSStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{sTskAtr}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}, #{@hState[TSR_PRM_SSTKSZ]}, #{sSStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
           end
         else
           if (belong_kernel?())
             if (sStk.nil?)
               sStk = @nStackNum ? "&ttg_sstack[#{@nStackNum - 1}][0]" : "NULL"
             end
-            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{sTskAtr}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
           else
             if (sStk.nil?)
               sStk = @nStackNum ? "&ttg_ustack[#{@hState[TSR_PRM_DOMAIN]} - 1][#{@nStackNum - 1}][0]" : "NULL"
@@ -164,7 +165,7 @@ module CommonModule
             if (sSStk.nil?)
               sSStk = @nStackNum ? "&ttg_sstack[#{@nStackNum - 1}][0]" : "NULL"
             end
-            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{KER_TA_NULL}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}, #{@hState[TSR_PRM_SSTKSZ]}, #{sSStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
+            cElement.set_config("#{API_CRE_TSK}(#{@sObjectID}, {#{sTskAtr}, #{@hState[TSR_PRM_EXINF]}, #{@sObjectID.downcase}, #{@hState[TSR_PRM_ITSKPRI]}, #{@hState[TSR_PRM_STKSZ]}, #{sStk}, #{@hState[TSR_PRM_SSTKSZ]}, #{sSStk}});", @hState[TSR_PRM_CLASS], @hState[TSR_PRM_DOMAIN])
           end
         end
       end

@@ -169,5 +169,34 @@ blkが，対象固定長メモリプールから獲得した固定長メモリ�
   tget_mpfのテストで確認を行う．
 
 
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+2. 構造ベースのホワイトボックステスト（方式2：手書きテスト）
+
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+[改変] 2026-06-09: 以下のホワイトボックステストを追加（kernel: ASP3 3.7.2）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.1. E_PAR チェック分岐（mempfix.c L308-L310）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【NGKI2313】の E_PAR 条件は mempfix.c の 3 段 CHECK_PAR で実装されており，
+BBテストでカバーできない内部分岐（L309/L310）をWBテストで補完する．
+
+  L308: CHECK_PAR(p_mpfinib->mpf <= blk && blk < p_mpfinib->mpf + mpfsz)
+  L309: CHECK_PAR(blkoffset % blksz == 0U)       ← W-a が対象
+  L310: CHECK_PAR(blkoffset / blksz < unused)     ← W-b が対象
+
+(W-a) アドレスが blksz の倍数でないブロックポインタを rel_mpf に渡した場合，
+      E_PAR が返ること．【NGKI2313】
+      狙う分岐: mempfix.c L309 br[0]（CHECK_PAR blkoffset % blksz == 0U — FALSE）
+      配置: api_test/ASP/mempfix/rel_mpf/rel_mpf_W-a/
+
+(W-b) blkidx（= blkoffset / blksz）が unused（割当済み高水準線）以上の
+      ブロックポインタを rel_mpf に渡した場合，E_PAR が返ること．【NGKI2313】
+      狙う分岐: mempfix.c L310 br[0]（CHECK_PAR blkoffset / blksz < unused — FALSE）
+      配置: api_test/ASP/mempfix/rel_mpf/rel_mpf_W-b/
+
 
 以上．

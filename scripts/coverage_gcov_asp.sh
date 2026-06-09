@@ -80,20 +80,20 @@ fi
 
 if [ "$MODE" = "all" ]; then
 	REF_MK="$OBJ_DIR/api_test/auto_code_1/Makefile"
-	if [ -f "$REF_MK" ] && compgen -G "api_test/ASP/*/*_W-*/" > /dev/null 2>&1; then
+	if [ -f "$REF_MK" ] && find api_test/ASP wb_test/ASP -type d -name "*_W-*" 2>/dev/null | grep -q .; then
 		echo "===== build & run: WB tests (manual, *_W-* dirs) ====="
 		source ./configure.sh
 		source "./library/ASP/target/${TARGET_NAME}/ttsp_target.sh"
 		WB_KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o"
 		WB_APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
-		for wb_src in api_test/ASP/*/*_W-*/; do
+		while IFS= read -r wb_src; do
 			wb_name=$(basename "$wb_src")
 			wb_dir="$OBJ_DIR/api_test/wb_${wb_name}"
 			mkdir -p "$wb_dir/objs"
 			cp "$REF_MK" "$wb_dir/Makefile"
-			cp "${wb_src}out.c" "$wb_dir/out.c"
-			cp "${wb_src}out.h" "$wb_dir/out.h"
-			cp "${wb_src}out.cfg" "$wb_dir/out.cfg"
+			cp "${wb_src}/out.c" "$wb_dir/out.c"
+			cp "${wb_src}/out.h" "$wb_dir/out.h"
+			cp "${wb_src}/out.cfg" "$wb_dir/out.cfg"
 			( cd "$wb_dir" && make ENABLE_GCOV=true -j4 \
 				KERNEL_COBJS="$WB_KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
 				APPL_COBJS="$WB_APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
@@ -106,7 +106,7 @@ if [ "$MODE" = "all" ]; then
 			else
 				echo "BUILD FAIL: wb/$wb_name"; tail -10 /tmp/gcov_build_wb_$$.log
 			fi
-		done
+		done < <(find api_test/ASP wb_test/ASP -type d -name "*_W-*" 2>/dev/null | sort)
 	fi
 fi
 

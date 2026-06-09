@@ -1,5 +1,5 @@
 /*
- *  ASP_mempfix_W_a
+ *  ASP_rel_mpf_W_a
  *
  *  [WB] mempfix.c L309 br[0]: CHECK_PAR(blkoffset % blksz == 0U) — FALSE
  *       アドレスが blksz の倍数でないブロックポインタを rel_mpf に渡すと E_PAR を返すこと
@@ -27,7 +27,7 @@ void main_task(intptr_t exinf)
 
 	ttsp_target_stop_tick();
 	ttsp_initialize_test_lib();
-	syslog_0(LOG_NOTICE, "ASP_mempfix_W_a: Start");
+	syslog_0(LOG_NOTICE, "ASP_rel_mpf_W_a: Start");
 
 	ttsp_check_point(1);
 
@@ -35,7 +35,7 @@ void main_task(intptr_t exinf)
 	 *  ブロックを取得して pool_base を得る
 	 *  (blk = pool_base = p_mpfcb->p_mpfinib->mpf)
 	 */
-	ercd = pget_mpf(ASP_mempfix_W_a_MPF1, &blk);
+	ercd = pget_mpf(ASP_rel_mpf_W_a_MPF1, &blk);
 	check_ercd(ercd, E_OK);
 
 	ttsp_check_point(2);
@@ -43,7 +43,7 @@ void main_task(intptr_t exinf)
 	/*
 	 *  pool_base+1 を返却 → blkoffset=1, 1 % 256 ≠ 0 → L309 br[0] → E_PAR
 	 */
-	ercd = rel_mpf(ASP_mempfix_W_a_MPF1, (char *)blk + 1);
+	ercd = rel_mpf(ASP_rel_mpf_W_a_MPF1, (char *)blk + 1);
 	check_ercd(ercd, E_PAR);
 
 	ttsp_check_point(3);
@@ -51,9 +51,9 @@ void main_task(intptr_t exinf)
 	/*
 	 *  正しいポインタで後片付け（blk は E_PAR で未返却のまま）
 	 */
-	ercd = rel_mpf(ASP_mempfix_W_a_MPF1, blk);
+	ercd = rel_mpf(ASP_rel_mpf_W_a_MPF1, blk);
 	check_ercd(ercd, E_OK);
 
-	syslog_0(LOG_NOTICE, "ASP_mempfix_W_a: OK");
+	syslog_0(LOG_NOTICE, "ASP_rel_mpf_W_a: OK");
 	ttsp_check_finish(4);
 }

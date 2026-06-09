@@ -922,9 +922,10 @@ module CommonModule
   TSR_PRM_WOBJID  = "wobjid"
   TSR_PRM_PORDER  = "porder"
   TSR_PRM_ACTPRC  = "actprc"
-  TSR_PRM_RASTER  = "raster"
-  TSR_PRM_DISTER  = "dister"
-  TSR_PRM_STKSZ   = "stksz"
+  TSR_PRM_RASTER    = "raster"
+  TSR_PRM_DISTER    = "dister"
+  TSR_PRM_NOACTQUE  = "noactque"
+  TSR_PRM_STKSZ     = "stksz"
   TSR_PRM_SSTKSZ  = "sstksz"
   TSR_PRM_STK     = "stk"
   TSR_PRM_SSTK    = "sstk"
@@ -1199,6 +1200,7 @@ module CommonModule
 
   # 静的APIのマクロ定義
   KER_TA_ACT      = "TA_ACT"
+  KER_TA_NOACTQUE = "TA_NOACTQUE"
   KER_TA_NULL     = "TA_NULL"
   KER_TA_TPRI     = "TA_TPRI"
   KER_TA_WMUL     = "TA_WMUL"
@@ -1559,9 +1561,10 @@ module CommonModule
       TSR_PRM_LEFTTMO => [false, false],
       TSR_PRM_RASTER  => [false, false],
       TSR_PRM_DISTER  => [false, false],
-      TSR_PRM_STKSZ   => [false, true],
-      TSR_PRM_STK     => [false, true],
-      TSR_PRM_LOCMTX  => [false, false]
+      TSR_PRM_STKSZ     => [false, true],
+      TSR_PRM_STK       => [false, true],
+      TSR_PRM_LOCMTX    => [false, false],
+      TSR_PRM_NOACTQUE  => [false, true]
     },
     TSR_OBJ_ALARM => {
       TSR_PRM_ALMSTAT   => [true, false],
@@ -1734,9 +1737,10 @@ module CommonModule
       TSR_PRM_PRCID   => [false, false],
       TSR_PRM_ACTPRC  => [false, false],
       TSR_PRM_SPINID  => [false, false],
-      TSR_PRM_STKSZ   => [false, true],
-      TSR_PRM_STK     => [false, true],
-      TSR_PRM_LOCMTX  => [false, false]
+      TSR_PRM_STKSZ     => [false, true],
+      TSR_PRM_STK       => [false, true],
+      TSR_PRM_LOCMTX    => [false, false],
+      TSR_PRM_NOACTQUE  => [false, true]
     },
     TSR_OBJ_ALARM => {
       TSR_PRM_ALMSTAT   => [true, false],
@@ -1936,11 +1940,12 @@ module CommonModule
       TSR_PRM_LEFTTMO => [false, false],
       TSR_PRM_RASTER  => [false, false],
       TSR_PRM_DISTER  => [false, false],
-      TSR_PRM_STKSZ   => [false, true],
-      TSR_PRM_SSTKSZ  => [false, true],
-      TSR_PRM_STK     => [false, true],
-      TSR_PRM_SSTK    => [false, true],
-      TSR_PRM_LOCMTX  => [false, false]
+      TSR_PRM_STKSZ     => [false, true],
+      TSR_PRM_SSTKSZ    => [false, true],
+      TSR_PRM_STK       => [false, true],
+      TSR_PRM_SSTK      => [false, true],
+      TSR_PRM_LOCMTX    => [false, false],
+      TSR_PRM_NOACTQUE  => [false, true]
     },
     TSR_OBJ_ALARM => {
       TSR_PRM_ALMSTAT   => [true, false],
@@ -2286,7 +2291,8 @@ module CommonModule
       TSR_PRM_SSTKSZ,
       TSR_PRM_STK,
       TSR_PRM_SSTK,
-      TSR_PRM_LOCMTX
+      TSR_PRM_LOCMTX,
+      TSR_PRM_NOACTQUE
     ],
     TSR_OBJ_TASK_EXC => [
       TSR_PRM_TASK,
@@ -2313,7 +2319,8 @@ module CommonModule
     TSR_PRM_ACCESS4,
     TSR_PRM_BOOTCNT,
     TSR_PRM_STKSZ,
-    TSR_PRM_SSTKSZ
+    TSR_PRM_SSTKSZ,
+    TSR_PRM_NOACTQUE
   ]
 
   #===================================================================

@@ -153,7 +153,7 @@ module CommonModule
               end
 
             # 真偽値
-            when TSR_PRM_GLOBAL, TSR_PRM_RASTER, TSR_PRM_DISTER, TSR_PRM_INTREQ
+            when TSR_PRM_GLOBAL, TSR_PRM_RASTER, TSR_PRM_DISTER, TSR_PRM_INTREQ, TSR_PRM_NOACTQUE
               check_attribute_type(sAtr, val, Bool, false, @aPath)
 
             # 優先度

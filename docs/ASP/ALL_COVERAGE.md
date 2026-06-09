@@ -1,6 +1,6 @@
 # ALL_COVERAGE.md — ASP3 kernel/ 分岐カバレッジ（ALL = BBテスト + WBテスト）
 
-> 計測日: 2026-06-09（`all` モード = BBテスト + WBテスト）  
+> 計測日: 2026-06-10（`all` モード = BBテスト + WBテスト）  
 > 方式: gcov（`bash scripts/coverage_gcov_asp.sh all` → `python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
 > 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
 > ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
@@ -18,7 +18,7 @@
 
 ```
 分岐カバレッジ(kernel/): 1434/1459 = 98.3%  (C1, 2026-06-09 NDEBUG計測、all モード WBテスト有効)
-  ※bbモード（WBテストなし）: 1425/1459 = 97.7%（手書き WBテスト alarm/cyclic/mempfix/task_manage/time_event 含まず）
+  ※bbモード（WBテストなし）: 1426/1459 = 97.7%（手書き WBテスト alarm/cyclic/mempfix/time_event 含まず。task_manage.c L137 は BB `act_tsk_c-3` で到達済み）
   ※NDEBUG計測移行後: assert ブランチ除去により task.c/wait.c → 100%、mutex.c 99.3%
     wait.h が 16→64ブランチ（インライン展開増加による計測アーティファクト）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -32,6 +32,13 @@
   ※BBテスト追加前:          1051/1405 = 74.8%（group17 失敗 + バグ）
   ※RAISE_CPU_EXCEPTION修正前: 1012/1405 = 72.0%（auto_code 6/20 タイムアウト起因）
 ```
+
+**2026-06-10 テスト整理（カバレッジ数値変化なし: 1434/1459 = 98.3%）**:
+- `act_tsk_c-3.yaml` (BB) 追加 → `task_manage.c` L137 br[1] が bb モードでも到達（bb: 1425→1426）
+- 旧 WBテスト `act_tsk_W-a` 削除（同ブランチを BB テストが担当）
+- `mempfix_W-a/b` → `rel_mpf_W-a/b` にリネーム・`api_test/ASP/mempfix/rel_mpf/` に再配置
+- `alarm_W-a`, `cyclic_W-a`, `time_event_W-a/b` を `api_test/ASP/` から `wb_test/ASP/` に移動
+- `coverage_gcov_asp.sh`: WBテスト検索を `find` ベースに変更（両ディレクトリ対応）
 
 **2026-06-09 追加した BBテスト（mutex.c WBテスト、全20グループ PASS）**:
 - `ini_mtx_e.yaml` — 未ロックのミューテックスに ini_mtx（mutex.c L558 br[1]）
@@ -51,7 +58,7 @@
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
 > **WBテスト（方式2: 手書き、`all` モードのみ）の追加履歴・カタログは [`WB_COVERAGE.md`](WB_COVERAGE.md) を参照。**  
-> WBテストは `bb` モード（1425/1459 = 97.7%）に対し 8 分岐（計 +9 分岐）を追加し、`all` モードで 1434/1459 = 98.3% に到達する。
+> WBテストは `bb` モード（1426/1459 = 97.7%）に対し 7 分岐（計 +8 分岐）を追加し、`all` モードで 1434/1459 = 98.3% に到達する。
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -173,7 +180,7 @@
 
 ### mempfix.c
 
-> 分岐 C1: 90/90 = **100%**（WBテスト `mempfix_W-a/b` により L309/L310 br[0] 到達済み）
+> 分岐 C1: 90/90 = **100%**（WBテスト `rel_mpf_W-a/b` により L309/L310 br[0] 到達済み）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -285,7 +292,7 @@
 
 ### task_manage.c
 
-> 分岐 C1: 92/92 = **100%**（WBテスト `act_tsk_W-a` により L137 br[1] 到達済み）
+> 分岐 C1: 92/92 = **100%**（BBテスト `act_tsk_c-3`（YAML 自動生成、2026-06-10）により L137 br[1] 到達済み。旧 WBテスト `act_tsk_W-a` は削除）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -412,13 +419,13 @@
 | task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
 | interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (97.7%、残2) |
-| mempfix.c (`rel_mpf` L309 br[0]) | mempfix_W-a (WB・方式2、`api_test/ASP/mempfix/`) | **100%** |
-| mempfix.c (`rel_mpf` L310 br[0]) | mempfix_W-b (WB・方式2、`api_test/ASP/mempfix/`) | **100%** |
-| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、`api_test/ASP/alarm/`) | **100%** |
-| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、`api_test/ASP/cyclic/`) | **100%** |
-| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_W-a (WB・方式2、`api_test/ASP/task_manage/`) | **100%** |
-| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、`api_test/ASP/time_event/`) | **100%** |
-| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、`api_test/ASP/time_event/`) | **到達済み** |
+| mempfix.c (`rel_mpf` L309 br[0]) | rel_mpf_W-a (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
+| mempfix.c (`rel_mpf` L310 br[0]) | rel_mpf_W-b (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
+| alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、`wb_test/ASP/alarm/`) | **100%** |
+| cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、`wb_test/ASP/cyclic/`) | **100%** |
+| task_manage.c (`act_tsk` L137 br[1]) | act_tsk_c-3 (BB・方式1 YAML 自動生成、2026-06-10 追加) | **100%** |
+| time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、`wb_test/ASP/time_event/`) | **100%** |
+| time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、`wb_test/ASP/time_event/`) | **到達済み** |
 | time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1、api_test/ 配下で **有効のまま**) | 8/8 **100%** |
 | semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
 

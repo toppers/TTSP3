@@ -110,13 +110,19 @@ TMAX_ACTCNTを超える場合には，E_QOVRエラーとなる【NGKI3528】．
           【NGKI1121】によりTSK_SELFの解決はタスクコンテキスト限定のため，
           非タスクコンテキストでは0が有効範囲外となる．
 
-(c) 対象タスクの起動要求キューイング数がTMAX_ACTCNT(=1)に一致している
-    場合．【NGKI3528】
+(c) E_QOVRが返ること．【NGKI3528】
+    (対象タスクがTA_NOACTQUE属性，または起動要求キューイング数がTMAX_ACTCNTに
+    一致している場合)
 
-    (c-1) tskidにTSK_SELF(=0)を指定しない場合，E_QOVRが返ること．
+    (c-1) 対象タスクの起動要求キューイング数がTMAX_ACTCNT(=1)に一致している
+          場合（tskidにTSK_SELF(=0)を指定しない）．
 
-    (c-2) tskidにTSK_SELF(=0)を指定すると，自タスクが対象タスクとなり，
-          E_QOVRが返ること．【NGKI1121】
+    (c-2) 対象タスクの起動要求キューイング数がTMAX_ACTCNT(=1)に一致している
+          場合（tskidにTSK_SELF(=0)を指定する）．【NGKI1121】
+
+    (c-3) 対象タスクがTA_NOACTQUE属性である場合，E_QOVRが返ること．
+          [改変] 2026-06-09: TTGにnoactqueフィールドを追加して対応
+          （task_manage.c L137 TA_NOACTQUE分岐）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1.2. 正常条件のテストケース
@@ -178,33 +184,18 @@ TMAX_ACTCNTを超える場合には，E_QOVRエラーとなる【NGKI3528】．
 
 ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
-2. 構造ベースのホワイトボックステスト（方式2：手書きテスト）
+2. 備考
 
 ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
-[改変] 2026-06-09: 以下のホワイトボックステストを追加（kernel: ASP3 3.7.2）
+[改変] 2026-06-09: TTGに noactque フィールドを追加（kernel: ASP3 3.7.2）
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2.1. TA_NOACTQUE属性タスクへの起動要求
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(c-3) のテストケースは当初 TA_NOACTQUE をTTGのpre_conditionで設定できないため
+方式2（手書き）としていたが，TTGのTASKオブジェクトに noactque: true フィールドを
+追加することで方式1（YAML生成）に移行した．
 
-狙う分岐: task_manage.c L137 br[1]
-  else if ((p_tcb->p_tinib->tskatr & TA_NOACTQUE) != 0U || p_tcb->actque)
-  → (tskatr & TA_NOACTQUE) が TRUE のとき ||演算子が短絡評価でE_QOVR
-
-【背景】
-TTGのTASK pre_conditionにtskatrフィールドが無いため，TA_NOACTQUE属性を
-静的cfg(out.cfg)で直接指定する方式2（手書き）テストで対応する．
-
-(W-a) TA_NOACTQUE属性の非休止状態タスクに対してact_tskを呼び出した場合，
-      E_QOVRが返ること．【NGKI3528】
-
-      配置: api_test/ASP/whitebox/task_manage/act_tsk_W-a/
-      ファイル: out.c / out.h / out.cfg
-
-      前提条件: TASK1（実行状態，優先度10），
-                TASK2（TA_NOACTQUE|TA_ACT，実行可能状態，優先度11）
-      操作: TASK1からact_tsk(TASK2)を呼び出す
-      期待値: E_QOVR，TASK2の状態変化なし（実行可能状態のまま）
+  YAML フィールド: noactque: true
+  生成される静的API: CRE_TSK(..., {TA_NOACTQUE, ...})
+  配置: api_test/ASP/task_manage/act_tsk/act_tsk_c-3.yaml
 
 以上．
