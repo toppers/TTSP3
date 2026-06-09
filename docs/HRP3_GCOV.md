@@ -96,44 +96,63 @@ KERNEL_DOMAIN {
 - 特権ダンプはカーネルドメインを読めるため、ここで十分（ユーザ書込み可能領域である必要はない）。
 - 非GCOV時は `.gcov_info` 入力が無く空セクション（無害）。
 
-## 変更点④：カーネル `arch/gcc/ldscript.trb` ★保護カーネルの核心
+## 変更点④：`target/zybo_z7_gcc/target_ldscript.trb`（新規）★保護カーネルの核心
 
-生成リンカスクリプトのテンプレート。3点を追加。
+**`arch/gcc/ldscript.trb`（共有arch）は変更しない。** 代わりに dummy ターゲットと同様に
+`target/zybo_z7_gcc/target_ldscript.trb` を新規追加し、各パスの target trb から IncludeTrb する
+（変更点⑤）。target_ldscript.trb は 2 つの関数を定義する。
 
-**(a) ツールチェーン書庫の配置パターンをワイルドカード化**（先頭付近、`$modnameReplace` 設定後）：
+**(1) `GenerateProvide(genFile)` フック** — `arch/gcc/ldscript.trb` が SECTIONS 生成前に
+`if defined? GenerateProvide` で呼ぶ（zybo は既定で未定義のため、定義すれば呼ばれる）：
 ```ruby
-$modnameReplace["libc.a"]      = "*libc.a:"
-$modnameReplace["libgcov.a"]   = "*libgcov.a:"
-$modnameReplace["librdimon.a"] = "*librdimon.a:"
-$modnameReplace["libgcc.a"]    = "*libgcc.a:"
+def GenerateProvide(genFile)
+  $modnameReplace["libc.a"]      = "*libc.a:"
+  $modnameReplace["libgcov.a"]   = "*libgcov.a:"
+  $modnameReplace["librdimon.a"] = "*librdimon.a:"
+  $modnameReplace["libgcc.a"]    = "*libgcc.a:"
+  genFile.add("\tPROVIDE(__gcov_info_start = __start_rodata_kernel_A1001);")
+  genFile.add("\tPROVIDE(__gcov_info_end   = __end_rodata_kernel_A1001);")
+  genFile.add("\tPROVIDE(end  = .);")
+  genFile.add("\tPROVIDE(_end = .);")
+end
 ```
-理由：これらは `-l` 指定でフルパスに解決される。コンフィギュレータが出す
-非ワイルドカードの `libc.a(.text)` はフルパス書庫にマッチせず、特に GROUP で遅延に引かれた
-メンバ（`strlen` 等）が `.text_shared`（マッピング済み）に入らず未マッピング領域へ落ちて
-**ランタイムフォールト**する。`*libc.a:` 形式でフルパスにマッチさせる。
+- **`$modnameReplace` ワイルドカード化**：ツールチェーン書庫は `-l` 指定でフルパスに解決される。
+  コンフィギュレータが出す非ワイルドカードの `libc.a(.text)` はフルパス書庫にマッチせず、
+  GROUP で遅延に引かれたメンバ（`strlen` 等）が `.text_shared`（マッピング済み）に入らず
+  未マッピング領域へ落ちて**ランタイムフォールト**する。`*libc.a:` でフルパスにマッチさせる。
+  （`$modnameReplace` は core_*.trb が `={}` 初期化後、ldscript.trb のセクションループより前に
+  本フックが呼ばれて追記される。）
+- **`__gcov_info_start/end` のエイリアス**：変更点③の ATT_SEC により `.gcov_info` が単独で入る
+  メモリオブジェクトの境界ラベル `__start_/__end_rodata_kernel_A1001`（コンフィギュレータ生成）に
+  エイリアス。check_library と API 全分割で**同一ラベル＝安定**を確認済み。PROVIDE は SECTIONS の
+  前に出るが、リンカのシンボル解決は大域的なので問題ない。
+  ※他構成へ展開時は、生成された `cfg2_out.ld`/`cfg3_out.ld` の `.gcov_info` を含む
+  `.rodata_kernel_*` の `__start_/__end_` ラベル名を確認して合わせること。
+- `end`/`_end`：cfg2_out 中間リンクで librdimon の `_sbrk` が参照（実機では自前 `_sbrk` が優先）。
 
-**(b) `__gcov_info_start/end` のエイリアスと heap/end 記号**（SECTIONS 内、固定部の前）：
-```
-PROVIDE(__gcov_info_start = __start_rodata_kernel_A1001);
-PROVIDE(__gcov_info_end   = __end_rodata_kernel_A1001);
-PROVIDE(end = .);
-PROVIDE(_end = .);
-```
-- `__start_rodata_kernel_A1001`/`__end_` は、変更点③の ATT_SEC により `.gcov_info` が単独で入る
-  メモリオブジェクトの境界ラベル（コンフィギュレータ生成）。check_library と API 全分割で
-  **同一ラベル＝安定**であることを確認済み。
-  ※他構成へ展開する際は、生成された `cfg2_out.ld`/`cfg3_out.ld` の `.gcov_info` を含む
-  `.rodata_kernel_*` の `__start_/__end_` ラベル名を確認し、ここを合わせること。
-- `end`/`_end`：cfg2_out 中間リンクで librdimon の `_sbrk` が参照する（実機では自前 `_sbrk` が優先）。
-
-**(c) SECTIONS の後（末尾）に `GROUP()`**：
-```
-GROUP( -lgcov -lrdimon -lc -lgcc )
+**(2) `GcovLdscriptAppendGroup()`** — ldscript.trb 実行後に各 target trb から呼び、
+SECTIONS の後ろ（リンカスクリプト末尾）へ GROUP を追記する：
+```ruby
+def GcovLdscriptAppendGroup()
+  $ldscript.add('GROUP( -lgcov -lrdimon -lc -lgcc )') if $ldscript
+end
 ```
 理由：保護多パスリンクはオブジェクトをリンカスクリプト経由で取り込むため、ライブラリを
-コマンドライン（-T より前）に置くと順序が合わない。SECTIONS 後の `GROUP()` なら、
-取り込んだオブジェクトより後に処理され、`strlen` 等が正しく解決される。
-非GCOV時は `__gcov_*`/セミホスティング記号への参照が無く、書庫メンバは一切引かれない（無害）。
+コマンドライン（-T より前）に置くと順序が合わない。SECTIONS 後の `GROUP()` なら取り込んだ
+オブジェクトより後に処理され `strlen` 等が解決される。フックには SECTIONS後の地点が無いため、
+target trb 側で ldscript 生成後に本関数を呼ぶ。非GCOV時は参照が無く無害。
+
+## 変更点⑤：`target/zybo_z7_gcc/target_{kernel,opt,mem}.trb`
+
+リンカスクリプトは 3 パスで生成される（pass2: `core_kernel.trb`→`cfg2_out.ld`、
+pass3: `core_opt.trb`→`cfg3_out.ld`、memパス: `core_mem.trb`→`ldscript.ld`）。各パスは別プロセスの
+ため、3 つの target trb すべてで、リンカスクリプト生成（`IncludeTrb` core依存部）の**前**に
+`IncludeTrb("target_ldscript.trb")`（フック定義）、**後**に `GcovLdscriptAppendGroup()`（GROUP追記）を置く：
+```ruby
+IncludeTrb("target_ldscript.trb")   # 前: GenerateProvide フック定義
+IncludeTrb("chip_kernel.trb")        # （target_opt.trb は core_opt.trb / target_mem.trb は core_mem.trb）
+GcovLdscriptAppendGroup()            # 後: GROUP 追記
+```
 
 ---
 
