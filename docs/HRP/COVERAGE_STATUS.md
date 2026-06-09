@@ -14,40 +14,48 @@
   ビルド成功（`hrp` 生成）。QEMU（単一コア、`-smp` 無し）で実行し
   **「All check points passed」**＝HRP3 は TTSP3 で実行可能。
 
-## ビルドの残課題：HRP3 tecsgen の SVCプラグイン命名不整合（根本原因・2026-06-09 調査）
+## ビルドの残課題：TTSP3 の COBJS 上書きが TECS celltype を落とす（確定・2026-06-09 サンプル解析）
 
-### 構造的背景：HRP3 は syssvc が TECSコンポーネント化されている
-- **HRP3 の syssvc**：`tSysLogAdapter.c`/`tSysLog.c`/`tSerialAdapter.c` 等 TECS celltype（.cdl+.c）。
-- **HRMP3 の syssvc**：`syslog.c`/`syslog.cfg`/`syslog.h` の従来型（TECS celltype 無し）。
-- このため HRMP3 は初回ビルドで成功するが、HRP3 は TECS の celltype/SVC オブジェクトに強く依存。
+> **サンプルビルドの解析で原因を確定。HRP3 カーネル本体（tecsgen 含む）は健全**。
+> 問題は **TTSP3 の HRP ビルドハーネス**にある（前回記載の「tecsgen 命名不整合（バグ）」説は誤りと判明）。
 
-### 不具合の連鎖（2点）
-1. **tecsgen の SVCプラグイン命名不整合**：HRP3 の `tecsgen/tecslib/plugin/` で
-   - `HRPSVCSignaturePlugin.rb` は **新命名** `tHRPSVCCaller_<sig>` の celltype を生成（L63）。
-   - `HRPSVCThroughPlugin` 等は **旧命名** `tHRPSVCPlugin_<Sig>SVCCaller_<Cell>_<Entry>` の
-     セル/オブジェクトを参照する（コメントにも旧命名が残る）。
-   - 結果、make が `objs/tHRPSVCPlugin_sSysLogSVCCaller_SysLog_eSysLog_tecsgen.o`（旧名）を要求するが
-     その `.c` は生成されず（新名のみ）「No rule to make target ...」で失敗。どのファイルにも旧名は
-     無いのに make が要求＝tecsgen のプラグイン版不整合。再make でも安定解消しない。
-2. **APPL_COBJS 上書きによる celltype オブジェクトの脱落**：TTSP3 のビルドは
-   `make ... APPL_COBJS="out.o ttsp_test_lib.o ..."` で上書きするため、Makefile 既定の
-   `APPL_COBJS := ... $(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)`（celltype＝tSysLogAdapter.o 等）が
-   落ち、cfg生成 ldscript が参照するのに自動ビルドされず「cannot find tSysLogAdapter.o」で失敗。
-   （HRMP3 は celltype が無いため無関係。）
+### 決め手：HRP3 サンプルは正常にビルドできる
+- `ruby hrp3/configure.rb -T zybo_z7_gcc` でサンプルを構成し `make` → **初回で成功**（`hrp` 生成）。
+- 生成物（gen/Makefile.tecsgen, cfg2_out.ld）は **新命名 `tHRPSVCCaller_<sig>` のみ**、
+  旧命名 `tHRPSVCPlugin_<Sig>SVCCaller_<Cell>_<Entry>` は **0 件**。SVCプラグイン
+  （`HRPSVCThroughPlugin.new(...,'SysLog','eSysLog',tSysLog)`）の呼び出しもサンプルと TTSP3 で同一。
+  → HRP3 の tecsgen は正常。旧名は TTSP3 ビルドの過渡で派生する症状にすぎない。
+
+### 構造的背景
+- **HRP3 の syssvc は TECSコンポーネント化**（`tSysLogAdapter.c`/`tSysLog.c`/`tSerialAdapter.c` 等の
+  celltype）。サンプル既定ビルドは `APPL_COBJS := out.o $(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS)`
+  で celltype/SVC オブジェクトを自動的に含めてビルドする。
+- **HRMP3 の syssvc は従来型**（`syslog.c` のみ、TECS celltype 無し）→ HRMP3 は影響を受けない。
+
+### 根本原因：APPL_COBJS の破壊的上書き
+TTSP3 は全プロファイル共通で `make ... KERNEL_COBJS="..." APPL_COBJS="out.o ttsp_test_lib.o ..."` と
+**オブジェクトリストを上書き**する。これにより Makefile 既定の
+`$(TECS_KERNEL_COBJS)`/`$(TECS_USER_COBJS)`/`$(TECS_OUTOFDOMAIN_COBJS)`（HRP の celltype＝
+tSysLogAdapter.o 等）が**脱落**し、cfg 生成 ldscript が参照するのに自動ビルドされず
+「cannot find tSysLogAdapter.o」で失敗する。
+（「No rule ... tHRPSVCPlugin_...」の旧名エラーは上書き＋初回makeの過渡で生じる派生症状。）
+
+- 単純に `APPL_COBJS` へ `$(TECS_OUTOFDOMAIN_COBJS)` 等を足すと、これらは `$(_TECS_OBJ_DIR)` 接頭辞で
+  `objs/` 前提の APPL_COBJS パターン規則と**接頭辞が不一致**となり、`.s` 規則が誤発火して
+  `gcc -S -o X.o`（入力無し）→「no input files」で失敗する（`Makefile:703 ignoring old recipe` 併発）。
 
 ### 確認された事実
-- 不足オブジェクトを**1つずつ明示ビルド**（`make objs/<name>.o`）して再リンクすれば hrp は完成し、
-  QEMU で緑になる（＝実行可能性は確証済み）。ただし ①の旧名不整合が初回makeを止めるため、
-  ビルドスクリプトのリトライだけでは安定して通せない。
-- `scripts/common.sh` への一時リトライ追加は ①に対して安定せず、共有コードを複雑化するため revert 済み。
+- 不足する TECS オブジェクトを**明示ビルド**（`make objs/<name>.o`）して再リンクすれば hrp は完成し、
+  QEMU で緑（**実行可能性は確証済み**）。
+- `scripts/common.sh` への一時リトライ追加は安定せず共有コードを複雑化するため revert 済み。
 
 ### 信頼できるビルドへの選択肢（将来）
-- (A) **hrp3 の tecsgen プラグイン命名を整合**（HRPSVCThroughPlugin と HRPSVCSignaturePlugin の
-  旧/新命名を統一）。最も根本的だが kernel(hrp3) 側 tecsgen の修正が必要。
-- (B) **HRP3 の syssvc を従来型（非TECS）に**（HRMP3 と同様 syslog.c 構成）。TTSP3 の HRP テスト
-  ターゲット構成変更で回避。
-- (C) ビルドドライバで TECS celltype オブジェクトを明示ビルドする手順を組み込む（②は
-  APPL_COBJS に `$(TECS_OUTOFDOMAIN_COBJS)` を SYSSVC 経路で追加、①は tecsgen 整合が前提）。
+- (A) **TTSP3 の HRP ビルドで APPL_COBJS を破壊的に上書きしない**。サンプル同様 Makefile 既定の
+  TECS オブジェクトを残しつつ、TTSP3 テストの追加オブジェクト（ttsp_test_lib.o/ttsp_target_test.o/
+  ttsp_mem_obj_*.o）を**追記**する（例：sample/Makefile に EXTRA_APPL_COBJS フックを設け TTSP3 が追加）。最もクリーン。
+- (B) **HRP3 の syssvc を従来型（非TECS）に**（HRMP3 と同様 syslog.c 構成）。HRP テストの
+  ターゲット構成変更で TECS celltype 依存を回避。
+- (C) ビルドドライバで TECS オブジェクトを正しい接頭辞・規則ルート（SYSSVC 経路）で明示ビルドする。
 
 いずれかで安定ビルドできれば、HRMP3 と同方式（`docs/HRP3_GCOV.md`、HRP3 は単一コア）で gcov 計測へ進める。
 
