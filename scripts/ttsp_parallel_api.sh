@@ -56,14 +56,23 @@ elif [ "$PROFILE_NAME" = "FMP" ]; then
 	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
 	KERNEL_NAME="fmp"
 	QEMU_SMP="-smp $PROCESSOR_NUM"
+elif [ "$PROFILE_NAME" = "HRMP" ]; then
+	# [改変] 2026-06-09: HRMP対応（保護＋マルチコア）．KERNEL_COBJS/APPL_COBJS は ttb.sh より転記．
+	KERNEL_COBJS_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o objs/messagebuf.o objs/svc_table.o objs/domain.o objs/mem_manage.o objs/memory.o objs/spin_lock.o"
+	APPL_COBJS_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o objs/ttsp_mem_obj_kernel1.o objs/ttsp_mem_obj_kernel2.o objs/ttsp_mem_obj_user1.o objs/ttsp_mem_obj_user2.o objs/ttsp_mem_obj_kernel_dummy1.o objs/ttsp_mem_obj_kernel_dummy2.o objs/ttsp_mem_obj_user_dummy1.o objs/ttsp_mem_obj_user_dummy2.o"
+	KERNEL_NAME="hrmp"
+	QEMU_SMP="-smp $PROCESSOR_NUM"
 else
-	echo "ERROR: PROFILE=$PROFILE_NAME 未対応（ASP/FMPのみ）"; exit 1
+	echo "ERROR: PROFILE=$PROFILE_NAME 未対応（ASP/FMP/HRMP）"; exit 1
 fi
 
 # TTGオプションの組み立て（scripts/api_test.sh より転記）
 TTG_BIN_ABS=$(realpath "./$TTG_BIN")
 if [ "$PROFILE_NAME" = "ASP" ]; then
 	TTG_OPT="-a $TTG_OPT --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION"
+elif [ "$PROFILE_NAME" = "HRMP" ]; then
+	# [改変] 2026-06-09: HRMP は TTG フラグ -H（FMPは -f）
+	TTG_OPT="-H $TTG_OPT --prc_num $PROCESSOR_NUM --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION --irc_arch $IRC_ARCH"
 else
 	TTG_OPT="-f $TTG_OPT --prc_num $PROCESSOR_NUM --out_file_name $APPLI_NAME --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION --irc_arch $IRC_ARCH"
 fi
@@ -95,6 +104,13 @@ build_group() { # $1=group番号
 	list=$(grep -v '^#' "MANIFEST_AUTO_CODE_$i" | tr '\n' ' ')
 	ruby "$TTG_BIN_ABS" $TTG_OPT $list > result_ttg.log 2>&1 || {
 		echo "TTG FAIL: auto_code_$i"; return 1; }
+	# [改変] 2026-06-09: HRMP の GCOV計装ビルドでは libgcov/librdimon を保護ドメインに
+	# 配置する必要がある（未配置だと /DISCARD/ で .text が破棄されリンク失敗）．TTG生成の
+	# out.cfg は libc.a までしか ATT_MOD しないため，ここで追記する（非GCOV時も無害）．
+	if [ "$GCOV_ATTACH_LIBS" = "1" ]; then
+		grep -q 'libgcov.a' out.cfg || \
+			printf 'ATT_MOD("libgcov.a");\nATT_MOD("librdimon.a");\n' >> out.cfg
+	fi
 	make $TTSP_MAKE_OPT -j"$MAKE_J" \
 		KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
 		APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
@@ -102,9 +118,14 @@ build_group() { # $1=group番号
 		echo "MAKE FAIL: auto_code_$i"; return 1; }
 	echo "BUILD OK: auto_code_$i"
 }
+# HRMP かつ GCOV計装時のみ out.cfg に libgcov/librdimon を追記する
+GCOV_ATTACH_LIBS=0
+if [ "$PROFILE_NAME" = "HRMP" ] && [[ "$TTSP_MAKE_OPT" == *ENABLE_GCOV=true* ]]; then
+	GCOV_ATTACH_LIBS=1
+fi
 export -f build_group
 export API_DIR TTG_BIN_ABS TTG_OPT MAKE_J KERNEL_COBJS_COMMON KERNEL_COBJS_TARGET \
-       APPL_COBJS_COMMON APPL_COBJS_TARGET TTSP_MAKE_OPT
+       APPL_COBJS_COMMON APPL_COBJS_TARGET TTSP_MAKE_OPT GCOV_ATTACH_LIBS
 
 echo "===== phase 2: parallel TTG+make (P=$PAR_GROUPS, make -j$MAKE_J) ====="
 t0=$(date +%s)

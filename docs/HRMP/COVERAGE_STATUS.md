@@ -27,12 +27,33 @@ gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）で
 
 → **結果**：QEMU が正常終了し gcda 45ファイル生成、`/hrmp3/kernel/` のカバレッジ抽出に成功。
 
-## 残るタスク：API auto-code の HRMP 対応
+## API auto-code 対応：完了（gcov計測は全20分割で動作）
 
-`scripts/ttsp_parallel_api.sh` が ASP/FMP のみ対応（PROFILE=HRMP でエラー）。HRMP は保護
-多パスビルド（cfg1→cfg2→cfg3、libkernel.a、TECS、保護ドメイン）で、ASP/FMP の単一パス
-直接makeモデルと異なるため、ドライバの HRMP 対応（または ttb.sh 経由のAPI生成）が必要。
-これが入れば API テスト全体のカバレッジが取得できる（計装・ダンプ機構は実証済み）。
+`scripts/ttsp_parallel_api.sh` に HRMP 対応を追加（2026-06-09）：
+- KERNEL_COBJS/APPL_COBJS（domain/memory/messagebuf/svc_table/spin_lock・mem_obj 群）
+- TTG フラグ `-H`（FMPは -f）、`-smp $PROCESSOR_NUM`
+- GCOV計装時は TTG生成 out.cfg に `ATT_MOD("libgcov.a")`/`ATT_MOD("librdimon.a")` を追記
+  （TTG は libc.a までしか ATT_MOD せず、未追記だと libgcov/librdimon の .text が
+  `/DISCARD/` で破棄されリンク失敗するため）.
+
+→ **全20分割 + check_library で gcda 生成・カバレッジ抽出に成功**（`bb` モード）。
+gcov_info のラベル（`__start_rodata_kernel_A1001`）は check_library/API で同一＝安定。
+
+## 現状のカバレッジと残課題（target依存の割込み問題）
+
+`bb` 計測結果（2026-06-09）：**line 24.0% (1118/4658) / branch 13.1% (352/2697)**。
+ASP(98%)/FMP(94%) より大幅に低い。理由は **API テストが QEMU 上で完走しない**こと：
+全20分割が `finish=0`（多くが「Unregistered interrupt occurs.」で緊急停止）。
+
+- 発生源：`arch/arm_gcc/common/core_kernel_impl.c:333` の未登録割込みハンドラ。
+  alarm/timer 等のテストで割込みが発生するが、HRMP+QEMU(zynq) で登録/処理されず緊急停止。
+- check_library の timer も同じ症状（exception/interrupt は緑）。
+- これは **gcov とは無関係の target依存（割込み注入・IRC構成）の実行bring-up問題**。
+  解消すれば API テストが完走し、ASP/FMP 並みのカバレッジが得られる見込み。
+- gcov 計装・ダンプ機構は完全動作（全グループで gcda 生成済み）＝**計測基盤は完成**。
+
+> 補足：カバレッジが取れている範囲（startup.c 97%, task.c 74%, alarm.c 98% 等）は
+> テスト完走前に通過した分。割込み問題の解消が次の主タスク。
 
 > 旧記述（multilib不一致／408B未マッピング）は調査途上の中間診断。最終的な真因と解決は上記。
 
