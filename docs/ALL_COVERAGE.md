@@ -1,11 +1,18 @@
-# WHITEBOX_BASELINE.md — ASP3 kernel/ API別分岐カバレッジベースライン
+# ALL_COVERAGE.md — ASP3 kernel/ 分岐カバレッジ（ALL = BBテスト + WBテスト）
 
-> 計測日: 2026-06-09（`all` モード、WBテスト有効）  
-> 方式: gcov（`python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
+> 計測日: 2026-06-09（`all` モード = BBテスト + WBテスト）  
+> 方式: gcov（`bash scripts/coverage_gcov_asp.sh all` → `python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/`）  
 > 対象: ASP3 3.7.2 `kernel/`、APIオートコード 20グループ統合（all 20/20 PASS）  
 > ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
-> ※ **2026-06-09 NDEBUG 計測移行**: `coverage_gcov_asp.sh` に `-DNDEBUG` を追加し assert ブランチを計測対象外に変更。  
-> ※ **2026-06-09 WBテスト有効**: 手書き WBテスト（方式2）を `api_test/ASP/<API>/` 配下に配置し `all` モード（1434/1459 = 98.3%）で計測。
+>
+> このファイルは **BBテスト + WBテストを統合した `all` モードの最終カバレッジ** と **BBテストの追加履歴** を記録する。  
+> - WBテスト単独の寄与・カタログ → [`WB_COVERAGE.md`](WB_COVERAGE.md)  
+> - 残存未到達分岐の詳細分析 → [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md)
+>
+> **計測条件（コンパイルオプション）:**  
+> - `ENABLE_GCOV=true` — gcov 計装（`-fprofile-arcs -ftest-coverage`）  
+> - `-DNDEBUG`（`COPTS` 経由） — `assert()` を無効化し分岐ノードを消滅させる（task.c / mutex.c / wait.c / time_event.c の assert 失敗パスを計測対象外にする）  
+> - `-O2`（zybo_z7_gcc デフォルト） — インライン展開により wait.h の追跡分岐数が増加（計測アーティファクト）
 
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
@@ -43,27 +50,8 @@
 - `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
-**2026-06-09 追加した WBテスト（alarm/cyclic/mempfix、方式2: 手書き）**:
-- `alarm_W-a` — call_alarm: ハンドラが iloc_cpu() で返る → lock_cpu() スキップ（alarm.c L241 br[1]）
-  配置: `api_test/ASP/alarm/alarm_W-a/`（out.c/h/cfg）
-- `cyclic_W-a` — call_cyclic: ハンドラが iloc_cpu() で返る → lock_cpu() スキップ（cyclic.c L259 br[1]）
-  配置: `api_test/ASP/cyclic/cyclic_W-a/`（out.c/h/cfg）
-- `mempfix_W-a` — rel_mpf: ミスアライメントポインタ → E_PAR（mempfix.c L309 br[0]）
-  配置: `api_test/ASP/mempfix/mempfix_W-a/`（out.c/h/cfg）
-- `mempfix_W-b` — rel_mpf: blkidx >= unused → E_PAR（mempfix.c L310 br[0]）
-  配置: `api_test/ASP/mempfix/mempfix_W-b/`（out.c/h/cfg）
-
-**2026-06-09 追加した WBテスト（time_event.c、方式2: 手書き）**:
-- `time_event_W-a` — tmevt_down: 右兄弟なし + 早期break（time_event.c L221 br[1] + L231 br[0]）
-  配置: `api_test/ASP/time_event/time_event_W-a/`（out.c/h/cfg）
-- `time_event_W-b` — tmevtb_delete go-up: lastノードが親より小さい（time_event.c L302 br[0]）
-  配置: `api_test/ASP/time_event/time_event_W-b/`（out.c/h/cfg）
-- `adj_tim_W-a.yaml` — check_adjtim else-fall-through: adjtim=0 → false（time_event.c L533 br[1]）
-  配置: `api_test/ASP/time_manage/adj_tim/adj_tim_W-a.yaml`
-
-**2026-06-09 追加した WBテスト（task_manage.c、方式2: 手書き）**:
-- `act_tsk_W-a` — TA_NOACTQUE属性タスクへのact_tsk→E_QOVR（task_manage.c L137 br[1]）
-  配置: `api_test/ASP/task_manage/act_tsk_W-a/`（out.c/h/cfg）
+> **WBテスト（方式2: 手書き、`all` モードのみ）の追加履歴・カタログは [`WB_COVERAGE.md`](WB_COVERAGE.md) を参照。**  
+> WBテストは `bb` モード（1425/1459 = 97.7%）に対し 8 分岐（計 +9 分岐）を追加し、`all` モードで 1434/1459 = 98.3% に到達する。
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -377,7 +365,7 @@
 
 > wait.c: 8/8 = **100%**（NDEBUG により assert 失敗パス除去）  
 > wait.h: 49/64 = 76.6%（NDEBUG+O2 インライン展開増加によるアーティファクト。  
->   論理的カバレッジは両分岐とも確認済み。詳細は docs/WB_UNREACHABLE.md §wait.h 参照）
+>   論理的カバレッジは両分岐とも確認済み。詳細は docs/WB_UNREACHABLE.md §5 wait.h 参照）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -402,7 +390,8 @@
 ## 残存未到達分岐リスト（2026-06-09 `all` モード）
 
 > 全 25 箇所（1434/1459 = 98.3%、`all` モード）。未到達数の多い順。  
-> ※ wait.h の 15 箇所はインライン展開アーティファクト（論理的カバレッジは確認済み）。
+> ※ wait.h の 15 箇所はインライン展開アーティファクト（論理的カバレッジは確認済み）。  
+> **各分岐の詳細分析（到達不能理由・分類）は [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md) を参照。**
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
