@@ -13,6 +13,9 @@
 > 分岐C1ベースライン取得可能。最初の題材として ena_ter を精査した結果は §12（worked example）。
 > **FMP gcov(C1) ベースライン取得済み（2026-06-09）**：93.9%（1575/1677）。-DNDEBUG 適用，
 > coverage_gcov_fmp.sh を bb|all モード対応に整備。分析は docs/FMP/WB_COVERAGE.md・WB_UNREACHABLE.md。
+> **HRP3/HRMP3 は計測延期（2026-06-09）**：GCOV計装が未移植なうえ、HRP3 は TTSP3 で未緑
+> （TECS二重make・ttsp_target_test.o リンク等の bring-up 問題）。ブロッカーを
+> docs/HRP/COVERAGE_STATUS.md・docs/HRMP/COVERAGE_STATUS.md に記録し後段へ（§11 Q4 と整合）。
 
 ---
 
@@ -340,6 +343,11 @@ pre_condition:
        **FMP gcov(C1) ベースライン取得・docs/FMP/ 作成。【完了 2026-06-09】**
        （coverage_gcov_fmp.sh を bb|all モード・NDEBUG 対応に整備，1575/1677=93.9%，
        docs/FMP/WB_COVERAGE.md・WB_UNREACHABLE.md 102分岐分析）
+- P0'：**HRP3/HRMP3 計測は延期（後段）**。2026-06-09 調査で前提ブロッカーを確認＝
+       (a) GCOV計装が両カーネル未移植、(b) HRP3 が TTSP3 で未緑（TECS二重make・
+       ttsp_target_test.o の保護多パスリンク統合）。計測には「bring-up → GCOV移植（保護
+       カーネルの生成リンカスクリプトへ .gcov_info 追加）→ 計測」の順が必要。
+       詳細・将来手順は docs/HRP/COVERAGE_STATUS.md・docs/HRMP/COVERAGE_STATUS.md。
 - P1：interrupt.c パイロット（未到達分岐→誘導テスト追加→C1向上を実測で実証）。
 - P2：time_event.c / mutex.c / task_term.c へ展開。
 - P3：残ファイル＋CIへの**分岐C1レポート提示**（閾値ゲートなし）＋到達不能の正当化文書化。
