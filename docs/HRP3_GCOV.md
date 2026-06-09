@@ -178,10 +178,17 @@ bash scripts/coverage_gcov_hrmp.sh bb
 
 ---
 
-## 既知の制約（gcov とは独立）
+## 計測結果と付随して修正したバグ
 
-`bb` 計測で API テストが「Unregistered interrupt occurs.」（`core_kernel_impl.c` の未登録割込み
-ハンドラ→`ext_ker`）で途中終了し、カバレッジが頭打ち（line 24% / branch 13%）。これは
-HRMP+QEMU の **target依存の割込み処理（割込み注入/IRC構成）の実行bring-up問題**で、
-gcov 計装・ダンプ機構とは独立（途中までの gcda は正常に取得できている）。詳細と進捗は
-`docs/HRMP/COVERAGE_STATUS.md`。
+`bb` 計測：**line 75.4% / branch 63.7%**（2026-06-09）。
+
+当初 24%/13% で頭打ちだったが、原因は gcov ではなく **IPI割込みバグ**：
+ティック更新用 `TTSP_IPI_INTNO=0x001e`（PPI）が `gicd_raise_sgi()` の GICD_SGIR
+INTIDフィールド（4bit）で `0x1e&0xF=14` に折り返され SGI 14 が誤発火→未登録割込み
+（`core_kernel_impl.c` default_int_handler）→緊急停止していた。`0x0004`（SGI 4、FMP と同じ）
+に修正（`library/HRMP/target/zybo_z7_gcc/ttsp_target_test.h`）して解消。
+※診断手法：`default_int_handler(uint32_t intno)` に一時変更＋ `core_support.S` の
+ハンドラ呼出し直前に `mov r0, r4`（割込み番号）を一時追加して intno=14 を特定（確認後リバート）。
+
+残る向上余地（gcov 無関係）：一部テストが E_OACV（保護違反）で途中終了、HRMP固有ファイル
+（messagebuf/domain/spin_lock 等）の低カバレッジ。詳細は `docs/HRMP/COVERAGE_STATUS.md`。

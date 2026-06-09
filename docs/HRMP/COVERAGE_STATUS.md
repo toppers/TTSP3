@@ -1,9 +1,9 @@
-# HRMP3 カバレッジ計測ステータス（gcovダンプ動作・API駆動のみ残）
+# HRMP3 カバレッジ計測ステータス（計測完成・line 75.4%/branch 63.7%）
 
-> **状態（2026-06-09）：check_library で gcov 完全動作（gcda生成・カバレッジ抽出成功）。**
-> HRMP3 の保護カーネルで gcov(C1) 計測の最難関（特権ダンプの未マッピングフォールト）を突破。
-> 残るは **API auto-code の並列ドライバ（ttsp_parallel_api.sh）が HRMP（保護多パスビルド）
-> 未対応**な点のみ。check_library のカバレッジは取得済み（startup.c 97%, task.c 52% 等）。
+> **状態（2026-06-09）：HRMP3 で gcov(C1) 計測が完全動作。check_library + API 20分割で
+> line 75.4% / branch 63.7%。** 保護カーネルの最難関（特権ダンプの未マッピングフォールト）
+> と IPI割込みバグ（SGI 14 誤発火）を解決。主要APIは 90%超が多数。
+> さらなる向上は HRMP固有ファイル（messagebuf/domain/spin_lock 等）と保護ドメイン対応テスト次第。
 
 ---
 
@@ -39,21 +39,30 @@ gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）で
 → **全20分割 + check_library で gcda 生成・カバレッジ抽出に成功**（`bb` モード）。
 gcov_info のラベル（`__start_rodata_kernel_A1001`）は check_library/API で同一＝安定。
 
-## 現状のカバレッジと残課題（target依存の割込み問題）
+## カバレッジ結果（2026-06-09 `bb`）
 
-`bb` 計測結果（2026-06-09）：**line 24.0% (1118/4658) / branch 13.1% (352/2697)**。
-ASP(98%)/FMP(94%) より大幅に低い。理由は **API テストが QEMU 上で完走しない**こと：
-全20分割が `finish=0`（多くが「Unregistered interrupt occurs.」で緊急停止）。
+**line 75.4% (3510/4658) / branch 63.7% (1719/2697)**。
 
-- 発生源：`arch/arm_gcc/common/core_kernel_impl.c:333` の未登録割込みハンドラ。
-  alarm/timer 等のテストで割込みが発生するが、HRMP+QEMU(zynq) で登録/処理されず緊急停止。
-- check_library の timer も同じ症状（exception/interrupt は緑）。
-- これは **gcov とは無関係の target依存（割込み注入・IRC構成）の実行bring-up問題**。
-  解消すれば API テストが完走し、ASP/FMP 並みのカバレッジが得られる見込み。
-- gcov 計装・ダンプ機構は完全動作（全グループで gcda 生成済み）＝**計測基盤は完成**。
+主要API は高カバレッジ：alarm 97.7%, cyclic 97.7%, dataqueue 95.5%, eventflag 98.3%,
+mempfix 98.0%, mutex 98.5%, pridataq 95.8%, semaphore 97.7%, task 89.1%, task_sync 97.9%,
+task_refer 91.8%, wait 98.6%, interrupt 92.1%。
 
-> 補足：カバレッジが取れている範囲（startup.c 97%, task.c 74%, alarm.c 98% 等）は
-> テスト完走前に通過した分。割込み問題の解消が次の主タスク。
+### IPI割込みバグの修正（24%→75% に向上）
+当初 24%/13% で頭打ちだった主因は、ティック更新用プロセッサ間割込みの番号
+`TTSP_IPI_INTNO=0x001e`（PPI）が `gicd_raise_sgi()` の GICD_SGIR INTIDフィールド（4bit）で
+`0x1e&0xF=14` に折り返され **SGI 14 が誤発火→未登録→緊急停止**していたこと。
+alarm/cyclic/timer 等ティック更新を伴うテストが全滅していた。FMP は 2026-06-06 に
+`0x0004`（SGI 4）へ修正済みだったが HRMP は未適用だった → 同修正を適用（`ttsp_target_test.h`）。
+診断は `default_int_handler` に intno を一時出力して SGI 14 を特定（確認後リバート）。
+→ check_library timer も「All check points passed」に回復。
+
+### 残課題（さらなる向上）
+- 一部テストが `E_OACV`（オブジェクトアクセス違反＝HRMP保護違反）で途中終了。
+  ASP/FMP テストを保護カーネルHRMPで実行した際の**保護ドメイン意味論の差**（テスト設計起因）。
+- HRMP固有ファイルが低カバレッジ：messagebuf.c 4%, spin_lock.c 12%, domain.c 19%,
+  mem_manage.c 55%, memory.c 55%, time_manage.c 23%, svc_table.c 0%。
+  → これらを網羅する HRMP固有テスト／保護ドメイン対応テストの拡充が次段階。
+- gcov 計装・ダンプ機構は全グループで完全動作（計測基盤は完成）。
 
 > 旧記述（multilib不一致／408B未マッピング）は調査途上の中間診断。最終的な真因と解決は上記。
 
