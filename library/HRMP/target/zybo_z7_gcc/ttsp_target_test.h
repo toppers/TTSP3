@@ -160,9 +160,16 @@
 
 /*
  *  ティック更新用割込み
+ *
+ *  [改変] 2026-06-09: HRMP3対応（FMPと同じ修正）．0x001e（PPI: ウォッチドッグ）から
+ *  0x0004（SGI 4）に変更．gicd_raise_sgi()/raise_int() はプロセッサ間割込みとして
+ *  SGI（INTID 0〜15）のみ発行可能で，PPIを指定すると GICD_SGIR のINTIDフィールド
+ *  （4bit）で折り返され SGI 14 が誤発火し，「Unregistered interrupt occurs.」で
+ *  ティック更新を伴うテスト（alarm/cyclic/timer 等）が全滅していた．カーネルは
+ *  SGI 0〜2（dispatch/ext_ker/set_hrt_evt）を使用するため空きの SGI 4 を選定．
  */
 #define TTSP_IPI_INTPRI -16
-#define TTSP_IPI_INTNO 0x001e
+#define TTSP_IPI_INTNO 0x0004
 #define TTSP_IPI_INTNO_PRC1 (0x10000|TTSP_IPI_INTNO)
 #define TTSP_IPI_INTNO_PRC2 (0x20000|TTSP_IPI_INTNO)
 
