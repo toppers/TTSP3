@@ -1,20 +1,37 @@
-# HRP3 カバレッジ計測ステータス（実行は可・ビルドが flaky）
+# HRP3 カバレッジ計測ステータス（check_library 緑・方式A実装）
 
-> **状態（2026-06-09 更新）：HRP3 は QEMU で実行可能（緑）であることを確認。**
-> check_library/exception を手動ビルド（後述の二重make）して QEMU 実行 →「All check points passed」。
-> ただし TTSP3 の通常ビルドは **TECS の SVCプラグイン命名 flaky** で安定して通らない（後述）。
+> **状態（2026-06-09 更新）：HRP3 が TTSP3 の通常フロー（ttb.sh）で check_library 全3種を
+> ビルド・実行でき「All check points passed」を確認。** 方式A（下記）を実装して解決。
 > gcov 計測の前提（GCOV計装）は HRMP3 と同方式で適用可能（`docs/HRP3_GCOV.md`、HRP3は単一コア）。
 
 ---
 
-## 実行可能性の確認（2026-06-09）
+## 解決：方式A（APPL_COBJS を破壊的に上書きしない）実装済み（2026-06-09）
 
-- HRMP3 の保護ビルド知見を適用し、check_library/exception を
-  `make KERNEL_COBJS=... APPL_COBJS=...`（HRP3用の全オブジェクト）で**二重make**したところ
-  ビルド成功（`hrp` 生成）。QEMU（単一コア、`-smp` 無し）で実行し
-  **「All check points passed」**＝HRP3 は TTSP3 で実行可能。
+ttb.sh の HRP `APPL_COBJS_COMMON` には**旧命名の TECS オブジェクトがハードコード**
+（`tHRPSVCPlugin_<sig>SVCCaller_<cell>_<port>_tecsgen.o` 等）されており、これが make 上書きで
+渡されて「No rule to make target」の出所だった。サンプル解析で真因（COBJS 破壊的上書きが
+TECS celltype を落とす）を確定（後述）。
 
-## ビルドの残課題：TTSP3 の COBJS 上書きが TECS celltype を落とす（確定・2026-06-09 サンプル解析）
+**実装した解決（方式A）**：
+- `ttb.sh`：HRP のとき `TEST_LIB_FILE` に TTSP3 のテスト用追加オブジェクト
+  （ttsp_test_lib.o/log_output.o/vasyslog.o/t_perror.o/strerror.o/ttsp_mem_obj_*.o/
+  ttsp_target_test.o）を設定し、configure の `-U`（→APPLOBJS）で渡す。
+- `scripts/common.sh`（`make_for_common`）：HRP のとき KERNEL_COBJS/APPL_COBJS を**上書きせず**
+  `make $MAKE_OPT` のみ実行。configure 生成 Makefile の
+  `APPL_COBJS := @(APPLOBJS) $(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS) ...` により
+  テストオブジェクト＋TECS celltype（**tecsgen が生成する正しい新命名**）が両立してビルドされる。
+- 旧命名ハードコードに依存しなくなった。ASP/FMP/HRMP は分岐外で影響なし（regression 無しを確認）。
+
+→ **結果**：`ttb.sh ../hrp3/ HRP` の check_library で exception/interrupt/timer の3種すべてが
+ビルド成功し、QEMU（単一コア）で「All check points passed」。
+
+> 残：API テストの並列ドライバ（ttsp_parallel_api.sh）は ASP/FMP/HRMP 対応。HRP を加える場合は
+> 同様に「-U でテストオブジェクト追加・COBJS 非上書き」を適用する。
+
+---
+
+## 真因（サンプル解析・2026-06-09）
 
 > **サンプルビルドの解析で原因を確定。HRP3 カーネル本体（tecsgen 含む）は健全**。
 > 問題は **TTSP3 の HRP ビルドハーネス**にある（前回記載の「tecsgen 命名不整合（バグ）」説は誤りと判明）。

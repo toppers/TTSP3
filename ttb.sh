@@ -135,6 +135,21 @@ else
 fi
 
 #
+# [改変] 2026-06-09: HRP の TECSコンポーネント化 syssvc 対応（方式A）．
+# HRP は syssvc が TECS化（tSysLogAdapter 等）されており，リンカスクリプトが参照する
+# celltype/SVC オブジェクトは configure 生成 Makefile の
+# 「APPL_COBJS := @(APPLOBJS) $(TECS_USER_COBJS) $(TECS_OUTOFDOMAIN_COBJS) ...」で自動的に
+# 含まれる．そこで TTSP3 のテスト用追加オブジェクトを configure の -U（→APPLOBJS）で渡し，
+# make 時に APPL_COBJS/KERNEL_COBJS を破壊的に上書きしない（common.sh で HRP を分岐）．
+# これにより旧命名のハードコード（従来の APPL_COBJS_COMMON 内 TECS オブジェクト）に依存せず，
+# tecsgen が生成する正しい命名の TECS オブジェクトでビルドできる．
+# out.o は configure が applname.o として自動追加するため -U には含めない．
+if [ $PROFILE_NAME = "HRP" ]
+then
+	TEST_LIB_FILE="ttsp_test_lib.o log_output.o vasyslog.o t_perror.o strerror.o ttsp_mem_obj_kernel1.o ttsp_mem_obj_kernel2.o ttsp_mem_obj_user1.o ttsp_mem_obj_user2.o ttsp_target_test.o"
+fi
+
+#
 # INCLUDE対象のパス定義
 #
 TTSP_DIR_NAME=${TTSP_DIR##*/}

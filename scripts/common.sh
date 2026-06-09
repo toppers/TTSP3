@@ -527,7 +527,15 @@ make_for_common()
 		 ;;
 		$RULE_BUILD)
 		 header_single "$MAKE_BUILD $dir_name"
-		 make $MAKE_OPT KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" 2>&1 | tee $RESULT_MAKE
+		 # [改変] 2026-06-09: HRP は TECSコンポーネント化 syssvc のため，KERNEL_COBJS/
+		 # APPL_COBJS を破壊的に上書きすると Makefile 既定の $(TECS_*_COBJS)（celltype）が
+		 # 落ちてリンクに失敗する．テスト用追加オブジェクトは configure の -U（ttb.sh の
+		 # TEST_LIB_FILE）で APPLOBJS に渡し済みのため，HRP では上書きせず既定でビルドする．
+		 if [ "$PROFILE_NAME" = "HRP" ]; then
+		 	make $MAKE_OPT 2>&1 | tee $RESULT_MAKE
+		 else
+		 	make $MAKE_OPT KERNEL_COBJS="$KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" APPL_COBJS="$APPL_COBJS_COMMON $APPL_COBJS_TARGET" 2>&1 | tee $RESULT_MAKE
+		 fi
 		 ;;
 		$RULE_CLEAN)
 		 header_single "$MAKE_CLEAN $dir_name"
