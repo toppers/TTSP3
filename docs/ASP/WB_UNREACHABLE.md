@@ -124,7 +124,7 @@ if (p_runtsk->raster && p_runtsk->enater) {
 |---|---|---|---|
 | L371 br[0]（`raster && enater` が真） | (1) タスク T が `enater=true` かつ (2) `chg_ipm` 実行中に (3) 別タスクが `ras_ter(T)` を呼び (4) T が `chg_ipm(TIPM_ENAALL)` に到達する、という競合タイミングが必要。 | **到達困難（制約あり）** |
 
-**補足**: 既存テスト [`chg_ipm_e.yaml`](../api_test/ASP/interrupt/chg_ipm/chg_ipm_e.yaml) は `enadsp=false`（L369 の真分岐不成立）のパスをカバー。L371 には `enadsp=true` かつ上記競合条件の同時成立が必要。
+**補足**: 既存テスト [`chg_ipm_e.yaml`](../../api_test/ASP/interrupt/chg_ipm/chg_ipm_e.yaml) は `enadsp=false`（L369 の真分岐不成立）のパスをカバー。L371 には `enadsp=true` かつ上記競合条件の同時成立が必要。
 
 **結論**: WB テストで到達可能だが、コストに対して優先度低。当面未対応で可。
 
@@ -154,7 +154,7 @@ if (p_runtsk->raster && p_runtsk->enater) {
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| sift-down 内部分岐 ×1 | 特定のヒープ配置でのみ通る経路 | `tmevt_down` の L221/L231 周辺は WBテスト [`time_event_W-a`](../api_test/ASP/time_event/time_event_W-a/out.c) で大半を到達済み（[`WB_COVERAGE.md`](WB_COVERAGE.md) §5）だが、残 1 分岐は更に特定のヒープ深さ・配置を要し、外部 API 操作での再現が難しい。 | **到達困難（内部状態依存）** |
+| sift-down 内部分岐 ×1 | 特定のヒープ配置でのみ通る経路 | `tmevt_down` の L221/L231 周辺は WBテスト [`time_event_W-a`](../../api_test/ASP/time_event/time_event_W-a/out.c) で大半を到達済み（[`WB_COVERAGE.md`](WB_COVERAGE.md) §5）だが、残 1 分岐は更に特定のヒープ深さ・配置を要し、外部 API 操作での再現が難しい。 | **到達困難（内部状態依存）** |
 
 **結論（time_event.c 全体）**: 残 4 未到達分岐はすべて WB テスト追加不要（実用的到達不能 ×3 + 内部状態依存 ×1）。
 

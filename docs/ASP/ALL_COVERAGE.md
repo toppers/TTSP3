@@ -365,7 +365,7 @@
 
 > wait.c: 8/8 = **100%**（NDEBUG により assert 失敗パス除去）  
 > wait.h: 49/64 = 76.6%（NDEBUG+O2 インライン展開増加によるアーティファクト。  
->   論理的カバレッジは両分岐とも確認済み。詳細は docs/WB_UNREACHABLE.md §5 wait.h 参照）
+>   論理的カバレッジは両分岐とも確認済み。詳細は WB_UNREACHABLE.md §5 wait.h 参照）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -402,16 +402,6 @@
 | 5 | mutex.c | 99.3% | 1 | L227 br[1]（remove_mutex NULL exit、構造的到達不能） |
 | 6 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
 | 7 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
-
-**NDEBUG適用で解消した未到達 (assert系)**：
-
-| ファイル | 解消内容 |
-|---|---|
-| task.c L268/L274 | `assert(dspflg)` 失敗パス × 2 |
-| mutex.c L375/423/474 | `assert(p_runtsk == p_schedtsk)` 失敗パス × 3 |
-| wait.c L65 | `assert(tmout <= TMAX_RELTIM)` 失敗パス |
-| wait.h (`make_non_wait`) | `assert(TSTAT_WAITING)` 失敗パス |
-| time_event.c L588/589 | `assert(sense_context())` / `assert(!sense_lock())` 失敗パス × 2 |
 
 **BBテストで解消済み（100%到達）**：
 

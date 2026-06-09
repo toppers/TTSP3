@@ -33,13 +33,13 @@ WBテスト（方式2）は以下の 8 分岐を新規に到達させ、`bb` →
 
 | WBテスト | 対象分岐 | 内容 | 配置 |
 |---|---|---|---|
-| `alarm_W-a` | alarm.c L241 br[1] | 通知ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../api_test/ASP/alarm/alarm_W-a/out.c) |
-| `cyclic_W-a` | cyclic.c L259 br[1] | 周期ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../api_test/ASP/cyclic/cyclic_W-a/out.c) |
-| `mempfix_W-a` | mempfix.c L309 br[0] | `rel_mpf`: ミスアライメントポインタ → `E_PAR` | [out.c](../api_test/ASP/mempfix/mempfix_W-a/out.c) |
-| `mempfix_W-b` | mempfix.c L310 br[0] | `rel_mpf`: blkidx 範囲外 → `E_PAR` | [out.c](../api_test/ASP/mempfix/mempfix_W-b/out.c) |
-| `act_tsk_W-a` | task_manage.c L137 br[1] | `act_tsk`: `TA_NOACTQUE` 属性タスクへの起動 → `E_QOVR` | [out.c](../api_test/ASP/task_manage/act_tsk_W-a/out.c) |
-| `time_event_W-a` | time_event.c L221 / L231 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../api_test/ASP/time_event/time_event_W-a/out.c) |
-| `time_event_W-b` | time_event.c L302 br[0] | `tmevtb_delete`: go-up パス（last < parent） | [out.c](../api_test/ASP/time_event/time_event_W-b/out.c) |
+| `alarm_W-a` | alarm.c L241 br[1] | 通知ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../api_test/ASP/alarm/alarm_W-a/out.c) |
+| `cyclic_W-a` | cyclic.c L259 br[1] | 周期ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../api_test/ASP/cyclic/cyclic_W-a/out.c) |
+| `mempfix_W-a` | mempfix.c L309 br[0] | `rel_mpf`: ミスアライメントポインタ → `E_PAR` | [out.c](../../api_test/ASP/mempfix/mempfix_W-a/out.c) |
+| `mempfix_W-b` | mempfix.c L310 br[0] | `rel_mpf`: blkidx 範囲外 → `E_PAR` | [out.c](../../api_test/ASP/mempfix/mempfix_W-b/out.c) |
+| `act_tsk_W-a` | task_manage.c L137 br[1] | `act_tsk`: `TA_NOACTQUE` 属性タスクへの起動 → `E_QOVR` | [out.c](../../api_test/ASP/task_manage/act_tsk_W-a/out.c) |
+| `time_event_W-a` | time_event.c L221 / L231 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../../api_test/ASP/time_event/time_event_W-a/out.c) |
+| `time_event_W-b` | time_event.c L302 br[0] | `tmevtb_delete`: go-up パス（last < parent） | [out.c](../../api_test/ASP/time_event/time_event_W-b/out.c) |
 
 ---
 
@@ -65,7 +65,7 @@ if (!sense_lock()) {                                                  /* L241 */
 |---|---|---|
 | L241 br[1]（`sense_lock() == true`） | ハンドラが CPU ロック（`iloc_cpu()`）を保持したまま戻る → `lock_cpu()` はスキップ | `call_alarm` はハンドラを `unlock_cpu()` 後に呼び出し、戻り後に `sense_lock()` で CPU ロック状態を確認する。BB テストのハンドラは CPU ロックを操作せず、戻り時は常にロック解除状態（`sense_lock() == false`）になる。`iloc_cpu()` を保持して戻るシナリオは自動生成テストでは生成されない。 |
 
-**WBテスト** [`alarm_W-a`](../api_test/ASP/alarm/alarm_W-a/out.c): アラーム通知ハンドラ内で `iloc_cpu()` を呼び出し、CPU ロックを保持したまま戻ることで L241 br[1] を到達させる。
+**WBテスト** [`alarm_W-a`](../../api_test/ASP/alarm/alarm_W-a/out.c): アラーム通知ハンドラ内で `iloc_cpu()` を呼び出し、CPU ロックを保持したまま戻ることで L241 br[1] を到達させる。
 
 ---
 
@@ -84,7 +84,7 @@ if (!sense_lock()) {                                                  /* L259 */
 |---|---|---|
 | L259 br[1]（`sense_lock() == true`） | 周期ハンドラが CPU ロックを保持したまま戻る | §1（alarm.c L241）と同構造。`call_cyclic` も同一パターンで実装されており、BB テストでは非網羅。 |
 
-**WBテスト** [`cyclic_W-a`](../api_test/ASP/cyclic/cyclic_W-a/out.c): 周期通知ハンドラ内で `iloc_cpu()` を呼び出し、CPU ロックを保持したまま戻ることで L259 br[1] を到達させる。
+**WBテスト** [`cyclic_W-a`](../../api_test/ASP/cyclic/cyclic_W-a/out.c): 周期通知ハンドラ内で `iloc_cpu()` を呼び出し、CPU ロックを保持したまま戻ることで L259 br[1] を到達させる。
 
 ---
 
@@ -107,7 +107,7 @@ blkidx = (uint_t)(blkoffset / p_mpfcb->p_mpfinib->blksz);                     /*
 |---|---|---|
 | L309 br[0]（`blkoffset % blksz != 0U` → E_PAR） | `rel_mpf` に渡すポインタがブロックサイズに整合しない | BB テストは常に `get_mpf` で取得したポインタを `rel_mpf` に渡す。`get_mpf` はブロックサイズ境界に整合したポインタのみ返すため、ミスアライメントポインタは自動生成テストでは発生しない。 |
 
-**WBテスト** [`mempfix_W-a`](../api_test/ASP/mempfix/mempfix_W-a/out.c): `get_mpf` で取得したブロックポインタにオフセットを加えたミスアライメントポインタを `rel_mpf` に渡し、`E_PAR` が返ることを確認。
+**WBテスト** [`mempfix_W-a`](../../api_test/ASP/mempfix/mempfix_W-a/out.c): `get_mpf` で取得したブロックポインタにオフセットを加えたミスアライメントポインタを `rel_mpf` に渡し、`E_PAR` が返ることを確認。
 
 ### 3-b. L310 br[0]（ブロックオフセット範囲外 → E_PAR）
 
@@ -115,7 +115,7 @@ blkidx = (uint_t)(blkoffset / p_mpfcb->p_mpfinib->blksz);                     /*
 |---|---|---|
 | L310 br[0]（`blkidx >= p_mpfcb->unused` → E_PAR） | `blkoffset / blksz` で得られる index が割当て済みブロック数を超過 | BB テストは正規ポインタのみ使用。プール管理領域外（`unused` を超えた index に対応する）アドレスを渡すケースは自動生成テストでは発生しない。 |
 
-**WBテスト** [`mempfix_W-b`](../api_test/ASP/mempfix/mempfix_W-b/out.c): プール末尾（`mpf + blksz * blkcnt`）を超えるアドレスを `rel_mpf` に渡し、`E_PAR` が返ることを確認。
+**WBテスト** [`mempfix_W-b`](../../api_test/ASP/mempfix/mempfix_W-b/out.c): プール末尾（`mpf + blksz * blkcnt`）を超えるアドレスを `rel_mpf` に渡し、`E_PAR` が返ることを確認。
 
 ---
 
@@ -139,7 +139,7 @@ else {
 |---|---|---|
 | L137 br[1]（`TA_NOACTQUE` フラグあり → E_QOVR） | `TA_NOACTQUE` 属性タスクに `act_tsk` を呼ぶ（起動要求キューイング不可 → 即 E_QOVR）〔NGKI3528〕 | BB テストで生成されるタスクは `TA_NOACTQUE` 属性を持たない。`actque=true` ルート（既にキュー済み）は BB テストでカバーされているが、`TA_NOACTQUE` フラグによる短絡ルートは属性指定が必要であり、自動生成テストでは非網羅。 |
 
-**WBテスト** [`act_tsk_W-a`](../api_test/ASP/task_manage/act_tsk_W-a/out.c): `TA_NOACTQUE` 属性で生成した実行中タスクに `act_tsk` を呼んで `E_QOVR` が返ることを確認。
+**WBテスト** [`act_tsk_W-a`](../../api_test/ASP/task_manage/act_tsk_W-a/out.c): `TA_NOACTQUE` 属性で生成した実行中タスクに `act_tsk` を呼んで `E_QOVR` が返ることを確認。
 
 ---
 
@@ -169,7 +169,7 @@ L221 は `child + 1 <= LAST_INDEX()`（右子の有無）と `EVTTIM_LT(...)`（
 | L221（`child + 1 > LAST_INDEX()`） | 現レベルに左の子しか存在しない（右子ノードがヒープ末尾を超える） | BB テストのタイムイベント登録・削除パターンでは、`tmevt_down` が呼ばれる時点でヒープが常に当該レベルに右子を持つ形になる。「左子のみ」状態は特定の登録順序・数でのみ発生し、自動生成テストでは生成されない。 |
 | L231 br[0]（`EVTTIM_LE(evttim, child->evttim)` が真 → break） | 挿入ノードの発生時刻が選択した子ノード以前 → 現在の `index` が挿入位置 | BB テストのパターンでは sift-down が末尾まで進むか 1 段のみで終わるため「中間で止まる」ケースが生じない。 |
 
-**WBテスト** [`time_event_W-a`](../api_test/ASP/time_event/time_event_W-a/out.c): 複数タイムイベントを特定の順序で登録・期限切れさせ、sift-down 時に右子が存在しないヒープ形状を手書きで構築。さらに挿入ノードが左子より早い発生時刻になるよう配置し、L221（右子なし）・L231（早期 break）を同一テスト実行で同時にカバー。
+**WBテスト** [`time_event_W-a`](../../api_test/ASP/time_event/time_event_W-a/out.c): 複数タイムイベントを特定の順序で登録・期限切れさせ、sift-down 時に右子が存在しないヒープ形状を手書きで構築。さらに挿入ノードが左子より早い発生時刻になるよう配置し、L221（右子なし）・L231（早期 break）を同一テスト実行で同時にカバー。
 
 ---
 
@@ -195,7 +195,7 @@ else {
 |---|---|---|
 | L302 br[0]（go-up 条件が真） | 削除ノードを最後尾ノードで置き換えた際、最後尾ノードの発生時刻が削除位置の親ノードより前 → ヒープ性質を回復するため上方向に移動 | BB テストの削除パターンでは、最後尾ノードが削除位置の親より後の時刻になるため常に go-down パスを通る。go-up が発生するには削除対象が「ヒープ下部の大きい値を持つノード」かつ最後尾が「比較的早い時刻」という特定の配置が必要。 |
 
-**WBテスト** [`time_event_W-b`](../api_test/ASP/time_event/time_event_W-b/out.c): ヒープ中間ノードの削除時に最後尾ノードの発生時刻が削除位置の親ノードより早くなるよう、複数タイムイベントの発生時刻と削除順序を手書きで設計。
+**WBテスト** [`time_event_W-b`](../../api_test/ASP/time_event/time_event_W-b/out.c): ヒープ中間ノードの削除時に最後尾ノードの発生時刻が削除位置の親ノードより早くなるよう、複数タイムイベントの発生時刻と削除順序を手書きで設計。
 
 ---
 
