@@ -1,9 +1,9 @@
-# HRMP3 カバレッジ計測ステータス（HRP3 3.3→3.4 アクセス許可仕様移行後・line 91.0%/branch 81.3%）
+# HRMP3 カバレッジ計測ステータス（spinlock sysstat1 移行後・line 91.3%/branch 82.1%）
 
-> **状態（2026-06-09）：HRP3 3.3→3.4 アクセス許可仕様移行（TTG CPUState.rb sysstat2 追加
-> ＋ ter_tsk TESRY 80ファイル access2↔access3 入替）後、E_OACV 早期終了が大幅解消。
-> check_library + API 17分割で line 91.0% / branch 81.3%（ベースライン比 +15.6pp/+17.6pp）。**
-> 残E_OACVは `loc_spn`/`try_spn`（スピンロック acptn カテゴリ）のみ（3グループ）。
+> **状態（2026-06-09）：spinlock（loc_spn/try_spn/unl_spn）の sysstat1_acvct.acptn2 移行
+> （HRMP spin_lock TESRY 5ファイル×5ケースに CPU_STATE1 access1-4 追加）後、
+> スピンロック E_OACV を解消。check_library + API 20分割で line 91.3% / branch 82.1%
+> （ベースライン比 +15.9pp/+18.4pp）。15/17 runnable グループで All check points passed。**
 >
 > （旧ベースライン 2026-06-09：line 75.4% / branch 63.7%。詳細は下記§「カバレッジ結果」）
 
@@ -41,24 +41,25 @@ gcovダンプ経路を診断（セミホスティング出力＋CPSR読取）で
 → **全20分割 + check_library で gcda 生成・カバレッジ抽出に成功**（`bb` モード）。
 gcov_info のラベル（`__start_rodata_kernel_A1001`）は check_library/API で同一＝安定。
 
-## カバレッジ結果（2026-06-09 `bb` ＋ HRP3 3.3→3.4 アクセス許可仕様移行後）
+## カバレッジ結果（2026-06-09 `bb` ＋ spinlock sysstat1 移行後）
 
-**line 91.0% (4237/4658) / branch 81.3% (2193/2697)**。
+**line 91.3% (4253/4658) / branch 82.1% (2215/2697)**。
 （旧ベースライン: line 75.4% (3510/4658) / branch 63.7% (1719/2697)）
 
 主要API は高カバレッジ：alarm 99.2%, cyclic 99.2%, dataqueue 95.5%, eventflag 98.3%,
 mempfix 98.0%, mutex 98.5%, pridataq 95.8%, semaphore 97.7%, task 98.7%, task_sync 98.3%,
-task_refer 91.8%, wait 100.0%, interrupt 93.5%, spin_lock 100.0%, messagebuf 90.1%。
+task_refer 91.8%, wait 100.0%, interrupt 93.5%, spin_lock 100.0%, messagebuf 90.7%。
 
 ### ベースライン比較
 
 | ファイル | 旧 line | 新 line | 旧 branch | 新 branch |
 |---|---|---|---|---|
-| messagebuf.c | 4.1% | 90.1% | 2.0% | 53.5% |
-| sys_manage.c | 92.2% | 95.7% | 70.1% | 75.7% |
+| messagebuf.c | 4.1% | 90.7% | 2.0% | 56.0% |
+| sys_manage.c | 92.2% | 96.0% | 70.1% | 76.6% |
 | task_sync.c | 98.3% | 98.3% | 91.8% | 95.9% |
 | time_manage.c | 98.7% | 98.7% | 82.5% | 82.5% |
-| **TOTAL** | **75.4%** | **91.0%** | **63.7%** | **81.3%** |
+| spin_lock.c | — | 100.0% | — | 81.4% |
+| **TOTAL** | **75.4%** | **91.3%** | **63.7%** | **82.1%** |
 
 ### IPI割込みバグの修正（24%→75% に向上）
 当初 24%/13% で頭打ちだった主因は、ティック更新用プロセッサ間割込みの番号
@@ -70,12 +71,18 @@ alarm/cyclic/timer 等ティック更新を伴うテストが全滅していた�
 → check_library timer も「All check points passed」に回復。
 
 ### 残課題（さらなる向上）
-- **スピンロック E_OACV**（3グループ: auto_code_10/12/16）：`loc_spn`/`try_spn` が E_OACV。
-  ter_tsk と同様の acptn カテゴリ差分と推定（HRMP spin_lock TESRY の access2↔access3 確認要）。
-  → `api_test/HRMP/spin_lock/{loc_spn,try_spn}/*_HM_ex.yaml` を精査して次の移行層として対応。
+- **acptn2 競合（auto_code_16）**：`HRP_interrupt_dis_int_H_a` が E_OK（期待 E_OACV）。
+  `dis_int` と `loc/try/unl_spn` が同一 `sysstat1_acvct.acptn2` を参照するため、spinlock 用に
+  DOM1 を acptn2 に追加すると `dis_int` も通るようになる設計上の競合。
+  `dis_int_H-a.yaml`（`api_test/HRP/interrupt/dis_int/`）は「DOM1 が acptn2 を持たない環境」前提で
+  E_OACV を期待するが、spinlock テストと同一バイナリでは共存不可。
+  → HRP interrupt テストと HRMP spinlock テストを別グループに分割するか、`dis_int_H-a.yaml` の
+    expected を修正する必要がある（HRMP3 3.4 では spinlock ≡ dis_int ≡ acptn2 が仕様設計）。
+- **alarm チェックポイント順序（auto_code_18）**：`ASP_alarm_sta_alm_d_1_H3` が
+  `Unexpected Check Point : 7`。SMP タイミング起因の既存問題（spinlock 移行と無関係）。
 - **HRMPビルド失敗**（3グループ: auto_code_14/17/19）：`target_mem.cfg:36: E_SYS: memory objects overlap`
-  （gcov 計装による増大。HRPでも同様で gcov 固有）。非計装では正常ビルド可。
-- 低カバレッジ残存：domain.c 19%, mem_manage.c 58%, memory.c 55%, svc_table.c 0%。
+  （gcov 計装による増大。gcov 固有）。非計装では正常ビルド可。
+- 低カバレッジ残存：domain.c 19%, mem_manage.c 58%, memory.c 79%, svc_table.c 0%。
   → 保護ドメイン固有テストの拡充が次段階。
 - gcov 計装・ダンプ機構は全グループで完全動作（計測基盤は完成）。
 

@@ -25,6 +25,10 @@ FMP_spin_lock_loc_spn_F_d_HM1:
       type   : CPU_STATE
       loc_cpu: false
       prcid  : PRC_SELF
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
 
     CPU_STATE2:
       type   : CPU_STATE
@@ -155,6 +159,10 @@ FMP_spin_lock_loc_spn_F_d_HM3:
       type   : CPU_STATE
       loc_cpu: false
       prcid  : PRC_SELF
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
 
     CPU_STATE2:
       type   : CPU_STATE
@@ -222,6 +230,10 @@ FMP_spin_lock_loc_spn_F_d_HM4:
       type   : CPU_STATE
       loc_cpu: false
       prcid  : PRC_SELF
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
 
     CPU_STATE2:
       type   : CPU_STATE
@@ -288,6 +300,10 @@ FMP_spin_lock_loc_spn_F_d_HM5:
       type   : CPU_STATE
       loc_cpu: false
       prcid  : PRC_SELF
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
 
     CPU_STATE2:
       type   : CPU_STATE
@@ -411,6 +427,10 @@ FMP_spin_lock_loc_spn_F_d_HM7:
       type   : CPU_STATE
       loc_cpu: false
       prcid  : PRC_SELF
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
 
     CPU_STATE2:
       type   : CPU_STATE

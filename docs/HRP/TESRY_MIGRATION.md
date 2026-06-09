@@ -176,7 +176,60 @@ for d in exception interrupt timer; do echo "$d: $(tr -d '\r' < obj_hrp_reg/chec
 
 ---
 
-## 7. 反復（次の不一致層の発見）
+## 7. 段階3：HRMP spinlock sysstat1 対応（HRMP 固有）
+
+> HRP3 3.3.2→3.4.0 で `loc_spn`/`try_spn`/`unl_spn` に `CHECK_ACPTN(sysstat1_acvct.acptn2, selfdom)` が追加
+> （`hrmp3/doc/version.txt` 「Release 3.3.2 から 3.4.0 への主な変更点」）。
+> TESRY に CPU_STATE1 の access フィールドが無いため、TTG が sysstat1_acvct.acptn2 に DOM1 を含めず E_OACV。
+
+### 影響ファイル（HRMP のみ・HRP は spinlock 非対象）
+
+`api_test/HRMP/spin_lock/{loc_spn,try_spn,unl_spn}/*_HM_ex.yaml` の non-ntc 5ファイル：
+- `loc_spn_F-c_HM_ex.yaml`, `loc_spn_F-d_HM_ex.yaml`
+- `try_spn_F-d_HM_ex.yaml`
+- `unl_spn_F-c-1_HM_ex.yaml`, `unl_spn_F-c-2_HM_ex.yaml`
+
+各ファイルの HM1/HM3/HM4/HM5/HM7（DOM1 が呼び出し元）の `pre_condition` 内 `CPU_STATE1` に
+以下 4フィールドを追加（HM2/HM6 は KERNEL 呼び出し元のため修正不要）：
+
+```yaml
+      access1: TACP_KERNEL
+      access2: TACP(DOM1)
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+```
+
+CPUState.rb が `access1` nil のとき `@@aAccess*` に追加しないため、**4フィールド全て要設定**。
+
+### 修正スクリプト（Python）
+
+```python
+# api_test/HRMP/spin_lock/ 以下の5ファイルを対象
+# pre_condition CPU_STATE1（type: CPU_STATE あり）かつ TASK1 domain=DOM1 のケースに追加
+# 実際の適用は 2026-06-09 Python スクリプトで実施（git 履歴参照）
+```
+
+### 副作用（設計上の制約）
+
+`dis_int`・`ena_int`・`ref_int`・`dis_dsp` 等も `sysstat1_acvct.acptn2` を参照
+（`hrmp3/kernel/interrupt.c:184, 231, 278, 325, 419`）。
+DOM1 を acptn2 に追加すると、同一バイナリで「DOM1 が dis_int を呼べないこと」を検証する
+`HRP_interrupt_dis_int_H_a`（`api_test/HRP/interrupt/dis_int/dis_int_H-a.yaml` 期待 E_OACV）が
+E_OK で失敗する（設計上の競合。詳細は `docs/HRMP/COVERAGE_STATUS.md` §「残課題」）。
+
+### 計測結果（2026-06-09）
+
+| プロファイル | 移行前 line/branch | 移行後 line/branch |
+|---|---|---|
+| HRMP | 91.0% / 81.3% | **91.3% / 82.1%** |
+
+auto_code_10, 12: E_OACV 解消 → All check points passed。
+auto_code_16: spinlock 解消後に dis_int_H-a 競合が露出（上記副作用）。
+15/17 runnable グループで All check points passed（旧：13/17）。
+
+---
+
+## 8. 反復（次の不一致層の発見）
 
 層1+層2 適用後も残る中断は、同じ手法で芋づる式に解析する：
 

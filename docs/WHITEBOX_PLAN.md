@@ -13,11 +13,12 @@
 > 分岐C1ベースライン取得可能。最初の題材として ena_ter を精査した結果は §12（worked example）。
 > **FMP gcov(C1) ベースライン取得済み（2026-06-09）**：93.9%（1575/1677）。-DNDEBUG 適用，
 > coverage_gcov_fmp.sh を bb|all モード対応に整備。分析は docs/FMP/WB_COVERAGE.md・WB_UNREACHABLE.md。
-> **HRMP3/HRP3 アクセス許可仕様移行後（2026-06-09）**：HRMP 91.0%/81.3%、HRP 89.4%/81.7%。
-> TTG CPUState.rb sysstat2 追加 + ter_tsk TESRY（HRP 44件／HRMP 80件）access2↔access3 入替で
-> E_OACV 早期終了を解消（移行前: HRMP 75.4%/63.7%、HRP 79.6%/69.8%）。
+> **HRMP3/HRP3 アクセス許可仕様移行後（2026-06-09）**：HRMP 91.3%/82.1%、HRP 89.4%/81.7%。
+> TTG CPUState.rb sysstat2 追加 + ter_tsk TESRY（HRP 44件／HRMP 80件）access2↔access3 入替、
+> さらに spinlock TESRY（HRMP 5ファイル×5ケース CPU_STATE1 access 追加）で E_OACV を解消。
+> （移行前: HRMP 75.4%/63.7%、HRP 79.6%/69.8%）。
 > 詳細 docs/HRMP/COVERAGE_STATUS.md・docs/HRP/WB_COVERAGE.md・docs/HRP/TESRY_MIGRATION.md。
-> → **4プロファイル最新値：ASP 98.3% / FMP 93.9% / HRMP 91.0% / HRP 89.4%**（line）。
+> → **4プロファイル最新値：ASP 98.3% / FMP 93.9% / HRMP 91.3% / HRP 89.4%**（line）。
 
 ---
 
@@ -353,8 +354,10 @@ pre_condition:
        **HRMP3 75.4%／HRP3 79.6%**（line）。詳細 docs/HRMP/・docs/HRP/（COVERAGE_STATUS / WB_COVERAGE / WB_UNREACHABLE）。
        → **HRP3/HRMP3 アクセス許可仕様移行（2026-06-09）**：TTG CPUState.rb sysstat2 追加
        ＋ ter_tsk TESRY（HRP 44件／HRMP 80件）access2↔access3 入替で E_OACV 早期終了を解消。
-       **HRMP3 91.0%/81.3%、HRP3 89.4%/81.7%**（残ギャップは domain/mem_manage と
-       loc_spn/try_spn スピンロック acptn カテゴリ不整合）。
+       さらに spinlock TESRY（HRMP 5ファイル×5ケース CPU_STATE1 access 追加）で spinlock
+       E_OACV も解消（15/17 runnable グループ All check points passed）。
+       **HRMP3 91.3%/82.1%、HRP3 89.4%/81.7%**（残ギャップは domain/mem_manage と
+       dis_int 競合・alarm SMP タイミング）。
 - P1：interrupt.c パイロット（未到達分岐→誘導テスト追加→C1向上を実測で実証）。
 - P2：time_event.c / mutex.c / task_term.c へ展開。
 - P3：残ファイル＋CIへの**分岐C1レポート提示**（閾値ゲートなし）＋到達不能の正当化文書化。
