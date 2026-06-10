@@ -63,10 +63,12 @@ BBテスト（自動生成）では計 19 分岐が未到達。2 群に分かれ
 
 | 群 | 内容 | 対応 |
 |---|---|---|
-| **(A) WBテストで到達可能（9分岐）** | alarm.c (1) / cyclic.c (1) / exception.c (1) / mempfix.c (2) / time_event.c (4) | 手書き WBテスト（方式2）で到達 → `all` モードで解消。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部 |
-| **(B) WBテストでも到達不能/困難（10分岐）** | exception.c (1) / interrupt.c (2: clr_int/ras_int GIC恒真) / mutex.c (1) / task_refer.c (1) / time_event.c (4) / time_manage.c (1) | 構造的・実用的到達不能、または到達困難（競合/64bit折返し/HRTCNT_BOUND 等）。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 |
+| **(A) WBテストで到達可能（10分岐）** | alarm.c (1) / cyclic.c (1) / exception.c (2) / mempfix.c (2) / time_event.c (4) | 手書き WBテスト（方式2）で到達 → `all` モードで解消。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部 |
+| **(B) WBテストでも到達不能/困難（9分岐）** | interrupt.c (2: clr_int/ras_int GIC恒真) / mutex.c (1) / task_refer.c (1) / time_event.c (4) / time_manage.c (1) | 構造的・実用的到達不能、または到達困難（競合/64bit折返し/HRTCNT_BOUND 等）。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 |
 
-> WBテスト追加後の最終到達率（`all` モード = 1369/1379 = 99.3%）とファイル別 all 数値は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
+> exception.c の 2 分岐（`kerflg==false` / `p_runtsk==NULL`）は `xsns_dpn_W-a` / `xsns_dpn_W-b`（custom idle 方式）で到達し、`all` で 8/8 = 100%。これにより (A) が 9→10、(B) が 10→9 となった。
+
+> WBテスト追加後の最終到達率（`all` モード = 1370/1379 = 99.3%）とファイル別 all 数値は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
 
 ---
 
