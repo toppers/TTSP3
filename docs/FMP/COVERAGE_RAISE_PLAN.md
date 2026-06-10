@@ -59,9 +59,24 @@ FMP は時刻イベント処理を行う PE を **`TOPPERS_TEPP_PRC`**（ビッ�
 
 ---
 
-## Method A：FMP simt（simulation timer）ターゲットで時刻 64bit 系を到達
+## Method A：FMP simt（simulation timer）ターゲットで時刻 64bit 系を到達 — ⏸ 保留（feasibility 評価済 2026-06-10）
 
-### 機構（ASP3 の simt を FMP へ移植）
+> **feasibility 調査の結論（2026-06-10）：ROI 不足のため保留**。
+> - **対象4分岐は simt 必須が確定**：`TMAX_RELTIM=4,000,000,000` が `HRTCNT_BOUND=4,000,000,002`（`mpcore_timer.h`）
+>   の**直下に意図設計**＝API経由で §5-d（`set_hrt_event` の `hrtcnt > HRTCNT_BOUND`）を踏めない。
+>   `EVTTIM` は uint32（`tmevt.h`・`!USE_64BIT_HRTCNT`）、§10 `adj_tim` 64bit 折返しは HRT 直接操作が前提。
+>   ＝zybo 実タイマでのショートカット不可。
+> - **ASP simt の実体**：`asp3/arch/simtimer/tSimTimerCntl.c`（**TECS ベースのソフトHRTコンポーネント**）＋
+>   `ct11mpcore` チップ ＋ `simt_systim*` テストの3点セット。
+> - **FMP の障壁**：`fmp3/arch/` は arm_gcc/gcc/posix_gcc/tracelog のみで **`arch/simtimer` が存在しない**。
+>   ゼロから移植が必要で、かつ FMP のマルチプロセッサ時刻モデル（TM master・PE毎ヒープ・IPI転送）への
+>   適合＋TECS 連携が絡む＝**大規模・高リスク**。
+> - **ゲインは +4 分岐（47→43、97.1→97.4%）**＝大規模移植に見合わない。
+> - 当該4分岐（§5-d/§5-e/§10×2）は `ALL_COVERAGE.md`/`BB_UNREACHABLE.md` で
+>   **「simt 到達可能・FMP未実施」と正当に分類済**（ASP と同じ扱い）。現状の記述は誤りではない。
+> ⇒ **着手しない**。将来 asp3_core(Phase 2) で simt 同型基盤が整う場合に再評価する。
+
+### 機構（ASP3 の simt を FMP へ移植）※以下は将来着手する場合の設計メモ
 ASP3 は `simtimer_ct11mpcore_gcc`（simulation timer・HRT を任意操作）＋ 自前テスト `simt_systim1-4`/`_64hrt`
 （`HRT_CONFIG1/2/3`・`SIMTIM_TEST`）で、zybo 実 GIC タイマでは到達不能な時刻分岐を C1 到達している
 （`scripts/simt_coverage/` ＋ `docs/ASP/BB_UNREACHABLE.md` 第3部）。
@@ -109,12 +124,12 @@ ASP3 は `simtimer_ct11mpcore_gcc`（simulation timer・HRT を任意操作）�
 | 順 | Method | ゲイン | コスト | fmp3 編集 |
 |---|---|---|---|---|
 | 1 | **B（単一TM-processor変種）** | ~5-6 | 中 | target_kernel.h 1行（or cfg上書き） |
-| 2 | **A（FMP simt ターゲット）** | ~4 | 大 | target 新設 |
+| – | ~~A（FMP simt ターゲット）~~ ⏸保留 | ~4 | 大 | target 新設（ROI不足・feasibility 評価済）|
 | – | C（interrupt.c） | ~0-1 | – | 文書化のみ |
 
 - **Method B から着手**を推奨（FMP固有・最良コスパ・小さな変種で済む）。
-- 続いて **Method A**（ASP 前例あり・要 target 新設）。
-- 到達実績/見込み：**Method B 達成 52→47（97.1%）**、Method A で更に ~3（約97.4% 見込み）。timing_test の +2（dis_dsp/chg_ipm L383）を union に
+- **Method A は保留**（simt-arch 移植が大規模・+4分岐で ROI 不足。feasibility 評価＝本節冒頭）。
+- 到達実績：**Method B 達成 52→47（97.1%）**。Method A（+~4・約97.4%）は ROI 不足で保留。timing_test の +2（dis_dsp/chg_ipm L383）を union に
   含めれば追加で +2。
 - **検証**：いずれも変種ビルドの gcov を `ttsp_gcov_report.py --filter /fmp3/kernel/` で集計し、
   本流（zybo all）とは別トラックで union（simt_coverage と同じ「参考トラック」運用）。
