@@ -305,27 +305,20 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## 5. interrupt.c — `chg_ipm` 自タスク終了パス（3 branches, 95.2%）
+## 5. interrupt.c — `clr_int` / `ras_int` / `chg_ipm`（3 branches, 95.2%）
 
 > 旧版 §5（wait.h インライン展開アーティファクト 15 分岐）は **インライン抑制で解消**（wait.h 14/14 = 100%）したため削除。
+> インライン抑制により `clr_int`/`ras_int` の実分岐が顕在化し、interrupt.c の未到達が 1→3 に増えた（旧 -O2 ではインライン併合で `clr_int`/`ras_int` が 8/8 と見えていた）。
 
-**ソース** (`asp3/kernel/interrupt.c`、`chg_ipm(TIPM_ENAALL)` 内 L372–373 付近):
-```c
-if (p_runtsk->raster && p_runtsk->enater) {   /* L372 */
-    ... 自タスク終了 ...                         /* L373 */
-}
-```
-
-インライン抑制により `chg_ipm` の実分岐が顕在化し、未到達が 1→3 に増加（旧 -O2 ではインライン併合で 1 と計上）。
-
-| gcov 位置 | 条件 | 未到達理由 | 分類 |
+| 関数 | 未到達分岐 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L372/L373（`raster && enater` が真 → 自タスク終了）×2 | `chg_ipm(TIPM_ENAALL)` 実行中に別タスクが `ras_ter(自)` を呼び、かつ `enater=true` の競合タイミング | **到達困難（制約あり）** |
-| dispatch 系 ×1（inline 抑制で顕在化） | `enadsp=true` かつ `p_runtsk != p_schedtsk` の競合 | **到達困難（制約あり）** |
+| `clr_int` | 1（`check_intno_cfg`/`check_intno_raise` が偽 → `E_OBJ`、または CPUロック状態 `!locked` 分岐の一方）| BB テストは構成済み・クリア可能な割込み番号を正常状態で渡すため、`E_OBJ` 分岐 or CPUロック中呼び出しの一方が未到達。target/状態依存 | **到達困難（config・状態依存）** |
+| `ras_int` | 1（同上、`ras_int` の検査/状態分岐の一方）| 同上 | **到達困難（config・状態依存）** |
+| `chg_ipm` | 1（`raster && enater` が真 → 自タスク終了、または dispatch 競合）| `chg_ipm(TIPM_ENAALL)` 実行中に別タスクが `ras_ter(自)` を呼ぶ競合タイミングが必要 | **到達困難（制約あり）** |
 
-**補足**: 既存テスト [`chg_ipm_e.yaml`](../../api_test/ASP/interrupt/chg_ipm/chg_ipm_e.yaml) は `enadsp=false` のパスをカバー。上記 3 分岐は競合タイミングの同時成立が必要。
+**補足**: いずれもインライン抑制で初めて per-関数の未到達として顕在化した分岐。`clr_int`/`ras_int` の正確な未到達 branch は config（VALID_INTNO 範囲・割込み構成）と CPUロック状態に依存し、特定条件の追加テストで到達余地あり（未調査）。
 
-**結論**: WB テストで到達可能だが、コストに対して優先度低。当面未対応で可。
+**結論**: WB/追加 BB テストで到達可能な可能性があるが、いずれも config・状態・競合依存で優先度低。当面未対応で可。
 
 ---
 

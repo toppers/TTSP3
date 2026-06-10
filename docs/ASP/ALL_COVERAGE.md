@@ -98,302 +98,185 @@
 
 ## API（関数）別 分岐カバレッジ
 
-> ⚠️ **注記（2026-06-10）**: 以下の per-API 詳細表は **旧 -O2（インライン展開あり）計測時の構造**で、分岐数の細値は -O2+インライン抑制での再計測後と一部異なる（wait.h 64→14、task.c 64→52、dataqueue 156→152 等）。**最新のファイル別 C1 は上表／[`BB_COVERAGE.md`](BB_COVERAGE.md) が正**。per-API 表は次回の手動再生成時に更新する。未到達分岐の最新の所在は下記「残存未到達分岐リスト」を参照。
+> 自動生成（`ttsp_gcov_report.py --by-function`、2026-06-10、-O2+インライン抑制、`all` モード 30ディレクトリ）。
+> `◀` = 未到達分岐あり（詳細・到達不能理由は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部）。
+> 再生成: `python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/ --by-function obj_asp_gcov/check_library/* obj_asp_gcov/api_test/auto_code_* obj_asp_gcov/api_test/wb_*`
+>
+> インライン抑制により内部 inline 関数（wait.h `make_wait` 等、task.c ヘルパ）が独立関数として計測される。旧 -O2 では呼出し元へ併合され見えなかった `clr_int`/`ras_int` の未到達分岐もここで顕在化している（`—` は分岐なし）。
 
-`◀` = 未到達分岐あり。`W` 列 = ホワイトボックステストの優先度（H/M/L/—）。
-
-### alarm.c
-
-> 分岐 C1: 32/32 = **100%**（WBテスト `alarm_W-a` により L241 br[1] 到達済み）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
+| 関数 | ファイル | 行 C0 | 分岐 C1 | |
 |---|---|---|---|---|
-| `_kernel_initialize_alarm` | 100% | 2/2 100% | — | — |
-| `sta_alm` | 100% | 10/10 100% | — | — |
-| `stp_alm` | 100% | 8/8 100% | — | — |
-| `ref_alm` | 100% | 10/10 100% | — | — |
-| `_kernel_call_alarm` | 100% | 2/2 100% | — | — |
-
-### cyclic.c
-
-> 分岐 C1: 36/36 = **100%**（WBテスト `cyclic_W-a` により L259 br[1] 到達済み）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_cyclic` | 100% | 4/4 100% | — | — |
-| `sta_cyc` | 100% | 10/10 100% | — | — |
-| `stp_cyc` | 100% | 10/10 100% | — | — |
-| `ref_cyc` | 100% | 10/10 100% | — | — |
-| `_kernel_call_cyclic` | 100% | 2/2 100% | — | — |
-
-### dataqueue.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_dataqueue` | 100% | 2/2 100% | — | — |
-| `_kernel_enqueue_data` | 100% | 2/2 100% | — | — |
-| `_kernel_force_enqueue_data` | 100% | 4/4 100% | — | — |
-| `_kernel_dequeue_data` | 100% | 2/2 100% | — | — |
-| `_kernel_send_data` | 100% | 4/4 100% | — | — |
-| `_kernel_force_send_data` | 100% | 2/2 100% | — | — |
-| `_kernel_receive_data` | 100% | 6/6 100% | — | — |
-| `snd_dtq` | 100% | 16/16 100% | — | — |
-| `psnd_dtq` | 100% | 12/12 100% | — | — |
-| `tsnd_dtq` | 100% | 20/20 100% | — | — |
-| `fsnd_dtq` | 100% | 12/12 100% | — | — |
-| `rcv_dtq` | 100% | 18/18 100% | — | — |
-| `prcv_dtq` | 100% | 12/12 100% | — | — |
-| `trcv_dtq` | 100% | 22/22 100% | — | — |
-| `ini_dtq` | 100% | 10/10 100% | — | — |
-| `ref_dtq` | 100% | 8/8 100% | — | — |
-
-### eventflag.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_eventflag` | 100% | 2/2 100% | — | — |
-| `_kernel_check_flg_cond` | 100% | 6/6 100% | — | — |
-| `set_flg` | 100% | 16/16 100% | — | — |
-| `clr_flg` | 100% | 8/8 100% | — | — |
-| `wai_flg` | 100% | 24/24 100% | — | — |
-| `pol_flg` | 100% | 18/18 100% | — | — |
-| `twai_flg` | 100% | 28/28 100% | — | — |
-| `ini_flg` | 100% | 10/10 100% | — | — |
-| `ref_flg` | 100% | 8/8 100% | — | — |
-
-### exception.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `xsns_dpn` ◀ | 100% | 4/6 66.7% | 2 | M |
-
-### interrupt.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `dis_int` ◀ | 93.8% | 6/8 75% | 2 | M |
-| `ena_int` ◀ | 100% | 7/8 87.5% | 1 | M |
-| `clr_int` | 100% | 8/8 100% | — | — |
-| `ras_int` | 100% | 8/8 100% | — | — |
-| `prb_int` | 100% | 8/8 100% | — | — |
-| `chg_ipm` ◀ | 90% | 13/14 92.9% | 1 | M |
-| `get_ipm` | 100% | 4/4 100% | — | — |
-
-### mempfix.c
-
-> 分岐 C1: 90/90 = **100%**（WBテスト `rel_mpf_W-a/b` により L309/L310 br[0] 到達済み）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_mempfix` | 100% | 2/2 100% | — | — |
-| `_kernel_get_mpf_block` | 100% | 2/2 100% | — | — |
-| `get_mpf` | 100% | 16/16 100% | — | — |
-| `pget_mpf` | 100% | 10/10 100% | — | — |
-| `tget_mpf` | 100% | 20/20 100% | — | — |
-| `rel_mpf` | 100% | 20/20 100% | — | — |
-| `ini_mpf` | 100% | 10/10 100% | — | — |
-| `ref_mpf` | 100% | 8/8 100% | — | — |
-
-### mutex.c
-
-> 分岐 C1: 137/138 = 99.3%（NDEBUG計測により assert 失敗パス除去、BBテスト ini_mtx_e/f 等追加後）  
-> 残 1 箇所: L227 br[1]（remove_mutex NULL exit、構造的到達不能）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_mutex` | 100% | 2/2 100% | — | — |
-| `_kernel_mutex_check_ceilpri` | 100% | 12/12 100% | — | — |
-| `mutex_calc_priority` | 100% | 4/4 100% | — | — |
-| `mutex_raise_priority` | 100% | 2/2 100% | — | — |
-| `mutex_drop_priority` | 100% | 4/4 100% | — | — |
-| `_kernel_mutex_acquire` | 100% | 2/2 100% | — | — |
-| `_kernel_mutex_release` | 100% | 6/6 100% | — | — |
-| `_kernel_mutex_release_all` | 100% | 4/4 100% | — | — |
-| `loc_mtx` | 100% | 100% | — | — |
-| `ploc_mtx` | 100% | 100% | — | — |
-| `tloc_mtx` | 100% | 100% | — | — |
-| `unl_mtx` | 100% | 100% | — | — |
-| `ini_mtx` | 100% | 100% | — | — |
-| `ref_mtx` | 100% | 100% | — | — |
-| `remove_mutex`（内部） ◀ | 100% | — | 1 NULL exit(到達不能) | — |
-
-### pridataq.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_pridataq` | 100% | 2/2 100% | — | — |
-| `_kernel_enqueue_pridata` | 100% | 6/6 100% | — | — |
-| `_kernel_dequeue_pridata` | 100% | — | — | — |
-| `_kernel_send_pridata` | 100% | 4/4 100% | — | — |
-| `_kernel_receive_pridata` | 100% | 6/6 100% | — | — |
-| `snd_pdq` | 100% | 20/20 100% | — | — |
-| `psnd_pdq` | 100% | 16/16 100% | — | — |
-| `tsnd_pdq` | 100% | 24/24 100% | — | — |
-| `rcv_pdq` | 100% | 18/18 100% | — | — |
-| `prcv_pdq` | 100% | 12/12 100% | — | — |
-| `trcv_pdq` | 100% | 22/22 100% | — | — |
-| `ini_pdq` | 100% | 10/10 100% | — | — |
-| `ref_pdq` | 100% | 8/8 100% | — | — |
-
-### semaphore.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_semaphore` | 100% | 2/2 100% | — | — |
-| `sig_sem` | 100% | 14/14 100% | — | — |
-| `wai_sem` | 100% | 14/14 100% | — | — |
-| `pol_sem` | 100% | 10/10 100% | — | — |
-| `twai_sem` | 100% | 18/18 100% | — | — |
-| `ini_sem` | 100% | 10/10 100% | — | — |
-| `ref_sem` | 100% | 8/8 100% | — | — |
-
-### startup.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `sta_ker` | 100% | 2/2 100% | — | — |
-| `ext_ker` | 100% | — | — | — |
-| `_kernel_exit_kernel` | 100% | 2/2 100% | — | — |
-
-### sys_manage.c
-
-> 分岐 C1: 62/62 = **100%**（BBテスト ena_dsp_b-3/b-4 追加後）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `rot_rdq` | 100% | 12/12 100% | — | — |
-| `get_tid` | 100% | 4/4 100% | — | — |
-| `get_lod` | 100% | 10/10 100% | — | — |
-| `get_nth` | 100% | 12/12 100% | — | — |
-| `loc_cpu` | 100% | 2/2 100% | — | — |
-| `unl_cpu` | 100% | 2/2 100% | — | — |
-| `dis_dsp` | 100% | 4/4 100% | — | — |
-| `ena_dsp` | 100% | 10/10 100% | — | — |
-| `sns_ctx` | 100% | — | — | — |
-| `sns_loc` | 100% | — | — | — |
-| `sns_dsp` | 100% | — | — | — |
-| `sns_dpn` | 100% | 6/6 100% | — | — |
-| `sns_ker` | 100% | — | — | — |
-
-### task.c（内部関数）
-
-> 分岐 C1: 64/64 = **100%**（NDEBUG計測により assert 失敗パス除去）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_task` | 100% | 100% | — | — |
-| `_kernel_search_schedtsk` | 100% | — | — | — |
-| `_kernel_make_runnable` | 100% | 100% | — | — |
-| `_kernel_make_non_runnable` | 100% | 100% | — | — |
-| `_kernel_make_dormant` | 90% | 100% | — | — |
-| `_kernel_make_active` | 100% | — | — | — |
-| `_kernel_change_priority` | 100% | 100% | — | — |
-| `_kernel_rotate_ready_queue` | 100% | 100% | — | — |
-| `_kernel_task_terminate` | 100% | 100% | — | — |
-
-### task_manage.c
-
-> 分岐 C1: 92/92 = **100%**（BBテスト `act_tsk_c-3`（YAML 自動生成、2026-06-10）により L137 br[1] 到達済み。旧 WBテスト `act_tsk_W-a` は削除）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `act_tsk` | 100% | 20/20 100% | — | — |
-| `can_act` | 100% | 10/10 100% | — | — |
-| `get_tst` | 100% | 20/20 100% | — | — |
-| `chg_pri` | 100% | 26/26 100% | — | — |
-| `get_pri` | 100% | 12/12 100% | — | — |
-| `get_inf` | 100% | 4/4 100% | — | — |
-
-### task_refer.c
-
-> 分岐 C1: 34/35 = 97.1%（残 1 箇所: `ref_tsk` L131 br[10]、switch の未使用待ち状態コード）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `ref_tsk` ◀ | 100% | 34/35 97.1% | 1 | L |
-
-### task_sync.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `slp_tsk` | 100% | 10/10 100% | — | — |
-| `tslp_tsk` | 100% | 14/14 100% | — | — |
-| `wup_tsk` | 100% | 20/20 100% | — | — |
-| `can_wup` | 100% | 12/12 100% | — | — |
-| `rel_wai` | 100% | 14/14 100% | — | — |
-| `sus_tsk` | 100% | 24/24 100% | — | — |
-| `rsm_tsk` | 100% | 14/14 100% | — | — |
-| `dly_tsk` | 100% | 10/10 100% | — | — |
-
-### task_term.c
-
-> 分岐 C1: 64/64 = 100%（`ras_ter_g.yaml` 追加により L180 (f) 到達済み、2026-06-09）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `ext_tsk` | 100% | 10/10 100% | — | — |
-| `ras_ter` | 100% | 24/24 100% | — | — |
-| `dis_ter` | 100% | 4/4 100% | — | — |
-| `ena_ter` | 100% | 8/8 100% | — | — |
-| `sns_ter` | 100% | 4/4 100% | — | — |
-| `ter_tsk` | 100% | 14/14 100% | — | — |
-
-### time_event.c
-
-> 分岐 C1: 52/56 = **92.9%**（WBテスト `time_event_W-a/b` により L221/L231/L302 等到達済み）  
-> 残 4 箇所: L390/L439（64bit折返し・HRTCNT_BOUND 実用的到達不能）、L624（spurious HRT 割込み）、tmevt_down 内部状態依存 ×1
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_initialize_tmevt` | 100% | — | — | — |
-| `_kernel_tmevt_up` | 100% | 4/4 100% | — | — |
-| `_kernel_tmevt_down` ◀ | ≈81.8% | 7/8 87.5% | 1（内部状態依存・到達困難） | — |
-| `tmevtb_insert` | 100% | — | — | — |
-| `tmevtb_delete` | 100% | 6/6 100% | — | — |
-| `tmevtb_delete_top` | 100% | 2/2 100% | — | — |
-| `_kernel_update_current_evttim` ◀ | 92.9% | 3/4 75% | 1 L390(64bit EVTTIM 折返し) | L |
-| `_kernel_set_hrt_event` ◀ | 90.9% | 5/6 83.3% | 1 L439(HRTCNT_BOUND=4G ticks) | L |
-| `_kernel_tmevtb_register` | 100% | — | — | — |
-| `_kernel_signal_time` ◀ | 95.7% | 7/8 87.5% | 1 L624(空ヒープ割込み) | L |
-| `_kernel_tmevtb_enqueue_rel` | 100% | 4/4 100% | — | — |
-| `_kernel_tmevtb_dequeue` | 100% | 4/4 100% | — | — |
-| `_kernel_check_adjtim` | 100% | 8/8 100% | — | — |
-| `_kernel_tmevt_lefttim` | 100% | 2/2 100% | — | — |
-
-### time_manage.c
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `set_tim` | 100% | 4/4 100% | — | — |
-| `get_tim` | 100% | 4/4 100% | — | — |
-| `adj_tim` ◀ | 95.7% | 12/14 85.7% | 2 | M |
-| `fch_hrt` | 100% | — | — | — |
-
-### wait.c / wait.h（内部関数）
-
-> wait.c: 8/8 = **100%**（NDEBUG により assert 失敗パス除去）  
-> wait.h: 49/64 = 76.6%（NDEBUG+O2 インライン展開増加によるアーティファクト。  
->   論理的カバレッジは両分岐とも確認済み。詳細は BB_UNREACHABLE.md 第2部 §5 wait.h 参照）
-
-| API | 行 C0 | 分岐 C1 | 未到達 | W |
-|---|---|---|---|---|
-| `_kernel_make_wait_tmout` | 100% | 100% | — | — |
-| `_kernel_wait_complete` | 100% | — | — | — |
-| `_kernel_wait_tmout` | 100% | 2/2 100% | — | — |
-| `_kernel_wait_tmout_ok` | 100% | — | — | — |
-| `wobj_queue_insert` | 100% | 2/2 100% | — | — |
-| `_kernel_wobj_make_wait` | 100% | — | — | — |
-| `_kernel_wobj_make_wait_tmout` | 100% | — | — | — |
-| `_kernel_init_wait_queue` | 100% | 2/2 100% | — | — |
-| `queue_insert_tpri` (wait.h) | 100% | 100% | — | — |
-| `make_wait` (wait.h) | 100% | — | — | — |
-| `make_non_wait` (wait.h) | 100% | 100% | — | — |
-| `wait_dequeue_wobj` (wait.h) ◀ | 100% | — | インライン展開アーティファクト | — |
-| `wait_dequeue_tmevtb` (wait.h) | 100% | 2/2 100% | — | — |
-| `wait_tskid` (wait.h) | 100% | 2/2 100% | — | — |
-| `wobj_change_priority` (wait.h) | 100% | 2/2 100% | — | — |
-
----
+| `_kernel_initialize_alarm` | alarm.c | 10/10 | 2/2 |  |
+| `sta_alm` | alarm.c | 18/18 | 10/10 |  |
+| `stp_alm` | alarm.c | 16/16 | 8/8 |  |
+| `ref_alm` | alarm.c | 17/17 | 10/10 |  |
+| `_kernel_call_alarm` | alarm.c | 9/9 | 2/2 |  |
+| `_kernel_initialize_cyclic` | cyclic.c | 14/14 | 4/4 |  |
+| `sta_cyc` | cyclic.c | 17/17 | 10/10 |  |
+| `stp_cyc` | cyclic.c | 16/16 | 10/10 |  |
+| `ref_cyc` | cyclic.c | 17/17 | 10/10 |  |
+| `_kernel_call_cyclic` | cyclic.c | 10/10 | 2/2 |  |
+| `_kernel_initialize_dataqueue` | dataqueue.c | 12/12 | 2/2 |  |
+| `_kernel_enqueue_data` | dataqueue.c | 7/7 | 2/2 |  |
+| `_kernel_force_enqueue_data` | dataqueue.c | 9/9 | 4/4 |  |
+| `_kernel_dequeue_data` | dataqueue.c | 7/7 | 2/2 |  |
+| `_kernel_send_data` | dataqueue.c | 10/10 | 4/4 |  |
+| `_kernel_force_send_data` | dataqueue.c | 8/8 | 2/2 |  |
+| `_kernel_receive_data` | dataqueue.c | 16/16 | 6/6 |  |
+| `snd_dtq` | dataqueue.c | 21/21 | 16/16 |  |
+| `psnd_dtq` | dataqueue.c | 16/16 | 12/12 |  |
+| `tsnd_dtq` | dataqueue.c | 24/24 | 20/20 |  |
+| `fsnd_dtq` | dataqueue.c | 19/19 | 12/12 |  |
+| `rcv_dtq` | dataqueue.c | 25/25 | 18/18 |  |
+| `prcv_dtq` | dataqueue.c | 15/15 | 12/12 |  |
+| `trcv_dtq` | dataqueue.c | 28/28 | 22/22 |  |
+| `ini_dtq` | dataqueue.c | 20/20 | 10/10 |  |
+| `ref_dtq` | dataqueue.c | 16/16 | 8/8 |  |
+| `_kernel_initialize_eventflag` | eventflag.c | 9/9 | 2/2 |  |
+| `_kernel_check_flg_cond` | eventflag.c | 7/7 | 6/6 |  |
+| `set_flg` | eventflag.c | 30/30 | 16/16 |  |
+| `clr_flg` | eventflag.c | 14/14 | 8/8 |  |
+| `wai_flg` | eventflag.c | 26/26 | 24/24 |  |
+| `pol_flg` | eventflag.c | 18/18 | 18/18 |  |
+| `twai_flg` | eventflag.c | 29/29 | 28/28 |  |
+| `ini_flg` | eventflag.c | 17/17 | 10/10 |  |
+| `ref_flg` | eventflag.c | 15/15 | 8/8 |  |
+| `xsns_dpn` | exception.c | 7/7 | 7/8 | ◀ |
+| `dis_int` | interrupt.c | 16/16 | 8/8 |  |
+| `ena_int` | interrupt.c | 16/16 | 8/8 |  |
+| `clr_int` | interrupt.c | 16/16 | 9/10 | ◀ |
+| `ras_int` | interrupt.c | 16/16 | 9/10 | ◀ |
+| `prb_int` | interrupt.c | 15/15 | 8/8 |  |
+| `chg_ipm` | interrupt.c | 18/20 | 13/14 | ◀ |
+| `get_ipm` | interrupt.c | 11/11 | 4/4 |  |
+| `_kernel_initialize_mempfix` | mempfix.c | 11/11 | 2/2 |  |
+| `_kernel_get_mpf_block` | mempfix.c | 12/12 | 2/2 |  |
+| `get_mpf` | mempfix.c | 22/22 | 16/16 |  |
+| `pget_mpf` | mempfix.c | 15/15 | 10/10 |  |
+| `tget_mpf` | mempfix.c | 25/25 | 20/20 |  |
+| `rel_mpf` | mempfix.c | 31/31 | 20/20 |  |
+| `ini_mpf` | mempfix.c | 19/19 | 10/10 |  |
+| `ref_mpf` | mempfix.c | 15/15 | 8/8 |  |
+| `_kernel_initialize_mutex` | mutex.c | 11/11 | 2/2 |  |
+| `_kernel_mutex_check_ceilpri` | mutex.c | 10/10 | 12/12 |  |
+| `mutex_calc_priority` | mutex.c | 13/13 | 4/4 |  |
+| `remove_mutex` | mutex.c | 8/8 | 3/4 | ◀ |
+| `mutex_raise_priority` | mutex.c | 5/5 | 2/2 |  |
+| `mutex_drop_priority` | mutex.c | 7/7 | 4/4 |  |
+| `_kernel_mutex_acquire` | mutex.c | 7/7 | 2/2 |  |
+| `_kernel_mutex_release` | mutex.c | 16/16 | 6/6 |  |
+| `_kernel_mutex_release_all` | mutex.c | 6/6 | 2/2 |  |
+| `loc_mtx` | mutex.c | 24/24 | 20/20 |  |
+| `ploc_mtx` | mutex.c | 20/20 | 16/16 |  |
+| `tloc_mtx` | mutex.c | 27/27 | 24/24 |  |
+| `unl_mtx` | mutex.c | 19/19 | 14/14 |  |
+| `ini_mtx` | mutex.c | 23/23 | 14/14 |  |
+| `ref_mtx` | mutex.c | 16/16 | 10/10 |  |
+| `_kernel_initialize_pridataq` | pridataq.c | 13/13 | 2/2 |  |
+| `_kernel_enqueue_pridata` | pridataq.c | 18/18 | 6/6 |  |
+| `_kernel_dequeue_pridata` | pridataq.c | 10/10 | — |  |
+| `_kernel_send_pridata` | pridataq.c | 11/11 | 4/4 |  |
+| `_kernel_receive_pridata` | pridataq.c | 19/19 | 6/6 |  |
+| `snd_pdq` | pridataq.c | 23/23 | 20/20 |  |
+| `psnd_pdq` | pridataq.c | 17/17 | 16/16 |  |
+| `tsnd_pdq` | pridataq.c | 26/26 | 24/24 |  |
+| `rcv_pdq` | pridataq.c | 26/26 | 18/18 |  |
+| `prcv_pdq` | pridataq.c | 15/15 | 12/12 |  |
+| `trcv_pdq` | pridataq.c | 29/29 | 22/22 |  |
+| `ini_pdq` | pridataq.c | 21/21 | 10/10 |  |
+| `ref_pdq` | pridataq.c | 16/16 | 8/8 |  |
+| `_kernel_initialize_semaphore` | semaphore.c | 9/9 | 2/2 |  |
+| `sig_sem` | semaphore.c | 22/22 | 14/14 |  |
+| `wai_sem` | semaphore.c | 20/20 | 14/14 |  |
+| `pol_sem` | semaphore.c | 15/15 | 10/10 |  |
+| `twai_sem` | semaphore.c | 23/23 | 18/18 |  |
+| `ini_sem` | semaphore.c | 17/17 | 10/10 |  |
+| `ref_sem` | semaphore.c | 15/15 | 8/8 |  |
+| `sta_ker` | startup.c | 13/13 | 2/2 |  |
+| `ext_ker` | startup.c | 7/7 | — |  |
+| `_kernel_exit_kernel` | startup.c | 5/5 | 2/2 |  |
+| `rot_rdq` | sys_manage.c | 20/20 | 12/12 |  |
+| `get_tid` | sys_manage.c | 9/9 | 4/4 |  |
+| `get_lod` | sys_manage.c | 22/22 | 10/10 |  |
+| `get_nth` | sys_manage.c | 26/26 | 12/12 |  |
+| `loc_cpu` | sys_manage.c | 8/8 | 2/2 |  |
+| `unl_cpu` | sys_manage.c | 8/8 | 2/2 |  |
+| `dis_dsp` | sys_manage.c | 12/12 | 4/4 |  |
+| `ena_dsp` | sys_manage.c | 17/17 | 10/10 |  |
+| `sns_ctx` | sys_manage.c | 6/6 | — |  |
+| `sns_loc` | sys_manage.c | 6/6 | — |  |
+| `sns_dsp` | sys_manage.c | 6/6 | — |  |
+| `sns_dpn` | sys_manage.c | 6/6 | 6/6 |  |
+| `sns_ker` | sys_manage.c | 6/6 | — |  |
+| `_kernel_initialize_task` | task.c | 20/20 | 6/6 |  |
+| `primap_empty` | task.c | 2/2 | — |  |
+| `primap_search` | task.c | 2/2 | — |  |
+| `primap_set` | task.c | 3/3 | — |  |
+| `primap_clear` | task.c | 3/3 | — |  |
+| `_kernel_search_schedtsk` | task.c | 4/4 | — |  |
+| `_kernel_make_runnable` | task.c | 8/8 | 6/6 |  |
+| `_kernel_make_non_runnable` | task.c | 13/13 | 8/8 |  |
+| `_kernel_make_dormant` | task.c | 10/10 | — |  |
+| `_kernel_make_active` | task.c | 6/6 | — |  |
+| `_kernel_change_priority` | task.c | 21/21 | 16/16 |  |
+| `_kernel_rotate_ready_queue` | task.c | 9/9 | 8/8 |  |
+| `_kernel_task_terminate` | task.c | 13/13 | 8/8 |  |
+| `set_dspflg` | task.h | 4/4 | — |  |
+| `act_tsk` | task_manage.c | 22/22 | 20/20 |  |
+| `can_act` | task_manage.c | 16/16 | 10/10 |  |
+| `get_tst` | task_manage.c | 28/28 | 20/20 |  |
+| `chg_pri` | task_manage.c | 27/27 | 26/26 |  |
+| `get_pri` | task_manage.c | 17/17 | 12/12 |  |
+| `get_inf` | task_manage.c | 9/9 | 4/4 |  |
+| `ref_tsk` | task_refer.c | 78/78 | 34/35 | ◀ |
+| `slp_tsk` | task_sync.c | 18/18 | 10/10 |  |
+| `tslp_tsk` | task_sync.c | 21/21 | 14/14 |  |
+| `wup_tsk` | task_sync.c | 23/23 | 20/20 |  |
+| `can_wup` | task_sync.c | 17/17 | 12/12 |  |
+| `rel_wai` | task_sync.c | 20/20 | 12/12 |  |
+| `sus_tsk` | task_sync.c | 27/27 | 24/24 |  |
+| `rsm_tsk` | task_sync.c | 20/20 | 14/14 |  |
+| `dly_tsk` | task_sync.c | 23/23 | 10/10 |  |
+| `ext_tsk` | task_term.c | 17/17 | 10/10 |  |
+| `ras_ter` | task_term.c | 29/29 | 22/22 |  |
+| `dis_ter` | task_term.c | 11/11 | 4/4 |  |
+| `ena_ter` | task_term.c | 14/14 | 8/8 |  |
+| `sns_ter` | task_term.c | 6/6 | 4/4 |  |
+| `ter_tsk` | task_term.c | 17/17 | 14/14 |  |
+| `_kernel_initialize_tmevt` | time_event.c | 8/8 | — |  |
+| `_kernel_tmevt_up` | time_event.c | 9/9 | 4/4 |  |
+| `_kernel_tmevt_down` | time_event.c | 11/11 | 7/8 | ◀ |
+| `tmevtb_insert` | time_event.c | 6/6 | — |  |
+| `tmevtb_delete` | time_event.c | 16/16 | 6/6 |  |
+| `tmevtb_delete_top` | time_event.c | 11/11 | 2/2 |  |
+| `_kernel_update_current_evttim` | time_event.c | 13/14 | 3/4 | ◀ |
+| `calc_current_evttim_ub` | time_event.c | 2/2 | — |  |
+| `_kernel_set_hrt_event` | time_event.c | 10/11 | 5/6 | ◀ |
+| `_kernel_tmevtb_register` | time_event.c | 3/3 | — |  |
+| `_kernel_tmevtb_enqueue_reltim` | time_event.c | 7/7 | 4/4 |  |
+| `_kernel_tmevtb_dequeue` | time_event.c | 7/7 | 4/4 |  |
+| `_kernel_check_adjtim` | time_event.c | 6/6 | 8/8 |  |
+| `_kernel_tmevt_lefttim` | time_event.c | 7/7 | 2/2 |  |
+| `_kernel_signal_time` | time_event.c | 22/23 | 7/8 | ◀ |
+| `set_tim` | time_manage.c | 12/12 | 4/4 |  |
+| `get_tim` | time_manage.c | 12/12 | 4/4 |  |
+| `adj_tim` | time_manage.c | 22/23 | 13/14 | ◀ |
+| `fch_hrt` | time_manage.c | 9/9 | — |  |
+| `_kernel_make_wait_tmout` | wait.c | 12/12 | 2/2 |  |
+| `_kernel_wait_complete` | wait.c | 5/5 | — |  |
+| `_kernel_wait_tmout` | wait.c | 10/10 | — |  |
+| `_kernel_wait_tmout_ok` | wait.c | 9/9 | — |  |
+| `wobj_queue_insert` | wait.c | 5/5 | 2/2 |  |
+| `_kernel_wobj_make_wait` | wait.c | 6/6 | — |  |
+| `_kernel_wobj_make_wait_tmout` | wait.c | 6/6 | — |  |
+| `_kernel_init_wait_queue` | wait.c | 8/8 | 2/2 |  |
+| `queue_insert_tpri` | wait.h | 8/8 | 4/4 |  |
+| `make_wait` | wait.h | 6/6 | — |  |
+| `make_non_wait` | wait.h | 9/9 | 2/2 |  |
+| `wait_dequeue_wobj` | wait.h | 4/4 | 2/2 |  |
+| `wait_dequeue_tmevtb` | wait.h | 4/4 | 2/2 |  |
+| `wait_tskid` | wait.h | 3/3 | 2/2 |  |
+| `wobj_change_priority` | wait.h | 5/5 | 2/2 |  |
 
 ## 残存未到達分岐リスト（2026-06-10 `all` モード、-O2+インライン抑制）
 
@@ -404,7 +287,7 @@
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
 | 1 | time_event.c | 92.9% | 4 | L391/L440(実用的到達不能), L625(タイミング依存), tmevt_down 内部状態依存 ×1 |
-| 2 | interrupt.c | 95.2% | 3 | `chg_ipm` L372/L373(raster&&enater=T時の自終了, 到達困難) + 1（inline抑制で顕在化した dispatch 系） |
+| 2 | interrupt.c | 95.2% | 3 | `clr_int` ×1 / `ras_int` ×1（config・CPUロック状態依存の検査分岐、inline抑制で顕在化）/ `chg_ipm` ×1（raster&&enater 競合）|
 | 3 | exception.c | 87.5% | 1 | `xsns_dpn` p_runtsk==NULL（構造的到達不能・テスト文脈） |
 | 4 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
 | 5 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |
