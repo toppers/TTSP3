@@ -1,7 +1,10 @@
 # FMP 未到達分岐分析
 
-> BBテスト（API auto-code 20分割 + check_library）での計測で未到達となった 102 分岐の分析。
-> カバレッジ計測結果は [WB_COVERAGE.md](WB_COVERAGE.md) を参照。
+> 更新: 2026-06-10（WBテスト5本追加後）
+> `all` モード（BBテスト + WBテスト）で未到達となった 95 分岐の分析。
+> WBテストで到達済みの分岐・カバレッジ計測結果は [WB_COVERAGE.md](WB_COVERAGE.md) を参照。
+>
+> **2026-06-10 更新**: ASP 前例の WBテスト5本（`alarm_W-a` / `cyclic_W-a` / `xsns_dpn_W-a` / `time_event_W-a` / `W-b`）を FMP に移植し、§6（exception 1分岐）・§5-a/§5-b（time_event 3分岐）・§8（alarm/cyclic 2分岐）の計 **6分岐を到達済みに変更**。未到達は 102 → 95 に減少（all モード 1582/1677 = 94.3%）。
 
 ---
 
@@ -23,12 +26,12 @@
 | §2 | interrupt.c chg_ipm 複合パス | 27 | interrupt.c |
 | §3 | wait.h インライン展開アーティファクト | 16 | wait.h |
 | §4 | task.c サブ優先度機能 | 16 | task.c |
-| §5 | time_event.c ヒープ操作・マルチコアパス | 13 | time_event.c |
-| §6 | exception.c xsns_dpn 複合条件 | 3 | exception.c |
+| §5 | time_event.c ヒープ操作・マルチコアパス | 10（13→10, WBで-3） | time_event.c |
+| §6 | exception.c xsns_dpn 複合条件 | 2（3→2, WBで-1） | exception.c |
 | §7 | mutex.c サブ優先度パス | 3 | mutex.c |
-| §8 | alarm/cyclic force_unlock_spin | 2 | alarm.c, cyclic.c |
+| §8 | alarm/cyclic force_unlock_spin | 0（2→0, WBで-2・到達済） | alarm.c, cyclic.c |
 | §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 4 | 各1分岐 |
-| **合計** | | **102 / 1677** | |
+| **合計** | | **95 / 1677**（WBで 102→95） | |
 
 ---
 
@@ -197,38 +200,36 @@ if ((subprio_primap & PRIMAP_BIT(newpri)) != 0U) {  /* L382 - 常にfalse */
 
 ## §5. time_event.c ヒープ操作・マルチコアパス
 
-### §5-a. tmevt_down 多段ヒープ下降（L251-257）
+### §5-a. tmevt_down 右子なし + 早期 break（✅ 2026-06-10 WBテストで到達済み）
 
 ```c
 /* fmp3/kernel/time_event.c L228-258 (tmevt_down) */
 while ((child = LCHILD(index)) <= LAST_INDEX(p_tmevt_heap)) {
-    if (...right child earlier...) { child = child + 1; }
-    if (EVTTIM_LE(evttim, HEAP_NODE(child)->evttim)) { break; }
-    /* ← ここで break しない場合（子ノードの方が早い）: */
-    HEAP_NODE(index) = HEAP_NODE(child);  /* L251 - 未到達 */
-    HEAP_NODE(index)->index = index;      /* L252 - 未到達 */
-    index = child;                        /* L257 - 未到達 */
+    if (child + 1 <= LAST_INDEX(p_tmevt_heap)         /* L234: 右子の有無 */
+            && EVTTIM_LT(...)) { child = child + 1; }
+    if (EVTTIM_LE(evttim, HEAP_NODE(child)->evttim)) { break; }  /* L244 */
+    ...
 }
 ```
 
-ヒープの「下向き調整」内部ループ。タイムイベントが3段以上にわたって存在し，かつ新しく挿入するイベントが最下位でない場合に実行される。テストではタイムイベント量が少なくこのパスに到達しない（ASPと同様）。
+**→ WBテスト [`time_event_W-a`](../../wb_test/FMP/time_event/time_event_W-a/out.c) で到達済み（+2 分岐）**。5アラームで右子の無いヒープ形状を構築し、index-2 削除で「右子なし（L234）」+「早期break（L244）」を同時カバー。ヒープ算法は ASP と同一。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §2。
 
-### §5-b. tmevtb_delete go-up パス（L321-327）
+### §5-b. tmevtb_delete go-up パス（✅ 2026-06-10 WBテストで到達済み）
 
 ```c
 /* fmp3/kernel/time_event.c L315-334 (tmevtb_delete) */
 if (index > ROOT_INDEX
-        && EVTTIM_LT(event_evttim, HEAP_NODE(parent, ...)->evttim)) {
-    HEAP_NODE(index) = HEAP_NODE(parent);  /* L321 - 未到達 */
-    HEAP_NODE(index)->index = index;       /* L322 - 未到達 */
-    index = tmevt_up(parent, ...);         /* L327 - 未到達 */
+        && EVTTIM_LT(event_evttim, HEAP_NODE(parent, ...)->evttim)) {  /* L315 */
+    HEAP_NODE(index) = HEAP_NODE(parent);
+    HEAP_NODE(index)->index = index;
+    index = tmevt_up(parent, ...);
 }
 else {
     index = tmevt_down(index, ...);
 }
 ```
 
-削除後のヒープ再編で「上向き」調整が必要になるケース（削除ノードの後継イベントが祖先より早い場合）。テストでは生じない（ASPと同様）。
+**→ WBテスト [`time_event_W-b`](../../wb_test/FMP/time_event/time_event_W-b/out.c) で到達済み（+1 分岐）**。6アラームで中間ノード削除時に最後尾ノードが削除位置の親より早い配置を構築し、go-up（L315 真）をカバー。
 
 ### §5-c. 非TM processor 転送パス（L168, L522, L546, L583, L627）
 
@@ -267,7 +268,7 @@ if (nocall == 0) {
 
 HRT割込み発生時にタイムイベントが処理されなかった場合。テストでは常にいずれかのタイムイベントが処理される。
 
-**分類**: §5-a, §5-b = 到達困難（内部状態依存：ヒープ深さ依存）。§5-c = 実用的到達不能（テスト設定のTM processor構成）。§5-d = 到達困難（制約あり：テストシナリオの制限）。§5-e = 実用的到達不能。
+**分類**: §5-a, §5-b = **WBテストで到達済み**（`time_event_W-a`/`W-b`、計+3分岐）。§5-c = 実用的到達不能（テスト設定のTM processor構成）。§5-d = 到達困難（制約あり：テストシナリオの制限）。§5-e = 実用的到達不能。残存 10 分岐は §5-c/§5-d/§5-e（実用的到達不能・ターゲット設定依存）。
 
 ---
 
@@ -287,9 +288,15 @@ else {
 }
 ```
 
-複合論理条件のうち一部の短絡評価パスが未到達（ASPと同様）。`xsns_dpn` はCPU例外ハンドラ内でのみ呼ばれるため，通常のAPIテストでは特定の条件組み合わせに到達しない。
+`check_tskctx()` は `sense_context()`（`excpt_nest_count > 0`、例外コンテキストで真）を返す。8分岐中、BBテストで5、WBテストで+1 = 6/8 をカバー済み。
 
-**分類**: 実用的到達不能（CPU例外ハンドラ内の特定組み合わせ）。
+**✅ 2026-06-10 WBテストで到達済み（+1分岐）**: L105 `check_tskctx()` 偽分岐（タスクコンテキスト → else `state=true`、NGKI3152）を WBテスト [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) でカバー。MAIN_TASK から `xsns_dpn(NULL)` を直接呼び出す。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §3。
+
+**残存 2 分岐（構造的到達不能）**:
+- `kerflg_table[prcid]==false`: `kerflg_table` は `start_dispatch`（startup.c L237）直前の L235 で true 化され、`check_tskctx()==true`（例外コンテキスト）成立時は常に true。例外コンテキストで kerflg_table=false となる窓が存在しない。**構造的到達不能**（ASP は `xsns_dpn` に `check_tskctx()` ガードが無いため初期化ルーチンで到達できたが、FMP では不可）。
+- `p_my_pcb->p_runtsk == NULL`: アイドルループ中（全タスク休眠）の CPU 例外が必要。テスト実行中は常に `p_runtsk != NULL`。**構造的到達不能**（テスト文脈）。
+
+**分類**: 残存 2 分岐は構造的到達不能。WBテスト追加不要。
 
 ---
 
@@ -320,21 +327,21 @@ if (newpri != p_tcb->priority
 
 ---
 
-## §8. alarm.c / cyclic.c force_unlock_spin パス
+## §8. alarm.c / cyclic.c force_unlock_spin パス（✅ 2026-06-10 WBテストで到達済み）
 
 ```c
-/* fmp3/kernel/alarm.c L316-321 (alm_cal) */
+/* fmp3/kernel/alarm.c L316-321 (call_alarm) */
 if (sense_lock()) {
-    force_unlock_spin(p_my_pcb);  /* L317 - 未到達 */
+    force_unlock_spin(p_my_pcb);  /* L317 */
 }
 else {
     lock_cpu();
 }
 ```
 
-アラームハンドラ/周期ハンドラが`sense_lock() == true`（スピンロック保持状態）で返った場合のクリーンアップ。ハンドラ内でスピンロックを取得したまま返ることはAPIの誤使用に相当し，適合性テストでは生じない。cyclic.c L338 も同様。
+**→ WBテスト [`alarm_W-a`](../../wb_test/FMP/alarm/alarm_W-a/out.c) / [`cyclic_W-a`](../../wb_test/FMP/cyclic/cyclic_W-a/out.c) で到達済み（各+1分岐）**。
 
-**分類**: 実用的到達不能（正常なハンドラ実装では発生しない誤使用パス）。WBテスト不要。
+> **当初分類の訂正**: 旧版は「ハンドラ内 CPU ロック保持＝API誤使用につき到達不要」としていたが、これは誤り。ハンドラ内での `iloc_cpu()` 呼出しは NGKI 上許容された動作であり、ASP の `alarm_W-a`/`cyclic_W-a`（`if(!sense_lock()) lock_cpu()` の対応分岐）で実証済みのパスである。通知ハンドラが `iwup_tsk` 後に `iloc_cpu()` を呼んで CPU ロック状態で戻ることで、`call_alarm` は `force_unlock_spin()` を実行する。gcov 実測で L317 到達・`if(sense_lock())` 真分岐 taken を確認済み。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §1。
 
 ---
 
@@ -415,28 +422,35 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 | マルチコア遅延ディスパッチパス（§1,§2の一部） | ～35 | FMP固有。並行実行シナリオ不在 |
 | interrupt.c chg_ipm 複合パス（§2） | 27 | dispatch + 終了フロー複合 |
 | wait.h インライン展開アーティファクト（§3） | 16 | 計測アーティファクト |
-| サブ優先度機能（§4, §7） | 19 | TA_SUBPRI 未使用設定 |
-| time_event.c ヒープ・マルチコアパス（§5） | 13 | ヒープ深度依存 + TM設定 |
-| exception.c xsns_dpn（§6） | 3 | CPU例外内複合条件 |
-| alarm/cyclic force_unlock_spin（§8） | 2 | 誤使用パス |
+| サブ優先度機能（§4, §7） | 19 | TA_SUBPRI/ENA_SPR 未使用設定 |
+| time_event.c ヒープ・マルチコアパス（§5） | 10（13→10） | TM設定依存（§5-a/b は WBで到達済み） |
+| exception.c xsns_dpn（§6） | 2（3→2） | 構造的到達不能（else は WBで到達済み） |
+| alarm/cyclic force_unlock_spin（§8） | 0（2→0） | WBテストで到達済み |
 | その他（§9） | 4 | 各ファイル1分岐 |
-| **合計** | **102 / 1677** | 93.9% branch coverage |
+| **合計** | **95 / 1677** | 94.3% branch coverage（all モード、WBで 102→95） |
 
 ---
 
 ## WBテスト設計の考察
 
-上記102分岐に対するWBテスト追加の実現性：
+### ✅ 2026-06-10 実装済み（ASP 前例の移植、計 +6分岐）
+
+| WBテスト | 対象 | 寄与 |
+|---|---|---|
+| `alarm_W-a` / `cyclic_W-a` | §8 force_unlock_spin | +2 |
+| `xsns_dpn_W-a` | §6 check_tskctx 偽（NGKI3152） | +1 |
+| `time_event_W-a` / `W-b` | §5-a/§5-b ヒープ操作 | +3 |
+
+### 残存分岐に対する WBテスト追加の実現性
 
 | カテゴリ | WBテスト化 | 理由 |
 |---|---|---|
-| マルチコア遅延ディスパッチ | 困難 | PE間タイミング制御が必要 |
-| interrupt.c 終了フロー | 困難 | chg_ipm + raster + enater の複合状態制御 |
-| wait.h アーティファクト | 不要 | 計測の性質上，実際には実行済み |
-| サブ優先度機能 | 可能 | `TA_SUBPRI` タスクをcfgに追加すれば到達可能 |
-| time_event.c ヒープ深度 | 可能 | 多数の同時タイムイベント設定で到達可能 |
-| time_event.c 非TM path | 困難 | ターゲットHW構成依存 |
-| exception.c xsns_dpn | 困難 | ASPと同様 |
-| alarm/cyclic force_unlock | 不要 | 誤使用パス |
+| マルチコア遅延ディスパッチ（§1,§2） | 困難 | PE間タイミング制御が必要。FMP は実2コアだが TTSP3 は PE2=idle |
+| interrupt.c 終了フロー（§2） | 困難 | chg_ipm + raster + enater の複合状態制御 |
+| wait.h アーティファクト（§3） | 不要 | 計測の性質上，実際には実行済み |
+| **サブ優先度機能（§4, §7）** | **可能（最有力）** | `ENA_SPR(tskpri)` 静的API で `subprio_primap` ビットを立て、当該優先度のタスク + `chg_spr` を組み合わせれば到達。auto_code は `ENA_SPR(13)` を持つが当該優先度のタスク構成が不足。最大 +約15実分岐 |
+| time_event.c 非TM path（§5-c/d/e） | 困難 | ターゲットHW構成・長期タイムアウト依存 |
+| exception.c xsns_dpn 残2（§6） | 不要 | 構造的到達不能（kerflg_table/p_runtsk） |
+| alarm/cyclic force_unlock（§8） | 完了 | WBテストで到達済み |
 
-**サブ優先度機能 WBテスト**が最もROIが高い候補：`TA_SUBPRI` 属性タスクを複数作成し，mutex の優先度継承とサブ優先度の相互作用を試験することで，§4, §7 の 19分岐に到達できる可能性がある。
+**次の最有力候補はサブ優先度機能（§4, §7, 19分岐）**: `ENA_SPR` で特定優先度をサブ優先度スケジューリング対象にし、その優先度に複数タスクを作成して `chg_spr` / mutex 優先度継承を試験することで、`subprio_primap & PRIMAP_BIT(pri)` 真分岐群に到達できる。ただし cfg 設計と複数タスクの優先度・サブ優先度の組合せ制御が必要。
