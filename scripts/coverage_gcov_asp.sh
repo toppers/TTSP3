@@ -108,7 +108,17 @@ if [ "$MODE" = "all" ]; then
 			cp "${wb_src}/out.c" "$wb_dir/out.c"
 			cp "${wb_src}/out.h" "$wb_dir/out.h"
 			cp "${wb_src}/out.cfg" "$wb_dir/out.cfg"
-			( cd "$wb_dir" && make ENABLE_GCOV=true -j4 \
+			# 任意: custom idle 注入（カーネルのアイドル経路を使う WB テスト用）．
+			# WB ディレクトリに ttsp_custom_idle.inc があれば，その test のビルドに
+			# 限り COPTS へ -include で注入する（asp3 無改変・他テストへは波及しない）．
+			# 例: xsns_dpn_W-b（exception.c L102 br[2]: p_runtsk==NULL）．
+			wb_extra_copts=""
+			if [ -f "${wb_src}/ttsp_custom_idle.inc" ]; then
+				cp "${wb_src}/ttsp_custom_idle.inc" "$wb_dir/ttsp_custom_idle.inc"
+				wb_extra_copts="-include $(cd "$wb_dir" && pwd)/ttsp_custom_idle.inc"
+			fi
+			( cd "$wb_dir" && COPTS="${COPTS}${wb_extra_copts:+ $wb_extra_copts}" \
+				make ENABLE_GCOV=true -j4 \
 				KERNEL_COBJS="$WB_KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
 				APPL_COBJS="$WB_APPL_COBJS_COMMON $APPL_COBJS_TARGET" \
 				> /tmp/gcov_build_wb_$$.log 2>&1 )

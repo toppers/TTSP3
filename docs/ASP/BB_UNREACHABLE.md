@@ -5,8 +5,8 @@
 > 方式: gcov（`bash scripts/coverage_gcov_asp.sh all` / `bb`）
 
 このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
-- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +9 分岐）
-- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由と分類（残存 10 分岐, `all` 1369/1379 = 99.3%）
+- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +10 分岐）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由と分類（残存 9 分岐, `all` 1370/1379 = 99.3%）
 
 関連:
 - BBテストのみのカバレッジ（ファイル別） → [`BB_COVERAGE.md`](BB_COVERAGE.md)
@@ -28,14 +28,14 @@
 
 # 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
 
-> BBテスト（`bb` モード、1360/1379 = 98.6%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1369/1379 = 99.3%（`chg_ipm_f` BB追加後）。
+> BBテスト（`bb` モード、1360/1379 = 98.6%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1370/1379 = 99.3%（`chg_ipm_f` BB追加 + `xsns_dpn_W-b` 後）。
 > 各分岐について「分岐の意味」「`bb` で未到達となる理由」「WBテストの到達手法」を示す。**WBテストの妥当性**（分岐の意味を正しく検証しているか等）は、これをもとに人間が確認する。
 >
 > ※ 計測は `-O2` + インライン抑制。`bb`/`all` で分母 1379 が一致する（旧 -O2 のインライン展開差による分母変動は解消）。
 
 ## WBテストによるカバレッジ寄与サマリ
 
-WBテスト（方式2）は `bb` → `all` で **+9 分岐**（alarm/cyclic/exception 各 +1、mempfix +2、time_event +4）を追加する。
+WBテスト（方式2）は `bb` → `all` で **+10 分岐**（alarm/cyclic 各 +1、exception +2、mempfix +2、time_event +4）を追加する。
 
 > `task_manage.c` L137 br[1]（`TA_NOACTQUE` → E_QOVR）は 2026-06-10 に BBテスト `act_tsk_c-3`（YAML 自動生成）が追加され、`bb` モードでも到達済みとなった。WBテスト `act_tsk_W-a` は削除し、本表から除外した。
 
@@ -43,12 +43,12 @@ WBテスト（方式2）は `bb` → `all` で **+9 分岐**（alarm/cyclic/exce
 |---|---|---|---|---|
 | alarm.c | 31/32 | 32/32 | +1 | `alarm_W-a` |
 | cyclic.c | 35/36 | 36/36 | +1 | `cyclic_W-a` |
-| exception.c | 6/8 | 7/8 | +1 | `xsns_dpn_W-a` |
+| exception.c | 6/8 | 8/8 | +2 | `xsns_dpn_W-a`（kerflg=F）/ `xsns_dpn_W-b`（p_runtsk=NULL）|
 | mempfix.c | 86/88 | 88/88 | +2 | `rel_mpf_W-a` / `rel_mpf_W-b` |
 | time_event.c | 48/56 | 52/56 | +4 | `time_event_W-a`（複合条件×2 + 早期break）/ `time_event_W-b`（go-up） |
-| **合計** | **1360/1379 (98.6%)** | **1369/1379 (99.3%)** | **+9** | — |
+| **合計** | **1360/1379 (98.6%)** | **1370/1379 (99.3%)** | **+10** | — |
 
-> ※ `bb` 合計 1360・`all` 合計 1369 は `chg_ipm_f.yaml`（BB, +1）追加後の値。WB 寄与 +9 は不変（chg_ipm とは独立）。
+> ※ `bb` 合計 1360・`all` 合計 1370 は `chg_ipm_f.yaml`（BB, +1）追加後の値。WB 寄与 +10 は不変（chg_ipm とは独立）。
 
 > ※ インライン抑制計測のため分岐番号は旧 -O2 と異なる（例: exception.c は 6→8 分岐、mempfix.c は 90→88 分岐）。以降の各節の行番号・branch 番号は論理分岐の意味を示すもので、gcov 上の番号と一致しない場合がある。
 
@@ -63,6 +63,7 @@ WBテスト（方式2）は `bb` → `all` で **+9 分岐**（alarm/cyclic/exce
 | `alarm_W-a` | alarm.c L241 br[1] | 通知ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../wb_test/ASP/alarm/alarm_W-a/out.c) |
 | `cyclic_W-a` | cyclic.c L259 br[1] | 周期ハンドラが `iloc_cpu()` を保持して戻る → `lock_cpu()` スキップ | [out.c](../../wb_test/ASP/cyclic/cyclic_W-a/out.c) |
 | `xsns_dpn_W-a` | exception.c L102 br[1] | `ATT_INI` 初期化ルーチンから `xsns_dpn(NULL)` を呼び出す → `kerflg==false` で短絡評価 → `state=true` | [out.c](../../wb_test/ASP/exception/xsns_dpn_W-a/out.c) |
+| `xsns_dpn_W-b` | exception.c L102 br[2] | 全タスク終了後のアイドル（`p_runtsk==NULL`）で CPU 例外発生 → CPU 例外ハンドラから `xsns_dpn(p_excinf)` → `p_runtsk==NULL` で短絡評価 → `state=true`（custom idle 方式・カーネル無改変）| [out.c](../../wb_test/ASP/exception/xsns_dpn_W-b/out.c) |
 | `rel_mpf_W-a` | mempfix.c L309 br[0] | `rel_mpf`: ミスアライメントポインタ → `E_PAR` | [out.c](../../api_test/ASP/mempfix/rel_mpf/rel_mpf_W-a/out.c) |
 | `rel_mpf_W-b` | mempfix.c L310 br[0] | `rel_mpf`: blkidx 範囲外 → `E_PAR` | [out.c](../../api_test/ASP/mempfix/rel_mpf/rel_mpf_W-b/out.c) |
 | `time_event_W-a` | time_event.c L221 / L231 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../../wb_test/ASP/time_event/time_event_W-a/out.c) |
@@ -169,7 +170,7 @@ L221 は `child + 1 <= LAST_INDEX()`（右子の有無）と `EVTTIM_LT(...)`（
 
 ---
 
-## 1-5. exception.c — `xsns_dpn` L102 br[1]（`xsns_dpn_W-a`）
+## 1-5. exception.c — `xsns_dpn` L102 br[1]/br[2]（`xsns_dpn_W-a` / `xsns_dpn_W-b`）
 
 **ソース** (`asp3/kernel/exception.c` L101–102):
 ```c
@@ -177,15 +178,18 @@ state = (kerflg && exc_sense_intmask(p_excinf) && enadsp
                         && p_runtsk != NULL) ? false : true;
 ```
 
-`&&` の短絡評価による 6 分岐のうち、BB テストで 4/6 をカバー済み。残 2 分岐のうち 1 分岐を `xsns_dpn_W-a` でカバーする（残 1 分岐は第2部 §1）。
+`&&` の短絡評価による 8 分岐（インライン抑制計測）のうち、BB テストで 6/8 をカバー済み。残 2 分岐を `xsns_dpn_W-a`（`kerflg==false`）と `xsns_dpn_W-b`（`p_runtsk==NULL`）でカバーし、exception.c を **8/8 = 100%** にする。
 
-| gcov 位置 | 条件 | BBテストで未到達の理由 |
-|---|---|---|
-| L102 br[1]（`-O2` 最適化後の短絡評価分岐） | `kerflg == false` → 短絡評価で `state=true` | `kerflg` はカーネルスケジューラ起動後（`startup.c` L125）に `true` にセットされる。BB テストのシナリオはすべてカーネル起動後であるため `kerflg==false` のパスは自動生成テストでは到達不能。 |
+| gcov 位置 | 条件 | BBテストで未到達の理由 | WBテスト |
+|---|---|---|---|
+| L102 br[1]（短絡評価分岐） | `kerflg == false` → 短絡評価で `state=true` | `kerflg` はカーネルスケジューラ起動後（`startup.c` L125）に `true` にセットされる。BB テストのシナリオはすべてカーネル起動後であるため `kerflg==false` のパスは自動生成テストでは到達不能。 | `xsns_dpn_W-a` |
+| L102 br[2]（短絡評価分岐） | `p_runtsk == NULL` → 短絡評価で `state=true` | `p_runtsk` がアイドル中（実行可能タスクなし）に CPU 例外が発生した場合のみ NULL。BB テストは常に実行中タスクがあり `p_runtsk != NULL`。 | `xsns_dpn_W-b` |
 
-> **gcov 分岐番号について**: `-O2` 最適化により、`kerflg=false` の短絡評価パスは `exception.c` の L101 ではなく L102 の分岐 br[1] として計装される。これは GCC が複合条件式を最適化した結果であり、実行パスとしては `xsns_dpn_W-a` が `kerflg=false` をカバーしていることに変わりはない。
+> **gcov 分岐番号について**: `-O2` 最適化により複合条件のコンパイル順序が変化し、各条件と gcov branch 番号の対応はソース上の位置と一致しない場合がある。`xsns_dpn_W-a` は `kerflg=false`、`xsns_dpn_W-b` は `p_runtsk=NULL` の短絡評価パスを実行する。実証として、5 BB split + check_library + `W-a` のみでは exception.c は **7/8**、ここに `W-b` を加えると **8/8** になる（merge 計測で確認）。
 
-**WBテスト** [`xsns_dpn_W-a`](../../wb_test/ASP/exception/xsns_dpn_W-a/out.c): `ATT_INI` で登録した初期化ルーチン `xsns_dpn_W_a_init()` から `xsns_dpn(NULL)` を呼び出す。`startup.c` では初期化ルーチン呼出し（L112-113）が `kerflg=true`（L125）より前に行われるため、呼び出し時点で `kerflg==false`。短絡評価により `state=true` が返ることを初期化ルーチン内で `init_result` に保存し、後で `main_task` が `check_value` で検証する。
+**WBテスト `xsns_dpn_W-a`** [out.c](../../wb_test/ASP/exception/xsns_dpn_W-a/out.c): `ATT_INI` で登録した初期化ルーチン `xsns_dpn_W_a_init()` から `xsns_dpn(NULL)` を呼び出す。`startup.c` では初期化ルーチン呼出し（L112-113）が `kerflg=true`（L125）より前に行われるため、呼び出し時点で `kerflg==false`。短絡評価により `state=true` が返ることを初期化ルーチン内で `init_result` に保存し、後で `main_task` が `check_value` で検証する。
+
+**WBテスト `xsns_dpn_W-b`** [out.c](../../wb_test/ASP/exception/xsns_dpn_W-b/out.c): `main_task` が `ext_tsk()` で自タスクを終了し、実行可能タスクが無くなった状態でカーネルをアイドル（`p_runtsk==NULL`）に入れる。`core_support.S` のアイドルループ `dispatcher_1` は `TOPPERS_CUSTOM_IDLE` 定義時に `toppers_asm_custom_idle` を実行する。これを **COPTS の `-include <wb_dir>/ttsp_custom_idle.inc`**（カーネル無改変・禁則②非抵触）で注入し、フックから C 関数 `xsns_dpn_W_b_idle()` を呼ぶ。同関数が CPU 例外を発生させ、CPU 例外ハンドラ `xsns_dpn_W_b_exc()` が `p_runtsk==NULL` のまま `xsns_dpn(p_excinf)` を呼ぶ。アイドル中の例外は非ネスト・IPM 全解除・CPU アンロックのため `kerflg=T && exc_sense_intmask=T && enadsp=T && (p_runtsk!=NULL)=F` → `state=true`（L102 br[2]）を確認する。注入は `scripts/coverage_gcov_asp.sh` の WB ビルドが当該テストにのみ適用（`ttsp_custom_idle.inc` の有無で判定、他テスト・カーネル本体には波及しない）。公式 `simtimer_ct11mpcore_gcc` ターゲットの `target_custom_idle` と同型の手法。
 
 ---
 
@@ -217,42 +221,11 @@ else {
 
 # 第2部 — WBテストでも到達しない残存分岐
 
-> `all` モード（BBテスト + WBテスト）での残存 10 分岐の詳細分析。到達不能理由・分類を示す。
+> `all` モード（BBテスト + WBテスト）での残存 9 分岐の詳細分析。到達不能理由・分類を示す。
 > （旧 -O2 計測の wait.h/wait.c/task.c インライン展開アーティファクトはインライン抑制で解消したため本部から除外。）
+> （exception.c `xsns_dpn` L102 br[2]（`p_runtsk==NULL`）は **`xsns_dpn_W-b` で到達済み**となり本部から除外＝第1部 §1-5 に移動。exception.c は 8/8 = 100%。）
 
-## 1. exception.c — `xsns_dpn`（1 branch, 87.5%）
-
-**ソース** (`asp3/kernel/exception.c` L101–102):
-```c
-state = (kerflg && exc_sense_intmask(p_excinf) && enadsp
-                        && p_runtsk != NULL) ? false : true;
-```
-
-`&&` の短絡評価により GCC（`-O2`）は 6 分岐を生成する。BB テストで 4/6、WBテスト `xsns_dpn_W-a` で +1 = 5/6 をカバー済み。
-
-**カバレッジ済みシナリオ一覧** (4 + 1 = 5 分岐):
-
-| シナリオ | 条件 | カバー手段 |
-|---|---|---|
-| 通常実行中 | kerflg=T, exc_sense_intmask=T, enadsp=T, p_runtsk≠NULL → state=false | BB テスト（多数） |
-| 割込みコンテキスト/CPUロック例外 | exc_sense_intmask=F → state=true | BB テスト（check_library/exception 等） |
-| `dis_dsp()` 後の例外 | enadsp=F → state=true | BB テスト `xsns_dpn_b-4.yaml` |
-| — | 上記シナリオの対 分岐（複数通過） | BB テスト（union） |
-| 初期化ルーチン中 | kerflg=F → state=true（短絡評価） | WBテスト `xsns_dpn_W-a` |
-
-**残存未到達（1 分岐）:**
-
-| gcov 位置 | 条件 | 未到達理由 | 分類 |
-|---|---|---|---|
-| L102 br[2] | `p_runtsk == NULL` → state=true | アイドルループ中（全タスクが休眠または待ち）に CPU 例外が発生した場合のパス。テスト実行中は常に MAIN_TASK が `running` 状態にあるため `p_runtsk != NULL`。この状態を作るには全タスクを待ち状態にした上でアイドルループ中に CPU 例外を発火させる必要があるが、zybo_z7_gcc / QEMU 環境では例外を任意タイミングで起動する機構がなく再現不可能。 | **構造的到達不能**（テスト文脈） |
-
-> **gcov 分岐番号について**: `-O2` では複合条件のコンパイル順序が最適化により変化し、各条件と gcov の branch 番号の対応がソース上の位置と一致しない場合がある。上表の L102 br[2] は、BB テスト（4 分岐カバー）+ xsns_dpn_W-a（kerflg=F カバー）を加えた後に唯一残る未到達分岐を指す。到達させるための残条件として `p_runtsk==NULL` 以外のシナリオは全て BB または xsns_dpn_W-a で消化済みであることを論理的に確認済み。
-
-**結論**: 残 1 分岐は WB テスト追加不要。
-
----
-
-## 2. mutex.c — `remove_mutex` L227 br[1]（1 branch, 99.3%）
+## 1. mutex.c — `remove_mutex` L227 br[1]（1 branch, 99.3%）
 
 **ソース** (`asp3/kernel/mutex.c` L224–232):
 ```c
@@ -274,7 +247,7 @@ while (*pp_prevmtx != NULL) {          /* L227 */
 
 ---
 
-## 3. task_refer.c — `ref_tsk` L131 br[10]（1 branch, 97.1%）
+## 2. task_refer.c — `ref_tsk` L131 br[10]（1 branch, 97.1%）
 
 **ソース** (`asp3/kernel/task_refer.c` L131):
 ```c
@@ -298,7 +271,7 @@ case TS_WAITING_DLY: ...
 
 ---
 
-## 4. time_manage.c — `adj_tim` L168 br[0]（1 branch, 95.5%）
+## 3. time_manage.c — `adj_tim` L168 br[0]（1 branch, 95.5%）
 
 **ソース** (`asp3/kernel/time_manage.c` L168):
 ```c
@@ -313,7 +286,7 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## 5. interrupt.c — `clr_int` / `ras_int`（2 branches, 96.8%）
+## 4. interrupt.c — `clr_int` / `ras_int`（2 branches, 96.8%）
 
 > 旧版 §5（wait.h インライン展開アーティファクト 15 分岐）は **インライン抑制で解消**（wait.h 14/14 = 100%）したため削除。
 > インライン抑制により `clr_int`/`ras_int` の実分岐が顕在化し、interrupt.c の未到達が 1→3 に増えた（旧 -O2 ではインライン併合で `clr_int`/`ras_int` が 8/8 と見えていた）。その後 `chg_ipm` の 1 分岐は **`chg_ipm_f.yaml`（BB）で到達済み**となり、残存は `clr_int`/`ras_int` の 2 分岐。
@@ -333,27 +306,27 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## 6. time_event.c — 内部タイムイベント管理（4 branches, 92.9%）
+## 5. time_event.c — 内部タイムイベント管理（4 branches, 92.9%）
 
-### 6-a. `_kernel_update_current_evttim` L390 br[0]（→ simt 到達済）
+### 5-a. `_kernel_update_current_evttim` L390 br[0]（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L390 br[0]（`current_evttim < monotonic_evttim`） | 64 bit EVTTIM 折返し後の単調増加保証パス | zybo 実タイマでは §4 同様 約 5.8 × 10¹¹ 年が必要で実用的到達不能。**ASP3 simt スイート（64hrt）で到達**（`update_current_evttim` 6/6 = 100%）。 | **zybo: 実用的到達不能 / simt: 到達済** |
+| L390 br[0]（`current_evttim < monotonic_evttim`） | 64 bit EVTTIM 折返し後の単調増加保証パス | zybo 実タイマでは §3 同様 約 5.8 × 10¹¹ 年が必要で実用的到達不能。**ASP3 simt スイート（64hrt）で到達**（`update_current_evttim` 6/6 = 100%）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-### 6-b. `_kernel_set_hrt_event` L439 br[0]（→ simt 到達済）
+### 5-b. `_kernel_set_hrt_event` L439 br[0]（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
 | L439 br[0]（`hrtcnt > HRTCNT_BOUND`） | 次タイムイベントまで HRTCNT_BOUND（≈ 4,000 秒）超の待ち | zybo 実タイマの時間スケールでは発生しない。**ASP3 simt スイート（simulation timer で HRT を任意操作）で到達**（`set_hrt_event` 6/6 = 100%、`simt_systim1` 項目 A-4 ［ASPD1006］）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-### 6-c. `_kernel_signal_time` L624 br（`nocall == 0`）（→ simt 到達済）
+### 5-c. `_kernel_signal_time` L624 br（`nocall == 0`）（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
 | L624 br[0]（`nocall == 0`） | HRT 割込みが発生したが期限切れイベントが 0 件 | zybo の cycle-accurate モデルでは spurious/early fire の再現困難。**ASP3 simt スイートで到達**（`simt_systim1` 項目 C-1、実行ログ "no time event is processed in hrt interrupt" で確認）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-### 6-d. `_kernel_tmevt_down`（内部状態依存 ×1, simt でも未到達）
+### 5-d. `_kernel_tmevt_down`（内部状態依存 ×1, simt でも未到達）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
@@ -363,29 +336,29 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## サマリ（残存 10 未到達分岐、`all` モード: 1369/1379 = 99.3%、-O2+インライン抑制）
+## サマリ（残存 9 未到達分岐、`all` モード: 1370/1379 = 99.3%、-O2+インライン抑制）
 
 | ファイル | 未到達数 | 分類 | 対応方針 |
 |---|---|---|---|
 | time_event.c | 4 | **simt スイートで 3 到達**（64bit折返し/HRTCNT_BOUND/nocall）+ 内部状態依存 ×1（tmevt_down, simt でも未到達）| 第3部参照 |
 | interrupt.c | 2 | 構造的到達不能（`clr_int`/`ras_int`: GIC で check_intno_clear/raise 恒真） | 不要（zybo） |
-| exception.c | 1 | 構造的到達不能（`p_runtsk==NULL` テスト文脈） | 不要 |
 | mutex.c | 1 | 構造的到達不能（`remove_mutex` NULL exit） | 不要 |
 | task_refer.c | 1 | 構造的到達不能（switch JT 境界チェック） | 不要 |
 | time_manage.c | 1 | **simt スイートで到達**（64bit折返し, `adj_tim` 14/14）| 第3部参照 |
-| **合計** | **10**（zybo all モード） | — | zybo の BB/WB テスト追加は不要 |
+| **合計** | **9**（zybo all モード） | — | zybo の BB/WB テスト追加は不要 |
 
 > 旧 -O2 計測で残存に計上していた wait.h(15)/wait.c(2)/task.c(4) のインライン展開アーティファクトは、インライン抑制（`-fno-inline` 系）で解消（各 100%）。`bb`/`all` の分母も 1379 で一致する。
 > `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達し、11→10 に減少。
+> exception.c `xsns_dpn` L102 br[2]（`p_runtsk==NULL`）は `xsns_dpn_W-b`（custom idle 方式）で到達し、10→9 に減少（exception.c 8/8 = 100%）。
 
-**zybo `all` モードは 1369/1379 = 99.3%。** 残存 10 のうち **時刻関連 4 分岐（time_event 3 + time_manage 1）は ASP3 公式 simt スイートで C1 到達可能**であることを実証（第3部）。これらは「zybo 実 GIC タイマでは実用的到達不能だが、シミュレーションタイマでは到達可能」であり、未到達は計測手段に依存する。残る 6 分岐（interrupt 2・exception 1・mutex 1・task_refer 1・time_event tmevt_down 1）は構造的到達不能または内部状態依存で、テスト追加は仕様適合性の確認に寄与しない。
+**zybo `all` モードは 1370/1379 = 99.3%。** 残存 9 のうち **時刻関連 4 分岐（time_event 3 + time_manage 1）は ASP3 公式 simt スイートで C1 到達可能**であることを実証（第3部）。これらは「zybo 実 GIC タイマでは実用的到達不能だが、シミュレーションタイマでは到達可能」であり、未到達は計測手段に依存する。残る 5 分岐（interrupt 2・mutex 1・task_refer 1・time_event tmevt_down 1）は構造的到達不能または内部状態依存で、テスト追加は仕様適合性の確認に寄与しない。
 
 ---
 
 # 第3部 — ASP3 公式 simt スイートによるタイマー分岐の到達（参考・別ビルド）
 
 > zybo 実 GIC タイマでは「実用的到達不能」とした時刻関連分岐が、**ASP3 開発元の simt（simulation timer）テスト**で C1 到達できることを実証した記録（2026-06-10）。
-> simt テストは `kernel/time_event.c`・`kernel/time_manage.c`（共有・CPU非依存）を別ビルド・別ターゲットで実行するもので、**zybo の `all` モード数値（1369/1379）には含めない**（計測手段が異なるため参考扱い）。
+> simt テストは `kernel/time_event.c`・`kernel/time_manage.c`（共有・CPU非依存）を別ビルド・別ターゲットで実行するもので、**zybo の `all` モード数値（1370/1379）には含めない**（計測手段が異なるため参考扱い）。
 
 ## 実証結果（simt スイート: simt_systim1-4 + 64hrt×3、全 All check points passed）
 

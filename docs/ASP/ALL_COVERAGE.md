@@ -17,19 +17,20 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1369/1379 = 99.3%  (C1, 2026-06-10 NDEBUG + -O2インライン抑制計測、all モード、chg_ipm_f 追加後)
+分岐カバレッジ(kernel/): 1370/1379 = 99.3%  (C1, 2026-06-10 NDEBUG + -O2インライン抑制計測、all モード、chg_ipm_f + xsns_dpn_W-b 追加後)
   ※bbモード（WBテストなし）: 1360/1379 = 98.6%（手書き WBテスト alarm/cyclic/mempfix/time_event/exception 含まず）
-  ※WBテスト寄与: +9 分岐（bb 1360 → all 1369）。bb/all で分母 1379 が一致（インライン抑制によりビルド差が解消）
+  ※WBテスト寄与: +10 分岐（bb 1360 → all 1370）。bb/all で分母 1379 が一致（インライン抑制によりビルド差が解消）
   ※インライン抑制移行後: wait.h 64→14・wait.c・task.c のインライン展開アーティファクトが解消（各 100% / 論理分岐がそのまま）
   ※chg_ipm_f.yaml 追加（BB）で interrupt.c chg_ipm 13/14→14/14（raster&&enater 自終了パス到達）
-  ※残存未到達 10 分岐（all モード）: exception(1)/interrupt(2)/mutex(1)/task_refer(1)/time_event(4)/time_manage(1)
+  ※xsns_dpn_W-b 追加（WB・custom idle 方式）で exception.c 7/8→8/8（p_runtsk==NULL パス到達）
+  ※残存未到達 9 分岐（all モード）: interrupt(2)/mutex(1)/task_refer(1)/time_event(4)/time_manage(1)
   ==== simt スイート合算（到達可能性ベース）====
-  ※all + simt: 1373/1379 = 99.6%（時刻関連4分岐を ASP3 公式 simt スイートで到達: 第3部）
+  ※all + simt: 1374/1379 = 99.6%（時刻関連4分岐を ASP3 公式 simt スイートで到達: 第3部）
       time_event.c set_hrt_event(HRTCNT_BOUND)/update_current_evttim(64bit折返し)/signal_time(空ヒープ nocall)
       ＋ time_manage.c adj_tim(64bit折返し) の計4分岐。simt は別ターゲット（simulation timer）計測のため
-      zybo の all モード数値(1369)とは別系統。合算は「到達可能性」の観点。
-  ※合算後の真の残存 6 分岐: interrupt(2 GIC恒真)/exception(1)/mutex(1)/task_refer(1)/time_event tmevt_down(1)
-      — すべて構造的到達不能 or 内部状態依存。
+      zybo の all モード数値(1370)とは別系統。合算は「到達可能性」の観点。
+  ※合算後の真の残存 5 分岐: interrupt(2 GIC恒真)/mutex(1)/task_refer(1)/time_event tmevt_down(1)
+      — いずれも構造的到達不能 or 内部状態依存。
   --- 旧 -O2（インライン展開あり）計測の履歴参考値 ---
   ※-O2 all: 1435/1471 = 97.6%（wait.h 49/64 等のインライン水増しを含む。分母が bb 1459 と不一致）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -40,6 +41,11 @@
 - カバレッジ計測を `-O2` + インライン抑制（`-fno-inline` 系）に変更。`static inline` 展開による gcov 分岐水増しアーティファクト（wait.h 16→64 等）を除去し、bb/all の分母を一致させた。理由は [`BB_COVERAGE.md`](BB_COVERAGE.md) 計測条件を参照。
 - 結果: wait.h 49/64→14/14、wait.c/task.c も 100%。全体 C1 は実態反映で 99.2% に。inline 抑制で interrupt.c の実分岐が顕在化（58→62 分岐、未到達 1→3）。
 - `xsns_dpn_W-a`（`wb_test/ASP/exception/`）: `exception.c` の `kerflg==false` 短絡評価パスを WBテストで到達（`ATT_INI` 初期化ルーチン経由）
+
+**2026-06-10 `xsns_dpn_W-b` 追加（exception.c 7/8 → 8/8 = 100%、all 1369 → 1370）**:
+- `xsns_dpn_W-b`（`wb_test/ASP/exception/`）: `exception.c` L102 br[2]（`p_runtsk==NULL` 短絡評価パス）を WBテストで到達。`ext_tsk()` で全タスク終了 → アイドル（`p_runtsk==NULL`）→ custom idle フックから CPU 例外を発生 → CPU 例外ハンドラで `xsns_dpn(p_excinf)==true` を確認。
+- 注入はカーネル無改変（禁則②非抵触）: `COPTS` に `-include <wb_dir>/ttsp_custom_idle.inc` を渡し `core_support.S` の `dispatcher_1` に `toppers_asm_custom_idle` を注入。`coverage_gcov_asp.sh` の WB ビルドが `ttsp_custom_idle.inc` の有無で当該テストにのみ適用（他テスト・カーネル本体へ波及しない）。
+- 検証: 5 BB split + check_library + `W-a` のみでは exception.c 7/8、`W-b` 追加で 8/8（merge 計測で確認）。
 
 **2026-06-10 テスト整理（カバレッジ数値変化なし: 1434/1459 = 98.3%）**:
 - `act_tsk_c-3.yaml` (BB) 追加 → `task_manage.c` L137 br[1] が bb モードでも到達（bb: 1425→1426）
@@ -66,7 +72,7 @@
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
 > **WBテスト（方式2: 手書き、`all` モードのみ）のカタログ・到達手法は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部を参照。**  
-> WBテストは `bb` モード（1360/1379 = 98.6%）に対し **+9 分岐**を追加し、`all` モードで 1369/1379 = 99.3% に到達する。
+> WBテストは `bb` モード（1360/1379 = 98.6%）に対し **+10 分岐**を追加し、`all` モードで 1370/1379 = 99.3% に到達する。
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -81,7 +87,7 @@
 | cyclic.c | 74/74 100% | 36 | 36 | **100%** |
 | dataqueue.c | 253/253 100% | 152 | 152 | **100%** |
 | eventflag.c | 165/165 100% | 120 | 120 | **100%** |
-| exception.c | 7/7 100% | 7 | 8 | 87.5% ◀ |
+| exception.c | 7/7 100% | 8 | 8 | **100%** |
 | interrupt.c | 110/110 100% | 60 | 62 | 96.8% ◀ |
 | mempfix.c | 150/150 100% | 88 | 88 | **100%** |
 | mutex.c | 212/212 100% | 135 | 136 | 99.3% ◀ |
@@ -99,7 +105,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 6 | 6 | **100%** |
 | wait.h | 39/39 100% | 14 | 14 | **100%** |
-| **TOTAL** | **2454/2458 99.8%** | **1369** | **1379** | **99.3%** |
+| **TOTAL** | **2454/2458 99.8%** | **1370** | **1379** | **99.3%** |
 
 > ※ インライン抑制（`-fno-inline` 系）により wait.h は 64→14 分岐（旧 -O2 のインライン展開水増しが解消）、wait.c・task.c も論理分岐どおりに計測され各 100%。
 > ※ インライン抑制で interrupt.c の実分岐が顕在化（58→62）、exception.c の xsns_dpn も 6→8 分岐に（論理分岐がそのまま見える）。
@@ -149,7 +155,7 @@
 | `twai_flg` | eventflag.c | 29/29 | 28/28 |  |
 | `ini_flg` | eventflag.c | 17/17 | 10/10 |  |
 | `ref_flg` | eventflag.c | 15/15 | 8/8 |  |
-| `xsns_dpn` | exception.c | 7/7 | 7/8 | ◀ |
+| `xsns_dpn` | exception.c | 7/7 | 8/8 | |
 | `dis_int` | interrupt.c | 16/16 | 8/8 |  |
 | `ena_int` | interrupt.c | 16/16 | 8/8 |  |
 | `clr_int` | interrupt.c | 16/16 | 9/10 | ◀ |
@@ -288,20 +294,20 @@
 
 ## 残存未到達分岐リスト（2026-06-10 `all` モード、-O2+インライン抑制）
 
-> 全 10 箇所（1369/1379 = 99.3%、zybo `all` モード）。未到達数の多い順。  
+> 全 9 箇所（1370/1379 = 99.3%、zybo `all` モード）。未到達数の多い順。  
 > ※ 旧 -O2 計測で 15 箇所を占めていた wait.h のインライン展開アーティファクトは inline 抑制で解消済み（現 14/14 = 100%）。  
 > ※ `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達済み（11→10）。  
-> **※ simt スイート合算（到達可能性）**: 下表 #1 の 3 分岐 + #6 の 1 分岐（計 4）は ASP3 公式 simt スイートで到達済み → **真の残存 6 分岐**（#2 interrupt 2 / #3 exception 1 / #4 mutex 1 / #5 task_refer 1 / #1 time_event tmevt_down 1）。合算 1373/1379 = 99.6%。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第3部。  
+> ※ `xsns_dpn` p_runtsk==NULL 分岐は `xsns_dpn_W-b`（WB・custom idle 方式）で到達済み（10→9、exception.c 8/8）。  
+> **※ simt スイート合算（到達可能性）**: 下表 #1 の 3 分岐 + #5 の 1 分岐（計 4）は ASP3 公式 simt スイートで到達済み → **真の残存 5 分岐**（#2 interrupt 2 / #3 mutex 1 / #4 task_refer 1 / #1 time_event tmevt_down 1）。合算 1374/1379 = 99.6%。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第3部。  
 > **各分岐の詳細分析（到達不能理由・分類）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 を参照。**
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
 | 1 | time_event.c | 92.9% | 4 | L391/L440/L625 は **ASP3 simt スイートで到達済**（zybo 実タイマでは到達不能）+ tmevt_down 内部状態依存 ×1（simt でも未到達）→ [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第3部 |
 | 2 | interrupt.c | 96.8% | 2 | `clr_int`/`ras_int` ×各1（GIC で `check_intno_clear/raise` 恒真 → 構造的到達不能）|
-| 3 | exception.c | 87.5% | 1 | `xsns_dpn` p_runtsk==NULL（構造的到達不能・テスト文脈） |
-| 4 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
-| 5 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |
-| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → zybo 実タイマでは到達不能、**ASP3 simt スイートで到達済**（adj_tim 14/14）→ 第3部 |
+| 3 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
+| 4 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |
+| 5 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → zybo 実タイマでは到達不能、**ASP3 simt スイートで到達済**（adj_tim 14/14）→ 第3部 |
 
 **BBテスト・WBテストで解消済み（100%到達）**：
 
@@ -319,6 +325,8 @@
 | mempfix.c (`rel_mpf` L310 br[0]) | rel_mpf_W-b (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
 | alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、`wb_test/ASP/alarm/`) | **100%** |
 | cyclic.c (`_kernel_call_cyclic` L259 br[1]) | cyclic_W-a (WB・方式2、`wb_test/ASP/cyclic/`) | **100%** |
+| exception.c (`xsns_dpn` L102 br[1] kerflg=F) | xsns_dpn_W-a (WB・方式2、`wb_test/ASP/exception/`) | **100%** |
+| exception.c (`xsns_dpn` L102 br[2] p_runtsk=NULL) | xsns_dpn_W-b (WB・方式2、`wb_test/ASP/exception/`、custom idle 方式、2026-06-10 追加) | **8/8 100%** |
 | task_manage.c (`act_tsk` L137 br[1]) | act_tsk_c-3 (BB・方式1 YAML 自動生成、2026-06-10 追加) | **100%** |
 | time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、`wb_test/ASP/time_event/`) | **100%** |
 | time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、`wb_test/ASP/time_event/`) | **到達済み** |
