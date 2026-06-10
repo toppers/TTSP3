@@ -143,16 +143,16 @@ else {
 | # | カテゴリ | 未到達分岐数（概数）| 主なファイル |
 |---|---|---|---|
 | §1 | マルチコア遅延ディスパッチパス | 約30 | alarm.c, cyclic.c, mempfix.c, mutex.c(一部), sys_manage.c, task_manage.c, task_term.c |
-| §2 | interrupt.c chg_ipm 複合パス | 約29 | interrupt.c（inline抑制で実分岐顕在化） |
+| §2 | interrupt.c 割込み番号バリデーション(VALID_INTNO)異常系＋chg_ipm | 17（旧称「chg_ipm複合パス・約29」は**誤分類**。2026-06-10 BB追加で27→17）| interrupt.c |
 | §3 | wait.h | 1 | wait.h（旧アーティファクト16はinline抑制で解消） |
-| §4 | task.c サブ優先度機能 | 約12 | task.c |
+| §4 | task.c サブ優先度機能 | 4（旧 約12。2026-06-10 サブ優先度BB/WB で 12→4）| task.c |
 | §5 | time_event.c ヒープ操作・マルチコアパス | 約10 | time_event.c（§5-a/b は WBで到達済） |
 | §6 | exception.c xsns_dpn | 1 | exception.c（else・`p_runtsk==NULL` は WBで到達済（`xsns_dpn_W-a`/`W-b`）。残1: `kerflg_table` は構造的到達不能）|
-| §7 | mutex.c サブ優先度パス | 約7 | mutex.c |
+| §7 | mutex.c サブ優先度パス | 3（旧 約7。サブ優先度BB/WB で縮小）| mutex.c |
 | §8 | alarm/cyclic force_unlock_spin | 0（WBで到達済）| alarm.c, cyclic.c |
 | §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 約4 | 各1分岐 |
 | §10 | time_manage.c adj_tim 64bit 折返し | 2 | time_manage.c（zybo 実用的到達不能 / simt 到達可能・ASP §3 同分類。マルチコア起因ではない）|
-| **合計** | | **77 / 1597** | |
+| **合計** | | **52 / 1597**（2026-06-10 再計測。旧 77。`all` 1545/1597=96.7%）| |
 
 ---
 
@@ -215,7 +215,36 @@ if (p_selftsk != p_my_pcb->p_schedtsk) {
 
 ---
 
-## §2. interrupt.c chg_ipm 複合パス
+## §2. interrupt.c 割込み番号バリデーション(VALID_INTNO)異常系 ＋ chg_ipm
+
+> **重要な訂正（2026-06-10）**：本節は旧版で「chg_ipm 複合パス・約29分岐」と分類していたが**誤り**だった。
+> 35dir union の実測で interrupt.c 未到達 27 の内訳を精査したところ、**大半は `dis_int`/`ena_int`/`clr_int`/
+> `ras_int`/`prb_int` の `VALID_INTNO_*` マクロ異常系（E_PAR）の偽アーム**であり、`chg_ipm` 由来は L383/L392 の
+> 2分岐のみだった。原因＝これら5APIの E_PAR 負テスト（F-b）は `variation: irc_arch: local` タグで、zybo は
+> `combination` のため**autocodeから除外**され未実行だった（gcov に現れない）。
+>
+> **対応（2026-06-10・BB追加）**：各APIに `irc_arch: combination` の E_PAR 負ケース
+> `<api>_F-e-1`（`ras_int`/`dis_int`/`ena_int`/`clr_int`/`prb_int`）を新設。入力に **PPI範囲・他PE宛**
+> （`INTNO_OTHER_INH_A`＝MASK 16, PRCID≠self）を用いると、既存 F-c の `INTNO_NOT_SELF_SELF`（SPI MASK=50）が
+> 短絡していた `VALID_INTNO` clause1 の `INTNO_PRCID(intno)==prcid` 偽アームに到達する。
+> 5ケースとも QEMU 緑。**interrupt.c union 27→17（covered 89→99, +10分岐）**。
+> 詳細は本リポジトリ `api_test/FMP/interrupt/*/F-e-1` と `DIVERGENCE_MAP.md` B表。
+>
+> **残 17 の精査（2026-06-10・全て実質到達不能と確定）**：
+> - **L268/L307 `check_intno_cfg && check_intno_clear/raise` の br4（各1）＝構造的dead**。
+>   `check_intno_clear()`/`check_intno_raise()` は zybo GIC（`gic_kernel_impl.h` L578-584/L611-617）で
+>   **無条件 `return(true)`** のため、`&&` 第2項の false アームは到達不能（E_OBJ は cfg=false 側のみ＝F-d で到達済）。
+> - **L304(7)/L187(2)/L226(1)/L265(2)/L343(1) ＝ `VALID_INTNO_*` の残アーム**。内訳は
+>   (a) `SGI0(0)<=INTNO_MASK` ＝ unsigned で常真の**構造的dead**、
+>   (b) **SGI節**（`VALID_INTNO_RASINT` 等は SGI/PPI/SPI の3節構成・arch版 `gic_kernel_impl.h` L595-607）の枝＝
+>   **SGI(MASK 0-15)用のテスト用 `INTNO` マクロが存在しない**（SGIは `IPINO_DISPATCH` 等カーネル内部IPI専用で
+>   負テスト不能）。PPI節の `PRCID==prcid` 偽アームは `<api>_F-e-1`（PPI他PE宛）で到達済。
+> - **L383（chg_ipm dispatch retry）**＝マルチコア dispatch race。`timing_test/FMP/interrupt/chg_ipm_race` で
+>   到達実証済（`all` union には含めない運用・[`TIMING_TEST.md`](TIMING_TEST.md) §8）。
+> - **L392（chg_ipm `task_terminate` 返値）**＝CPUアフィニティ依存・実用的到達不能。
+> ⇒ **interrupt.c は test framework 上の到達可能分岐を網羅済（残17は dead / SGIマクロ無 / timing / affinity）。**
+
+（以下は旧記述・chg_ipm 部分の詳細。割込み番号バリデーション異常系の大半は上記 BB 追加で到達済）
 
 `chg_ipm`（割込み優先度マスク変更）はFMP版で大幅に複雑化しており，複数の未到達パスを含む。
 
@@ -317,6 +346,12 @@ queue_insert_subprio_head(QUEUE *p_queue, TCB *p_tcb)
 
 `change_priority` (L363) 内の `if ((subprio_primap & PRIMAP_BIT(newpri)) != 0U)` が常に偽（サブ優先度未使用）のため，インライン展開後のコード（L383-387周辺）も含め実行されない。
 
+**更新（2026-06-10）**：サブ優先度テスト追加で到達済み。**L384 `queue_insert_subprio_head`（mtxmode 真）は F-e-4(BB)**
+が `loc_mtx`（ceiling=13・同優先度昇格）→`mutex_raise_priority`→`change_priority(mtxmode=true)` で到達。
+**`current_subpri` boosted 側（L195）も F-e-4 で到達**（boosted タスクの head 挿入）。
+`queue_insert_subprio_head` のループ走査（continue/break）は WBテスト **`subprio_head_W-a`**（`unl_mtx` で非boosted
+再挿入）で到達し **line 8/8=100%・branch 7/8=87.5%**。残1 branch＝「全兄弟走査して break せず末尾挿入」のみ。
+
 ### §4-b. change_priority サブ優先度分岐（L382-387）
 
 ```c
@@ -332,8 +367,63 @@ if ((subprio_primap & PRIMAP_BIT(newpri)) != 0U) {  /* L382 - 常にfalse */
 ```
 
 **分類**: 実用的到達不能（`TA_SUBPRI` 未使用のテスト設定）。
+**更新（2026-06-10）**：サブ優先度BBケース（`chg_spr_F-e-1/3/4`）追加で `change_subprio`・`queue_insert_subprio_tail`
+（末尾/中間挿入の両アーム）は **BB到達済み**。残る WB対象は §4-c。
 
-`task_manage.c` の `chg_spr` (L600-607) も同様のサブ優先度パス（`change_subprio` 呼び出し後のdispatch分岐含む）が未到達。
+### §4-c. chg_spr L603-608 自タスク降格 local dispatch（✅ 2026-06-10 WBテストで到達済み）
+
+```c
+/* fmp3/kernel/task_manage.c chg_spr L599-608 */
+if (TSTAT_RUNNABLE(p_tcb->tstat)) {
+    if ((subprio_primap & PRIMAP_BIT(p_tcb->priority)) != 0U && !(p_tcb->boosted)) {
+        change_subprio(p_my_pcb, p_tcb, subpri, p_pcb);   /* L602 */
+        if (p_selftsk != p_my_pcb->p_schedtsk) {          /* L603 TRUE arm */
+            release_glock();                              /* L604 */
+            dispatch();                                   /* L605 */
+            ercd = E_OK;                                  /* L606 */
+            goto unlock_and_exit;                         /* L607 */
+        }
+    }
+}
+```
+
+自タスクが `chg_spr(TSK_SELF, 大)` で同優先度群の末尾へ降格し、別タスクが schedtsk となって
+**local dispatch** する経路。**BB では到達不能**＝actor が `dispatch()` でCPUを失い、TTG生成の
+actor内 post 検証へ戻れずデッドロックする（`SUBPRIO_TEST_PLAN.md §3.1`）。
+→ **WBテスト `wb_test/FMP/task_manage/chg_spr_W-a`** で到達。MAIN(pri1) が TASK_A/B(pri13,ENA_SPR(13)) を
+用意し slp_tsk → TASK_A が `chg_spr(TSK_SELF,5)` で自己降格 → TASK_B へ dispatch（L603-605）→
+TASK_B が porder 検証後 slp_tsk → TASK_A 復帰で L606-607 到達 → MAIN 起床・finish。
+gcov：**chg_spr line 33/33 = 100%**、L603-608 全行 covered（手書きなので切替先が検証・解放を担う）。
+
+### §4-d. change_subprio 内の防御的再チェック（2 branches・到達不能／2026-06-10）
+
+```c
+/* fmp3/kernel/task.c change_subprio L437-451 */
+change_subprio(PCB *p_my_pcb, TCB *p_tcb, uint_t subpri, PCB *p_pcb) {
+    uint_t pri = p_tcb->priority;
+    p_tcb->subpri = subpri;
+    if (TSTAT_RUNNABLE(p_tcb->tstat)) {                    /* L442 — false アーム到達不能 */
+        if ((subprio_primap & PRIMAP_BIT(pri)) != 0U) {    /* L443 — false アーム到達不能 */
+            queue_delete(...);
+            queue_insert_subprio_tail(&(p_pcb->ready_queue[pri]), p_tcb);
+        }
+        if (pri == p_pcb->p_schedtsk->priority) {           /* L447 — 両アーム到達済 */
+            update_schedtsk_dsp(p_my_pcb, p_pcb, ...);
+        }
+    }
+}
+```
+
+`change_subprio` は **`chg_spr`（task_manage.c）L602 からのみ**呼ばれ、その呼出しは
+**L599 `TSTAT_RUNNABLE(p_tcb->tstat)` ＋ L600 `(subprio_primap & PRIMAP_BIT(p_tcb->priority)) != 0U` ＋ `!boosted`**
+のガード内に限られる。したがって `change_subprio` 内の同条件の再チェック（L442・L443）は **常に true** で、
+**false アーム（計2 branch）は構造的に到達不能（防御コード）**。
+
+- **分類**：到達不能（防御的再チェック・呼出し側で事前保証）。BB/WB いずれでも通せない。
+- **影響**：`change_subprio` の branch 上限は **4/6（66.7%）**。残2は本項。到達可能分岐
+  （L442/L443 true・L447 両アーム＝cross-PE/同PE both）は **全て到達済**
+  （cross-PE は既存 F-c 系＋`chg_spr_F-e-6`、同PE は F-e-1/3）。
+- 補足：`chg_spr` L606-607 / L603 等の dispatch 系は §4-c（WB chg_spr_W-a）で到達済。
 
 ---
 
@@ -593,13 +683,13 @@ if (adjtim > 0
 | マルチコア遅延ディスパッチパス（§1,§2の一部） | 約30 | FMP固有。並行実行シナリオ不在。→ [`TIMING_TEST.md`](TIMING_TEST.md) 案3で到達実証済み |
 | interrupt.c chg_ipm 複合パス（§2） | 約29 | dispatch + 終了フロー複合（inline抑制で実分岐顕在化）|
 | wait.h（§3） | 1 | 過渡状態分岐（旧アーティファクト16はinline抑制で解消）|
-| サブ優先度機能（§4, §7） | 約19 | TA_SUBPRI/ENA_SPR 未使用設定 |
+| サブ優先度機能（§4, §7） | 約3 | **2026-06-10 更新**：サブ優先度BB（`chg_spr_F-e-1/3/4/6`）＋WB（`chg_spr_W-a`/`subprio_head_W-a`）追加で大幅縮小。`current_subpri`/`queue_insert_subprio_tail`/`queue_insert_subprio_head` は **branch 100%**、chg_spr local dispatch も到達済。残＝`change_subprio` の防御的再チェック2（§4-d・到達不能）＋`change_priority` 残1 等 |
 | time_event.c ヒープ・マルチコアパス（§5） | 約10 | TM設定依存（§5-a/b は WBで到達済み） |
 | exception.c xsns_dpn（§6） | 1 | else・`p_runtsk==NULL` は WBで到達済み（`xsns_dpn_W-a`/`W-b`）。`kerflg_table` は構造的到達不能 |
 | alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み（`all` で各 1 残存はマルチコア起因の §1 側）|
 | その他（§9） | 約4 | 各ファイル1分岐 |
 | **time_manage.c adj_tim 64bit 折返し（§10）** | 2 | zybo 実用的到達不能 / simt 到達可能（ASP §3 と同分類）。マルチコア起因ではない |
-| **合計** | **77 / 1597** | 95.2% branch coverage（all モード、-O2+インライン抑制）|
+| **合計** | **62 / 1597** | **96.1% branch coverage**（all モード、-O2+インライン抑制。**2026-06-10**：サブ優先度テスト追加で 77→62＝**+15 分岐到達**。旧値 77/1597・95.2%）|
 
 ---
 
