@@ -32,11 +32,23 @@ state = (kerflg && exc_sense_intmask(p_excinf) && enadsp
 
 `&&` の短絡評価により GCC（`-O2`）は 6 分岐を生成する。BB テストで 4/6、WBテスト `xsns_dpn_W-a` で +1 = 5/6 をカバー済み。
 
-> **2026-06-10 更新**: `kerflg==false` パスは WBテスト `xsns_dpn_W-a`（`ATT_INI` 初期化ルーチンからの呼び出し）で到達済み。`WB_COVERAGE.md` §5 に詳細。当初「構造的到達不能」と分類していたが、初期化ルーチン実行タイミング（`startup.c` L112-113、`kerflg=true` の L125 より前）を利用することで到達可能であった。
+**カバレッジ済みシナリオ一覧** (4 + 1 = 5 分岐):
+
+| シナリオ | 条件 | カバー手段 |
+|---|---|---|
+| 通常実行中 | kerflg=T, exc_sense_intmask=T, enadsp=T, p_runtsk≠NULL → state=false | BB テスト（多数） |
+| 割込みコンテキスト/CPUロック例外 | exc_sense_intmask=F → state=true | BB テスト（check_library/exception 等） |
+| `dis_dsp()` 後の例外 | enadsp=F → state=true | BB テスト `xsns_dpn_b-4.yaml` |
+| — | 上記シナリオの対 分岐（複数通過） | BB テスト（union） |
+| 初期化ルーチン中 | kerflg=F → state=true（短絡評価） | WBテスト `xsns_dpn_W-a` |
+
+**残存未到達（1 分岐）:**
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L102 br[2] | `-O2` 最適化後の複合条件残分岐（`p_runtsk == NULL` に対応する可能性） | アイドルループ中（実行可能タスクなし）に CPU 例外が発生する必要があるが、テストタスク実行中は常に `p_runtsk != NULL`。 | **構造的到達不能**（テスト文脈） |
+| L102 br[2] | `p_runtsk == NULL` → state=true | アイドルループ中（全タスクが休眠または待ち）に CPU 例外が発生した場合のパス。テスト実行中は常に MAIN_TASK が `running` 状態にあるため `p_runtsk != NULL`。この状態を作るには全タスクを待ち状態にした上でアイドルループ中に CPU 例外を発火させる必要があるが、zybo_z7_gcc / QEMU 環境では例外を任意タイミングで起動する機構がなく再現不可能。 | **構造的到達不能**（テスト文脈） |
+
+> **gcov 分岐番号について**: `-O2` では複合条件のコンパイル順序が最適化により変化し、各条件と gcov の branch 番号の対応がソース上の位置と一致しない場合がある。上表の L102 br[2] は、BB テスト（4 分岐カバー）+ xsns_dpn_W-a（kerflg=F カバー）を加えた後に唯一残る未到達分岐を指す。到達させるための残条件として `p_runtsk==NULL` 以外のシナリオは全て BB または xsns_dpn_W-a で消化済みであることを論理的に確認済み。
 
 **結論**: 残 1 分岐は WB テスト追加不要。
 
