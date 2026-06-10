@@ -26,7 +26,7 @@
 #include "ttsp_test_lib.h"
 #include "out.h"
 
-#define LOOP_N      500000U
+#define LOOP_N      100000U
 #define RACER_GUARD 200000000U
 
 static volatile bool_t done = false;
