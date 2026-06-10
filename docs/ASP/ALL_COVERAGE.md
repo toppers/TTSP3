@@ -415,15 +415,17 @@
 | 6 | task_refer.c | 97.1% | 1 | `ref_tsk` L131 br[10]（switch JT境界チェック、構造的到達不能） |
 | 7 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
 
-**BBテストで解消済み（100%到達）**：
+**BBテスト・WBテストで解消済み（100%到達）**：
 
-| ファイル・API | BBテスト | 状態 |
+> `(BB・方式1)` = YAML 自動生成テスト、`(WB・方式2)` = 手書き WBテスト。WBテストの到達手法は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部を参照。
+
+| ファイル・API | テスト（BB/WB） | 状態 |
 |---|---|---|
-| sys_manage.c | ena_dsp_b-3/b-4 | **100%** |
-| task_term.c (`ena_ter`) | ena_ter_c | **100%** |
-| task_term.c (`ras_ter` L180) | ras_ter_g | **100%** |
-| interrupt.c (`chg_ipm` L369) | chg_ipm_e | 57/58 (**98.3%**、L371残1: 到達不能) |
-| mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k | 86/88 (97.7%、残2) |
+| sys_manage.c | ena_dsp_b-3/b-4 (BB・方式1) | **100%** |
+| task_term.c (`ena_ter`) | ena_ter_c (BB・方式1) | **100%** |
+| task_term.c (`ras_ter` L180) | ras_ter_g (BB・方式1) | **100%** |
+| interrupt.c (`chg_ipm` L369) | chg_ipm_e (BB・方式1) | 57/58 (**98.3%**、L371残1: 到達不能) |
+| mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k (BB・方式1) | 86/88 (97.7%、残2) |
 | mempfix.c (`rel_mpf` L309 br[0]) | rel_mpf_W-a (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
 | mempfix.c (`rel_mpf` L310 br[0]) | rel_mpf_W-b (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
 | alarm.c (`_kernel_call_alarm` L241 br[1]) | alarm_W-a (WB・方式2、`wb_test/ASP/alarm/`) | **100%** |
@@ -432,7 +434,7 @@
 | time_event.c (`tmevtb_delete` L302 br[0]) | time_event_W-b (WB・方式2、`wb_test/ASP/time_event/`) | **100%** |
 | time_event.c (`tmevt_down` L221 br[1]+L231 br[0]) | time_event_W-a (WB・方式2、`wb_test/ASP/time_event/`) | **到達済み** |
 | time_event.c (`check_adjtim` L533 br[1]) | adj_tim_W-a.yaml (WB・方式1、api_test/ 配下で **有効のまま**) | 8/8 **100%** |
-| semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト | **100%** |
+| semaphore.c, dataqueue.c, eventflag.c, pridataq.c, task_sync.c | 既存テスト (BB・方式1) | **100%** |
 
 ## 更新手順
 
