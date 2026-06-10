@@ -286,7 +286,13 @@ case TS_WAITING_DLY: ...
 |---|---|---|---|
 | L131 br[10]（switch JT 境界チェック） | `TS_WAITING_MASK` の有効範囲外の待ち状態コード | GCC の switch ジャンプテーブル最適化が生成する「範囲外 → デフォルト」の安全チェック分岐。有効な待ち状態コードのみカーネル内部から設定される。 | **構造的到達不能** |
 
-**結論**: WB テストは不要。
+**switch JT 無効化オプション（`-fno-jump-tables`）の検討**: `-fno-jump-tables` で switch を比較連鎖に変換すれば JT 境界チェック分岐は消えるが、**採用しない**。理由:
+- 全 switch に効く大域フラグで（関数単位指定はカーネル編集＝禁則②）、他関数の switch（dataqueue 等）の分岐数も総ずれする
+- production は JT を使うため実バイナリから乖離する
+- 比較連鎖でも末尾 default/else が残り、未到達が消えず移動するだけの可能性
+- インライン抑制（隠れた論理カバレッジの顕在化）と異なり、これは到達不能な安全チェックを分母から消すだけの cosmetic な操作
+
+**結論**: コンパイラ挿入の安全チェックであり **構造的到達不能**。WB テスト・コンパイルオプション変更ともに不要。
 
 ---
 
@@ -310,15 +316,17 @@ if (current_evttim < monotonic_evttim) {
 > 旧版 §5（wait.h インライン展開アーティファクト 15 分岐）は **インライン抑制で解消**（wait.h 14/14 = 100%）したため削除。
 > インライン抑制により `clr_int`/`ras_int` の実分岐が顕在化し、interrupt.c の未到達が 1→3 に増えた（旧 -O2 ではインライン併合で `clr_int`/`ras_int` が 8/8 と見えていた）。
 
+各未到達分岐の正体を特定した（`ena_int` は `check_intno_cfg` 1条件のみで 100%、`clr_int`/`ras_int` は `&& check_intno_clear/raise` の**第2条件**が追加されている点が差）。
+
 | 関数 | 未到達分岐 | 未到達理由 | 分類 |
 |---|---|---|---|
-| `clr_int` | 1（`check_intno_cfg`/`check_intno_raise` が偽 → `E_OBJ`、または CPUロック状態 `!locked` 分岐の一方）| BB テストは構成済み・クリア可能な割込み番号を正常状態で渡すため、`E_OBJ` 分岐 or CPUロック中呼び出しの一方が未到達。target/状態依存 | **到達困難（config・状態依存）** |
-| `ras_int` | 1（同上、`ras_int` の検査/状態分岐の一方）| 同上 | **到達困難（config・状態依存）** |
-| `chg_ipm` | 1（`raster && enater` が真 → 自タスク終了、または dispatch 競合）| `chg_ipm(TIPM_ENAALL)` 実行中に別タスクが `ras_ter(自)` を呼ぶ競合タイミングが必要 | **到達困難（制約あり）** |
+| `clr_int` | `check_intno_clear(intno)` が偽 → `E_OBJ` | zybo（GIC）の [`gic_kernel_impl.h`](../../../asp3/arch/arm_gcc/common/gic_kernel_impl.h) で `check_intno_clear` は **`return(true)` 恒真**。「configured だが clear 不可な割込み」が存在せず false 分岐に到達できない（カーネル編集なしには不可＝禁則②）| **構造的到達不能（ターゲット依存: GIC 恒真）** |
+| `ras_int` | `check_intno_raise(intno)` が偽 → `E_OBJ` | 同上（`check_intno_raise` も `return(true)` 恒真）| **構造的到達不能（ターゲット依存: GIC 恒真）** |
+| `chg_ipm` | `if (p_runtsk->raster && p_runtsk->enater)` 真 → 自タスク終了 | `chg_ipm(TIPM_ENAALL)` 時に raster=true（`ras_ter` 済）かつ enater=true の自タスク終了パス。単核・単一シナリオで再現可能 | **BBテストで到達可能**（→ `chg_ipm_f.yaml` で対応） |
 
-**補足**: いずれもインライン抑制で初めて per-関数の未到達として顕在化した分岐。`clr_int`/`ras_int` の正確な未到達 branch は config（VALID_INTNO 範囲・割込み構成）と CPUロック状態に依存し、特定条件の追加テストで到達余地あり（未調査）。
-
-**結論**: WB/追加 BB テストで到達可能な可能性があるが、いずれも config・状態・競合依存で優先度低。当面未対応で可。
+**結論**:
+- `clr_int`/`ras_int`: zybo（GIC）では `check_intno_clear`/`check_intno_raise` が恒真のため**構造的到達不能**。非クリア/非要求可能な割込みを持つ別ターゲットでのみ到達可（BB/WB ともに zybo では不可）。
+- `chg_ipm`: **BBテスト（`chg_ipm_f.yaml`）で到達可能**。既存 `ena_dsp_b-4.yaml`（ena_dsp の同型 raster&&enater 自終了）と同じ構成。
 
 ---
 

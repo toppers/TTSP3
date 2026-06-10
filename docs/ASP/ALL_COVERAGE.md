@@ -287,7 +287,7 @@
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
 | 1 | time_event.c | 92.9% | 4 | L391/L440(実用的到達不能), L625(タイミング依存), tmevt_down 内部状態依存 ×1 |
-| 2 | interrupt.c | 95.2% | 3 | `clr_int` ×1 / `ras_int` ×1（config・CPUロック状態依存の検査分岐、inline抑制で顕在化）/ `chg_ipm` ×1（raster&&enater 競合）|
+| 2 | interrupt.c | 95.2% | 3 | `clr_int`/`ras_int` ×各1（GIC で `check_intno_clear/raise` 恒真 → 構造的到達不能）/ `chg_ipm` ×1（raster&&enater 自終了、`chg_ipm_f.yaml` で BB 到達可）|
 | 3 | exception.c | 87.5% | 1 | `xsns_dpn` p_runtsk==NULL（構造的到達不能・テスト文脈） |
 | 4 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
 | 5 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |

@@ -1,0 +1,36 @@
+version: "bb-2026-06-10"
+ASP_interrupt_chg_ipm_f:
+  note: 【NGKI3110 補足説明】chg_ipm(TIPM_ENAALL) 呼出し時にタスク終了要求フラグがセット（raster=T）かつタスク終了許可状態（enater=T）の場合，chg_ipm からリターンせず自タスクが終了すること（interrupt.c の `if (p_runtsk->raster && p_runtsk->enater)` 真分岐）。手順：dister=T+raster=T（終了要求済・終了禁止）→ chg_ipm(マスク)で enadsp=T を保ったまま dspflg=F → ena_ter(dspflg=F なので終了せず E_OK，enater=T 化) → chg_ipm(TIPM_ENAALL) で set_dspflg 後 raster&&enater 成立 → 自タスク終了。ena_dsp_b-4 の chg_ipm 版。
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+
+  do_0:
+    id     : TASK1
+    syscall: chg_ipm(TTSP_TMIN_INTPRI)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+  do_1:
+    id     : TASK1
+    syscall: ena_ter()
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      dister: false
+
+  do_2:
+    id     : TASK1
+    syscall: chg_ipm(TIPM_ENAALL)
+
+  post_condition_2:
+    TASK1:
+      tskstat: dormant
