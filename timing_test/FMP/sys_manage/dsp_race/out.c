@@ -55,7 +55,7 @@ void main_task(intptr_t exinf)
 
 	ttsp_target_stop_tick();
 	ttsp_initialize_test_lib();
-	syslog_0(LOG_NOTICE, "FMP_dis_dsp_race: Start");
+	syslog_0(LOG_NOTICE, "FMP_dsp_race: Start");
 
 	ttsp_check_point(1);
 
@@ -68,6 +68,6 @@ void main_task(intptr_t exinf)
 
 	ttsp_check_point(2);
 
-	syslog_0(LOG_NOTICE, "FMP_dis_dsp_race: loop done");
+	syslog_0(LOG_NOTICE, "FMP_dsp_race: loop done");
 	ttsp_check_finish(3);
 }

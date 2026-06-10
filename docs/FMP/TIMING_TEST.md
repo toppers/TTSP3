@@ -168,30 +168,57 @@ MTTCG で実並行する事実を使い、外部制御なしでレースを自�
 
 ## 8. 実測結果（案3 プロトタイプ, 2026-06-10）★案3 実証済み
 
-`dis_dsp` の多コアレース分岐（sys_manage.c L603-606）を対象に案3を試作・実測。
+### 8-0. ファイル管理（フォルダ構成）
 
-- プロトタイプ: `wb_test/FMP/timing/dis_dsp_race/`
-  - PE1 `MAIN_TASK`: `dis_dsp()`/`ena_dsp()` を **500,000 回**密ループ
-  - PE2 `RACER_TASK`: `sus_tsk(MAIN_TASK)`/`rsm_tsk(MAIN_TASK)` を `done` まで密ループ
-- 実行: QEMU 11.0.0 `-M xilinx-zynq-a9 -smp 2`（MTTCG）、`-O2 -DNDEBUG`、All check points passed
-
-**gcov 実測（dis_dsp）**:
+タイミング（多コアレース）テストは `api_test/`・`wb_test/` と並ぶ**トップレベル `timing_test/`** で管理する（`coverage_gcov_fmp.sh` の `*_W-*` 自動収集対象外＝通常カバレッジ／CIゲートに混入しない）。
 
 ```
-   513599:  601:	acquire_glock();
-   513599:  603:	if (p_selftsk != p_my_pcb->p_schedtsk) {
-branch  0 taken 13599 (fallthrough)   ← 多コアレース分岐（従来 #### 未到達）
-branch  1 taken 500000
-    13599:  604:		release_glock();
-    13599:  605:		dispatch();
-    13599:  606:		goto retry;
+timing_test/FMP/<group>/<name>/{out.c,out.cfg,out.h}
+  例) timing_test/FMP/sys_manage/dsp_race/     … dis_dsp + ena_dsp
+      timing_test/FMP/interrupt/chg_ipm_race/  … chg_ipm retry
 ```
 
-- レース分岐が **13,599 回 taken**（500,000 回中）。**ヒット率 約 2.7%/回**
-- 「稀に当たる」ではなく**高頻度**。外部ツールなしの純2コアストレスループで安定到達
+共通構造: PE1 `MAIN_TASK`（CLS_ALL_PRC1）が対象APIを密ループ、PE2 `RACER_TASK`（CLS_ALL_PRC2）が `sus_tsk`/`rsm_tsk(MAIN_TASK)` で `p_schedtsk` を反復書換。実行は QEMU 11.0.0 `-smp 2`（MTTCG）、`-O2 -DNDEBUG`、停止は案A（固定 N → `done` → 正常終了 → オフライン gcov 判定）。
+
+### 8-1. 実測サマリ（2サブシステム・3分岐を実証）
+
+| テスト | 対象分岐 | gcov 実測（500,000 回ループ中） | 結果 |
+|---|---|---|---|
+| `sys_manage/dsp_race` | dis_dsp L603（retry レース）| dispatch **13,599 回** taken（≈2.7%/回）| ✅ |
+| `sys_manage/dsp_race` | ena_dsp L654（dispatch レース）| dispatch **463,648 回** taken | ✅ 同一実行で同時カバー |
+| `interrupt/chg_ipm_race` | chg_ipm L383（retry レース・§2-a）| dispatch+goto retry **6,798 回** | ✅ |
+| `interrupt/chg_ipm_race` | chg_ipm L403/L405（ENAALL 内 dispatch）| **#### 未到達** | ✗ 下記参照 |
+
+- 1本の `dsp_race` で **dis_dsp + ena_dsp の2分岐を同時カバー**（同じ RACER が API を問わず `p_schedtsk` を変えるため）。
+- 外部ツールなしの純2コアストレスループで**高頻度**ヒット → 案3 実証済み・CI フレーキ懸念は実質なし。
+
+### 8-2. 重要な切り分け：踏める分岐 / 構造的に dead な分岐
+
+chg_ipm の L403/L405 が未到達のままだった理由：
+
+- **acquire_glock 後の「最初の」 `p_selftsk != p_schedtsk` 判定**（glock が競合し得た直後）は racer で踏める（dis_dsp L603 / ena_dsp L654 / chg_ipm L383）。
+- **glock を連続保持したままの「後続」再チェック**（chg_ipm L403）は、間に `release_glock` が無く `p_schedtsk` が変わり得ない → **構造的到達不能**。racer でも踏めない（踏むべきでもない）。
+
+→ 各 API の dispatch 分岐は「glock 競合直後の初回判定か／連続保持中の再判定か」で到達可否が決まる。後者は第2部の「構造的到達不能」に分類すべき。
+
+### 8-3. 他APIへの横展開（検討）
+
+同機構（`sus_tsk` racer）で到達できる見込みの「glock 競合直後の初回 dispatch 判定」を持つ API：
+
+| API（ファイル）| ループ可否 | racer 操作 | 備考 |
+|---|---|---|---|
+| dis_dsp / ena_dsp（sys_manage）| ◎ 自己ループ | sus/rsm | **実証済み**（dsp_race）|
+| chg_ipm（interrupt）| ◎ 自己ループ | sus/rsm | **retry 実証済み**（chg_ipm_race）。ENAALL内は dead |
+| rot_rdq / mrot_rdq（sys_manage）| ◎ 自己ループ | sus/rsm | 未試作。ただし同優先度タスク併用で単核到達の可能性あり要確認 |
+| adj_tim（time_manage）| ◎ 自己ループ | sus/rsm | 未試作 |
+| rel_mpf / ini_mpf（mempfix）| ○ get/rel 対ループ | sus/rsm | 未試作 |
+| unl_mtx / ini_mtx（mutex）| ○ loc/unl 対ループ | sus/rsm | 未試作 |
+| act_tsk / mact_tsk（task_manage）| △ 対象タスクの再休止が必要 | sus/rsm | 未試作・ループ構造に工夫要 |
+| ter_tsk（task_term）| △ 対象の再活性化が必要 | sus/rsm | 未試作 |
+| alarm / cyclic ハンドラ後 dispatch | △ アラーム発火が必要 | sus/rsm | ハンドラ文脈・別設計要 |
 
 **結論**:
-- 案3（純ストレスループ）は `dis_dsp` で **実証済み**。ヒット率 2.7% なら N=数百でほぼ確実、CI フレーキ懸念は実質なし
-- 他の多コアレース分岐（`mrot_rdq` / `act_tsk` / `ter_tsk` / alarm・cyclic ハンドラ後 dispatch 等）も同機構。ただし **PE2 が p_schedtsk を変える操作は API ごとに適切なものを選ぶ**必要がある（dis_dsp では `sus_tsk` が有効）
-- 残りは「各分岐に対し PE2 レーサー操作を合わせた WBテストを横展開」すれば案3で広くカバーできる見込み。当たりにくい分岐のみ案4（GDB）へ
-- 本番採用時は `dis_dsp_race` → `dis_dsp_W-a` 等にリネームし、CI はカバレッジ蓄積ジョブで実行（合否ゲートにはしない）
+- 案3（純ストレスループ）は **実証済み**。`sus_tsk`/`rsm_tsk` の汎用 racer が複数 API・複数サブシステムの「glock 競合直後 dispatch」分岐を踏める。
+- 横展開は「対象APIを密ループする MAIN ＋ 共通 racer」を `timing_test/FMP/<group>/<name>/` に追加していく。自己ループしにくい API（act_tsk/ter_tsk/alarm 等）はループ構造の工夫、当たりにくい分岐は案4（GDB）へ。
+- 「glock 連続保持中の後続再チェック」は構造的到達不能として第2部に分類（chg_ipm L403 が実例）。
+- 本番採用時は `*_race` → `*_W-*` 等にリネームし、CI はカバレッジ蓄積ジョブで実行（合否ゲートにはしない）。
