@@ -267,7 +267,9 @@ case TS_WAITING_DLY: ...
 - 比較連鎖でも末尾 default/else が残り、未到達が消えず移動するだけの可能性
 - インライン抑制（隠れた論理カバレッジの顕在化）と異なり、これは到達不能な安全チェックを分母から消すだけの cosmetic な操作
 
-**結論**: コンパイラ挿入の安全チェックであり **構造的到達不能**。WB テスト・コンパイルオプション変更ともに不要。
+**`-fno-bounds-check` の検討（無効）**: 配列境界チェックを抑止する `-fno-bounds-check` でこの境界分岐を消せないか試したが、**C では効果なし（no-op）**。`-fno-bounds-check`（`-fbounds-check`）は **Fortran/Java フロントエンド専用**のオプションで、C フロントエンドはエラーを出さず黙って無視する。実測（`arm-none-eabi-gcc -O2`、switch 5 case + default）で `-O2` と `-O2 -fno-bounds-check` の生成コードはバイト単位で完全に同一、JT 境界チェック `cmp r0, #4`（範囲外→default）はそのまま残った。そもそも当該分岐は言語レベルの配列境界チェックではなく GCC が JT を生成する際の codegen 上の安全分岐であり、`-fno-bounds-check` の対象外。
+
+**結論**: コンパイラ挿入の安全チェックであり **構造的到達不能**。WB テスト・コンパイルオプション変更（`-fno-jump-tables` / `-fno-bounds-check` いずれも）ともに不要。
 
 ---
 
