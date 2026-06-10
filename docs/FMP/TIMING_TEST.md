@@ -166,59 +166,54 @@ MTTCG で実並行する事実を使い、外部制御なしでレースを自�
 
 ---
 
-## 8. 実測結果（案3 プロトタイプ, 2026-06-10）★案3 実証済み
+## 8. 実測結果（-O2+インライン抑制 union, 2026-06-10）★案3 実証・寄与確定
 
 ### 8-0. ファイル管理（フォルダ構成）
 
-タイミング（多コアレース）テストは `api_test/`・`wb_test/` と並ぶ**トップレベル `timing_test/`** で管理する（`coverage_gcov_fmp.sh` の `*_W-*` 自動収集対象外＝通常カバレッジ／CIゲートに混入しない）。
+タイミング（多コアレース）テストは `api_test/`・`wb_test/` と並ぶ**トップレベル `timing_test/`** で管理する（`coverage_gcov_fmp.sh` の `*_W-*` 自動収集対象外＝通常カバレッジ／CIゲートに混入しない）。正味で分岐を増やす2本のみを保持する。
 
 ```
-timing_test/FMP/<group>/<name>/{out.c,out.cfg,out.h}
-  例) timing_test/FMP/sys_manage/dsp_race/     … dis_dsp + ena_dsp
-      timing_test/FMP/interrupt/chg_ipm_race/  … chg_ipm retry
+timing_test/FMP/sys_manage/dsp_race/     … dis_dsp dispatch race
+timing_test/FMP/interrupt/chg_ipm_race/  … chg_ipm retry race (L383)
 ```
 
-共通構造: PE1 `MAIN_TASK`（CLS_ALL_PRC1）が対象APIを密ループ、PE2 `RACER_TASK`（CLS_ALL_PRC2）が `sus_tsk`/`rsm_tsk(MAIN_TASK)` で `p_schedtsk` を反復書換。実行は QEMU 11.0.0 `-smp 2`（MTTCG）、`-O2 -DNDEBUG`、停止は案A（固定 N → `done` → 正常終了 → オフライン gcov 判定）。
+共通構造: PE1 `MAIN_TASK`（CLS_ALL_PRC1）が対象APIを `LOOP_N=100000` 回密ループ、PE2 `RACER_TASK`（CLS_ALL_PRC2）が `sus_tsk`/`rsm_tsk(MAIN_TASK)` で `p_schedtsk` を反復書換。実行は QEMU 11.0.0 `-smp 2`（MTTCG）、計測は本番と同じ **-O2 + インライン抑制**、停止は案A（固定 N → `done` → 正常終了 → オフライン gcov 判定）。
 
-### 8-1. 実測サマリ（2サブシステム・3分岐を実証）
+### 8-1. -ni union での正味寄与（+2 分岐）
 
-| テスト | 対象分岐 | gcov 実測（500,000 回ループ中） | 結果 |
+採用済みの -O2+インライン抑制ビルドで、BB+WB の union に timing を加えた寄与：
+
+| 指標 | 分岐 C1 |
+|---|---|
+| BB+WB（timing なし）| 1519/1597 (95.1%) |
+| **BB+WB+timing** | **1521/1597 (95.2%)** |
+
+| timing test | 対象分岐 | 寄与 | 備考 |
 |---|---|---|---|
-| `sys_manage/dsp_race` | dis_dsp L603（retry レース）| dispatch **13,599 回** taken（≈2.7%/回）| ✅ |
-| `sys_manage/dsp_race` | ena_dsp L654（dispatch レース）| dispatch **463,648 回** taken | ✅ 同一実行で同時カバー |
-| `interrupt/chg_ipm_race` | chg_ipm L383（retry レース・§2-a）| dispatch+goto retry **6,798 回** | ✅ |
-| `interrupt/chg_ipm_race` | chg_ipm L403/L405（ENAALL 内 dispatch）| **#### 未到達** | ✗ 下記参照 |
+| `dsp_race` | dis_dsp dispatch race | **+1**（3/4→4/4）| dis_dsp は自分でスケジュールを変えないため BB では到達不能＝timing 専用 |
+| `chg_ipm_race` | chg_ipm retry race（L383）| **+1**（12/16→13/16）| 同上。retry 直後の `p_selftsk!=p_schedtsk` |
+| ~~`mrot_rdq_race`~~ | mrot_rdq dispatch | **0 → 削除** | mrot_rdq の race 分岐は **BB が単核で網羅済み**（残 1 は context 経路 `request_dispatch_retint`＝非タスク文脈のみ）。寄与ゼロのため削除 |
 
-- 1本の `dsp_race` で **dis_dsp + ena_dsp の2分岐を同時カバー**（同じ RACER が API を問わず `p_schedtsk` を変えるため）。
-- 外部ツールなしの純2コアストレスループで**高頻度**ヒット → 案3 実証済み・CI フレーキ懸念は実質なし。
+全テスト All check points passed。LOOP_N=100000 で全完走（-ni でも timeout なし）。
 
-### 8-2. 重要な切り分け：踏める分岐 / 構造的に dead な分岐
+### 8-2. 重要な知見：-ni では多コア dispatch の大半が BB で既に網羅
 
-chg_ipm の L403/L405 が未到達のままだった理由：
+旧 -O2（インライン展開あり）計測では「マルチコア遅延ディスパッチ 未到達 ~30」と見えていたが、これは**インライン由来の分岐水増し・誤集計が主因**だった。-O2+インライン抑制で計測し直すと、`mrot_rdq`/`ena_dsp` 等の dispatch race 分岐は **BB テストが単核シナリオ（同／高優先度タスクの起床）で既に到達**しており、timing 技術が本当に必要なのは：
 
-- **acquire_glock 後の「最初の」 `p_selftsk != p_schedtsk` 判定**（glock が競合し得た直後）は racer で踏める（dis_dsp L603 / ena_dsp L654 / chg_ipm L383）。
-- **glock を連続保持したままの「後続」再チェック**（chg_ipm L403）は、間に `release_glock` が無く `p_schedtsk` が変わり得ない → **構造的到達不能**。racer でも踏めない（踏むべきでもない）。
+- **dis_dsp**（dispatch race）— 自身でスケジュールを変えないため BB では不可
+- **chg_ipm**（retry race L383）— 同上
 
-→ 各 API の dispatch 分岐は「glock 競合直後の初回判定か／連続保持中の再判定か」で到達可否が決まる。後者は第2部の「構造的到達不能」に分類すべき。
+の 2 分岐に縮小した。`ena_dsp`/`mrot_rdq` の残存未到達は dispatch race ではなく **raster&&enater 自終了**や **context 経路**（別技術／構造的）である。
 
-### 8-3. 他APIへの横展開（検討）
+### 8-3. 切り分け：踏める分岐 / 構造的に dead な分岐
 
-同機構（`sus_tsk` racer）で到達できる見込みの「glock 競合直後の初回 dispatch 判定」を持つ API：
+- **acquire_glock 後の「最初の」 `p_selftsk != p_schedtsk` 判定**（glock が競合し得た直後）は racer で踏める（dis_dsp / chg_ipm L383）。
+- **glock を連続保持したままの「後続」再チェック**（chg_ipm L403/L405 等）は、間に `release_glock` が無く `p_schedtsk` が変わり得ない → **構造的到達不能**（racer でも踏めない）。
+- **context 経路**（`request_dispatch_retint`、非タスク文脈の分岐）は task からのループでは到達できない。
 
-| API（ファイル）| ループ可否 | racer 操作 | 備考 |
-|---|---|---|---|
-| dis_dsp / ena_dsp（sys_manage）| ◎ 自己ループ | sus/rsm | **実証済み**（dsp_race）|
-| chg_ipm（interrupt）| ◎ 自己ループ | sus/rsm | **retry 実証済み**（chg_ipm_race）。ENAALL内は dead |
-| rot_rdq / mrot_rdq（sys_manage）| ◎ 自己ループ | sus/rsm | 未試作。ただし同優先度タスク併用で単核到達の可能性あり要確認 |
-| adj_tim（time_manage）| ◎ 自己ループ | sus/rsm | 未試作 |
-| rel_mpf / ini_mpf（mempfix）| ○ get/rel 対ループ | sus/rsm | 未試作 |
-| unl_mtx / ini_mtx（mutex）| ○ loc/unl 対ループ | sus/rsm | 未試作 |
-| act_tsk / mact_tsk（task_manage）| △ 対象タスクの再休止が必要 | sus/rsm | 未試作・ループ構造に工夫要 |
-| ter_tsk（task_term）| △ 対象の再活性化が必要 | sus/rsm | 未試作 |
-| alarm / cyclic ハンドラ後 dispatch | △ アラーム発火が必要 | sus/rsm | ハンドラ文脈・別設計要 |
+### 8-4. 結論・運用
 
-**結論**:
-- 案3（純ストレスループ）は **実証済み**。`sus_tsk`/`rsm_tsk` の汎用 racer が複数 API・複数サブシステムの「glock 競合直後 dispatch」分岐を踏める。
-- 横展開は「対象APIを密ループする MAIN ＋ 共通 racer」を `timing_test/FMP/<group>/<name>/` に追加していく。自己ループしにくい API（act_tsk/ter_tsk/alarm 等）はループ構造の工夫、当たりにくい分岐は案4（GDB）へ。
-- 「glock 連続保持中の後続再チェック」は構造的到達不能として第2部に分類（chg_ipm L403 が実例）。
-- 本番採用時は `*_race` → `*_W-*` 等にリネームし、CI はカバレッジ蓄積ジョブで実行（合否ゲートにはしない）。
+- 案3（純2コアストレスループ）は **実証済み**。外部ツールなしで dis_dsp / chg_ipm の dispatch race を高頻度ヒット（CI フレーキ懸念は実質なし）。
+- ただし -ni 下での**正味寄与は +2 分岐**（多コア dispatch の大半は BB が網羅）。timing テストは `dsp_race`・`chg_ipm_race` の 2 本に整理。
+- `timing_test/` は CI ゲート対象外（`*_W-*` 非該当で自動収集されない）。カバレッジ蓄積ジョブで union に加える運用。
+- 再走: `bash /tmp/fmp_timing_run.sh` 相当（各 timing を -ni でビルド→QEMU -smp 2→`ttsp_gcov_report.py` で BB+WB と union）。
