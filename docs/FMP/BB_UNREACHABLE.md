@@ -149,6 +149,9 @@ else {
 FMP（Flexible Multiprocessor）では，カーネルAPIの多くに以下のパターンが追加されている：
 
 ```c
+lock_cpu();
+acquire_glock();
+...
 if (p_selftsk != p_my_pcb->p_schedtsk) {
     release_glock();
     dispatch();
@@ -156,10 +159,27 @@ if (p_selftsk != p_my_pcb->p_schedtsk) {
     goto unlock_and_exit;    /* ← 未到達 */
 }
 ```
+次のようなシナリオで発生する
+- PE2 : TASK2 : sus_tsk(TASK1)
+  - acquire_glock()でスピンロックを取得
+- PE1 : TASK1 : dis_dsp()
+  - lock_cpu()で割り込みを禁止
+  -  PE1 の p_my_pcb->p_schedtsk は TASK1
+  - acquire_glock()でスピンロックを取得を試みるがPE2が取得しているので取得できない
+- PE2 : TASK2 : sus_tsk(TASK1)
+  - make_non_runnable() で PE1の p_my_pcb->p_schedtsk をTASK1以外にする
+  - release_glock() : ロックの開放
+- PE1 : TASK1 : dis_dsp()
+  - acquire_glock() でロックを取得
+  - if (p_selftsk != p_my_pcb->p_schedtsk) が Trueとなりif文の中を実行する
 
-別プロセッサが同時に優先度の高いタスクを起動した場合，現在タスクが実行すべきタスクでなくなり，この `dispatch()` ルートが実行される。
+**テスト環境での到達不能理由**: TTSP3のAPIテストは1タスク（または少数タスク）が順次APIを呼び出す構成．QEMUで2コア起動していても，PE2は `idle_loop` のみ実行し，PE1のスケジューリングを変更しない。そのため `p_selftsk == p_my_pcb->p_schedtsk` が常に成立する。
 
-**テスト環境での到達不能理由**: TTSP3のAPIテストは1タスク（または少数タスク）が順次APIを呼び出す構成。QEMUで2コア起動していても，PE2は `idle_loop` のみ実行し，PE1のスケジューリングを変更しない。そのため `p_selftsk == p_my_pcb->p_schedtsk` が常に成立する。
+**対応方法検討** → 詳細は [`TIMING_TEST.md`](TIMING_TEST.md)
+- 案1: QEMU + GDB スクリプト（gdbstub + scheduler-locking）で決定的に interleaving を強制
+- 案2: QEMU にパッチを当ててコア間タイミングを制御（**フォーク保守コスト過大・不採用推奨**）
+- 案3（推奨）: 純粋な2コア・ストレスループ WBテスト（外部ツール不要）— MTTCG の実並行を利用
+- 案4: ハイブリッド（案3 主軸 + 残り分岐を案1 GDB で決定的補完）
 
 ### 影響ファイル
 
