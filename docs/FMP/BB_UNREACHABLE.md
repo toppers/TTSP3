@@ -5,8 +5,10 @@
 > 方式: gcov（`bash scripts/coverage_gcov_fmp.sh all` / `bb`）
 
 このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
-- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（6分岐, `bb`→`all` で +6 分岐）
-- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 95 分岐, `all` 1582/1677 = 94.3%）
+- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +6 分岐）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 78 分岐, `all` 1519/1597 = 95.1%、-O2+インライン抑制）
+
+> **計測方式（2026-06-10 変更）**: `-O2` + インライン抑制（`-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions`）。`static inline` 展開による gcov 分岐水増し（wait.h 等）を除去し、論理分岐をそのまま計測、bb/all 分母も一致（1597）。理由詳細は [`BB_COVERAGE.md`](BB_COVERAGE.md) 計測条件。旧 -O2 計測（分母 1677, wait.h 64分岐）からの移行。
 
 関連:
 - BBテストのみのカバレッジ（ファイル別） → [`BB_COVERAGE.md`](BB_COVERAGE.md)
@@ -16,19 +18,21 @@
 
 # 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
 
-> 自動生成 BBテスト（`bb` モード、1576/1677 = 94.0%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1582/1677 = 94.3%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a`）を FMP に移植したもの。
+> 自動生成 BBテスト（`bb` モード、1513/1597 = 94.7%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1519/1597 = 95.1%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a`）を FMP に移植したもの。
 
 ## WBテストによるカバレッジ寄与サマリ
 
-WBテスト（方式2）は以下の 6 分岐を新規に到達させ、`bb` → `all` で **+6 分岐** を追加する（未到達は 101 → 95）。
+WBテスト（方式2）は以下の 6 分岐を新規に到達させ、`bb` → `all` で **+6 分岐** を追加する（未到達は 84 → 78）。
 
 | ファイル | `bb` 分岐 | `all` 分岐 | 増分 | WBテスト |
 |---|---|---|---|---|
 | alarm.c | 48/50 | 49/50 | +1 | `alarm_W-a` |
 | cyclic.c | 46/48 | 47/48 | +1 | `cyclic_W-a` |
-| exception.c | 5/8 | 6/8 | +1 | `xsns_dpn_W-a` |
-| time_event.c | 65/78 | 68/78 | +3 | `time_event_W-a`（×2）/ `time_event_W-b`（×1） |
-| **合計** | **1576/1677 (94.0%)** | **1582/1677 (94.3%)** | **+6** | — |
+| exception.c | 7/10 | 8/10 | +1 | `xsns_dpn_W-a` |
+| time_event.c | 63/76 | 66/76 | +3 | `time_event_W-a`（×2）/ `time_event_W-b`（×1） |
+| **合計** | **1513/1597 (94.7%)** | **1519/1597 (95.1%)** | **+6** | — |
+
+> ※ -O2+インライン抑制計測。分岐番号は旧 -O2 と異なる（exception.c 8→10 分岐等）。各節の行番号・branch 番号は論理分岐の意味を示す。
 
 > ASP との差異: ASP の `xsns_dpn_W-a` は `kerflg==false` 短絡評価パスを対象としたが、FMP の `xsns_dpn` は `check_tskctx()` ガードを持つため `kerflg_table=false` 分岐は構造的到達不能。FMP 版は代わりに `check_tskctx()==false`（タスクコンテキスト呼び出し、NGKI3152）の else 分岐を対象とする。詳細は §1-3。
 
@@ -113,7 +117,7 @@ else {
 
 # 第2部 — WBテストでも到達しない残存分岐
 
-> `all` モード（BBテスト + WBテスト）での残存 95 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
+> `all` モード（BBテスト + WBテスト）での残存 78 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
 
 ## ビルド条件
 
@@ -121,24 +125,26 @@ else {
 |---|---|
 | `ENABLE_GCOV=true` | gcov計装（`-fprofile-arcs -ftest-coverage`）を有効化 |
 | `-DNDEBUG` | `assert()` 無効化。`t_stddef.h` の `#ifndef NDEBUG` で制御される assert 分岐がコードから除去される |
-| `-O2` | `static inline` 関数が呼び出し元へ展開。同一ソース行が複数コールサイトで計測され，wait.h 等で「64 分岐」のような計測アーティファクトが生じる |
+| **`-O2` + インライン抑制** | `-fno-inline` 系で `static inline` 展開を抑制し、wait.h 等の「64分岐」水増しアーティファクトを除去。各 inline 関数を1実体計測し論理分岐をそのまま反映、bb/all 分母も一致（1597）。`-O0` は実行時クラッシュ・タイミング変化のため不採用（理由詳細は [`BB_COVERAGE.md`](BB_COVERAGE.md)） |
 
 ---
 
 ## サマリー
 
-| # | カテゴリ | 未到達分岐数 | 主なファイル |
+> -O2+インライン抑制で再計測（合計 78 / 1597）。旧 -O2 計測の §3 wait.h アーティファクト（16）はインライン抑制で解消（現 wait.h 13/14 = 1分岐のみ未到達）。category 別の内訳は概数（インライン抑制で分岐数が再正規化されたため、interrupt.c は実分岐顕在化で増、task.c は 16→12 に減 等）。
+
+| # | カテゴリ | 未到達分岐数（概数）| 主なファイル |
 |---|---|---|---|
-| §1 | マルチコア遅延ディスパッチパス | 約33 | alarm.c, cyclic.c, mempfix.c, mutex.c(一部), sys_manage.c, task_manage.c, task_term.c, time_manage.c |
-| §2 | interrupt.c chg_ipm 複合パス | 27 | interrupt.c |
-| §3 | wait.h インライン展開アーティファクト | 16 | wait.h |
-| §4 | task.c サブ優先度機能 | 16 | task.c |
-| §5 | time_event.c ヒープ操作・マルチコアパス | 10（13→10, WBで-3） | time_event.c |
-| §6 | exception.c xsns_dpn 複合条件 | 2（3→2, WBで-1） | exception.c |
-| §7 | mutex.c サブ優先度パス | 3 | mutex.c |
-| §8 | alarm/cyclic force_unlock_spin | 0（2→0, WBで-2・到達済） | alarm.c, cyclic.c |
-| §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 4 | 各1分岐 |
-| **合計** | | **95 / 1677**（WBで 102→95） | |
+| §1 | マルチコア遅延ディスパッチパス | 約30 | alarm.c, cyclic.c, mempfix.c, mutex.c(一部), sys_manage.c, task_manage.c, task_term.c, time_manage.c |
+| §2 | interrupt.c chg_ipm 複合パス | 約29 | interrupt.c（inline抑制で実分岐顕在化） |
+| §3 | wait.h | 1 | wait.h（旧アーティファクト16はinline抑制で解消） |
+| §4 | task.c サブ優先度機能 | 約12 | task.c |
+| §5 | time_event.c ヒープ操作・マルチコアパス | 約10 | time_event.c（§5-a/b は WBで到達済） |
+| §6 | exception.c xsns_dpn | 2 | exception.c（else は WBで到達済、残2は構造的到達不能）|
+| §7 | mutex.c サブ優先度パス | 約7 | mutex.c |
+| §8 | alarm/cyclic force_unlock_spin | 0（WBで到達済）| alarm.c, cyclic.c |
+| §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 約4 | 各1分岐 |
+| **合計** | | **78 / 1597** | |
 
 ---
 
@@ -251,31 +257,26 @@ if (intpri == TIPM_ENAALL && p_my_pcb->enadsp) {
 
 ---
 
-## §3. wait.h インライン展開アーティファクト
+## §3. wait.h — 過渡状態分岐（1 branch, 13/14）
+
+> **2026-06-10 更新**: 旧 -O2 計測ではインライン展開により wait.h が「64分岐」に水増しされ 16分岐が未到達と計上されていたが、**インライン抑制（`-fno-inline` 系）で解消**。現在 wait.h は 14分岐（論理分岐どおり）で **13/14 = 92.9%**、残 1 分岐のみ。
 
 ```c
-/* fmp3/kernel/wait.h L82-93 */
+/* fmp3/kernel/wait.h make_wait */
 Inline void
 make_wait(PCB *p_my_pcb, TS tstat, TCB *p_selftsk)
 {
-    if (!TSTAT_SUSPENDED(p_selftsk->tstat)) {
-        p_selftsk->tstat = tstat;
-        make_non_runnable(p_my_pcb, p_selftsk);
-    }
+    if (!TSTAT_SUSPENDED(p_selftsk->tstat)) { ... }
     else {
-        /* 過渡状態で呼び出された場合 */
-        p_selftsk->tstat |= tstat;             /* L92 - 未到達 */
+        p_selftsk->tstat |= tstat;             /* 過渡状態分岐 - 未到達 */
     }
-    p_selftsk->winfo.tmevtb.callback = NULL;
+    ...
 }
 ```
 
-`wait.h` の `static inline` 関数は `-O2` により呼び出し元（semaphore.c, eventflag.c, mutex.c 等）にインライン展開される。gcov は展開後の各コールサイトを個別計測するため，元のソース16行が計64分岐として計測される（展開倍率 ×4）。
+- **過渡状態分岐**: 待ち状態（TS_WAITING）と強制待ち状態（TS_SUSPENDED）が同時成立する過渡状態。マルチコア遷移中に理論上発生しうるが、テストでは生じない。
 
-- **L92 (過渡状態分岐)**: 待ち状態（TS_WAITING）と強制待ち状態（TS_SUSPENDED）が同時成立する過渡状態。FMPでは加えてマルチコア遷移中に発生しうるが，テストでは生じない。
-- **16分岐**: すべてのコールサイトで過渡状態分岐が未到達となる計測アーティファクト。
-
-**分類**: 計測アーティファクト（-O2 inlining × 過渡状態到達不能）。WBテスト不要。
+**分類**: 到達困難（内部状態依存：過渡状態）。WBテスト不要（旧版のインライン展開アーティファクト ×16 はインライン抑制で消滅し、残るのは論理分岐 1 のみ）。
 
 ---
 
@@ -544,17 +545,17 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 
 ## 未到達分岐 総括
 
-| カテゴリ | 分岐数 | 備考 |
+| カテゴリ | 分岐数（概数）| 備考 |
 |---|---|---|
-| マルチコア遅延ディスパッチパス（§1,§2の一部） | ～35 | FMP固有。並行実行シナリオ不在 |
-| interrupt.c chg_ipm 複合パス（§2） | 27 | dispatch + 終了フロー複合 |
-| wait.h インライン展開アーティファクト（§3） | 16 | 計測アーティファクト |
-| サブ優先度機能（§4, §7） | 19 | TA_SUBPRI/ENA_SPR 未使用設定 |
-| time_event.c ヒープ・マルチコアパス（§5） | 10（13→10） | TM設定依存（§5-a/b は WBで到達済み） |
-| exception.c xsns_dpn（§6） | 2（3→2） | 構造的到達不能（else は WBで到達済み） |
-| alarm/cyclic force_unlock_spin（§8） | 0（2→0） | WBテストで到達済み |
-| その他（§9） | 4 | 各ファイル1分岐 |
-| **合計** | **95 / 1677** | 94.3% branch coverage（all モード、WBで 102→95） |
+| マルチコア遅延ディスパッチパス（§1,§2の一部） | 約30 | FMP固有。並行実行シナリオ不在。→ [`TIMING_TEST.md`](TIMING_TEST.md) 案3で到達実証済み |
+| interrupt.c chg_ipm 複合パス（§2） | 約29 | dispatch + 終了フロー複合（inline抑制で実分岐顕在化）|
+| wait.h（§3） | 1 | 過渡状態分岐（旧アーティファクト16はinline抑制で解消）|
+| サブ優先度機能（§4, §7） | 約19 | TA_SUBPRI/ENA_SPR 未使用設定 |
+| time_event.c ヒープ・マルチコアパス（§5） | 約10 | TM設定依存（§5-a/b は WBで到達済み） |
+| exception.c xsns_dpn（§6） | 2 | 構造的到達不能（else は WBで到達済み） |
+| alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み |
+| その他（§9） | 約4 | 各ファイル1分岐 |
+| **合計** | **78 / 1597** | 95.1% branch coverage（all モード、-O2+インライン抑制）|
 
 ---
 
@@ -572,9 +573,9 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 
 | カテゴリ | WBテスト化 | 理由 |
 |---|---|---|
-| マルチコア遅延ディスパッチ（§1,§2） | 困難 | PE間タイミング制御が必要。FMP は実2コアだが TTSP3 は PE2=idle |
+| マルチコア遅延ディスパッチ（§1,§2） | **実証済み（案3）** | [`TIMING_TEST.md`](TIMING_TEST.md) の2コアストレスループで dis_dsp/ena_dsp/chg_ipm のレース分岐到達を実証。横展開で広くカバー可 |
 | interrupt.c 終了フロー（§2） | 困難 | chg_ipm + raster + enater の複合状態制御 |
-| wait.h アーティファクト（§3） | 不要 | 計測の性質上，実際には実行済み |
+| wait.h 過渡状態（§3） | 困難（内部状態依存）| 残 1 分岐（旧アーティファクト16はinline抑制で解消）|
 | **サブ優先度機能（§4, §7）** | **可能（最有力）** | `ENA_SPR(tskpri)` 静的API で `subprio_primap` ビットを立て、当該優先度のタスク + `chg_spr` を組み合わせれば到達。auto_code は `ENA_SPR(13)` を持つが当該優先度のタスク構成が不足。最大 +約15実分岐 |
 | time_event.c 非TM path（§5-c/d/e） | 困難 | ターゲットHW構成・長期タイムアウト依存 |
 | exception.c xsns_dpn 残2（§6） | 不要 | 構造的到達不能（kerflg_table/p_runtsk） |
