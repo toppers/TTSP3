@@ -24,3 +24,13 @@ TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 - arm-none-eabi-gcc 13.2 / ruby 3.2
 
 > 更新時：版を改訂 → `DIVERGENCE_MAP.md` A表で差分を洗う → 緑に戻す。
+
+## FMP3 改変パッチ（カバレッジ計測専用・通常ビルド非適用）
+
+通常ビルド・CI（`ci_run_fmp.sh`）は **無改変の `exshonda/fmp3@223ed7e`** で緑（PASS=182/0）。
+以下はカバレッジ計測 Method B 用の任意パッチで、`coverage_gcov_fmp.sh all` の WB ビルド時のみ効く
+（既定挙動不変）。fmp3 を編集する場合はライセンス条件（改変明記）を満たすこと。
+
+| パッチ | 目的 | 既定挙動への影響 |
+|---|---|---|
+| `docs/patches/fmp3-tepp-prc-overridable.patch` | `target/zybo_z7_gcc/target_kernel.h` の `TOPPERS_TEPP_PRC` を `#ifndef` ガード化し COPTS 上書き可に。WB `tepp1_W-a`（`-DTOPPERS_TEPP_PRC=0x1`）で time_event.c §5-c 非TM-processor 転送（L168/L583/L627）を到達 | なし（未定義時 0x3 のまま）。`DIVERGENCE_MAP.md`／`docs/FMP/COVERAGE_RAISE_PLAN.md` |

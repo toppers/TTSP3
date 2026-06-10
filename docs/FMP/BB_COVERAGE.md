@@ -66,16 +66,16 @@
 
 ## BBで未到達の分岐（概要）
 
-BBテスト（自動生成）では計 84 分岐が未到達。2 群に分かれる。
+BBテスト（自動生成）では計 64 分岐が未到達（2026-06-10 再計測・bb 1533/1597）。2 群に分かれる。
 
 | 群 | 内容 | 対応 |
 |---|---|---|
-| **(A) WBテストで到達可能（7分岐）** | alarm.c (1) / cyclic.c (1) / exception.c (2) / time_event.c (3) | 手書き WBテスト（方式2）で到達 → `all` で 84→77。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部 |
-| **(B) all モードでも残る未到達（52分岐・2026-06-10 再計測）** | interrupt.c (17・`VALID_INTNO`構造的dead/check_intno_cfg複合/chg_ipm) / time_event (10) / マルチコア遅延ディスパッチ各所（timing） など。※サブ優先度(旧12+7)・割込み番号異常系(旧29→17)は 2026-06-10 のBB/WB追加で大幅縮小 | マルチコアタイミング依存・構造的到達不能等。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) |
+| **(A) WBテストで到達可能（16分岐）** | exception.c (2) / time_event.c §heap (3) / alarm.c (1) / cyclic.c (1) ＝当初6本(+7) ／ サブ優先度 task.c・mutex (+5：`chg_spr_W-a`・`subprio_head_W-a`) ／ time_event.c §5-c + startup.c §9-b (+4：`tepp1_W-a`・単一TM-processor変種) | 手書き WBテスト（方式2）で到達 → `all` で bb 64→48（WB寄与 all−bb = +16）。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部・§5-c |
+| **(B) all モードでも残る未到達（48分岐・2026-06-10 再計測）** | interrupt.c (17・`VALID_INTNO`構造的dead/check_intno_cfg複合/chg_ipm) / time_event (7) / マルチコア遅延ディスパッチ各所（timing） など。※サブ優先度(旧12+7)・割込み番号異常系(旧29→17)・time_event §5-c は 2026-06-10 のBB/WB追加で大幅縮小 | マルチコアタイミング依存・構造的到達不能等。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) |
 
-> exception.c の 2 分岐（`check_tskctx()==false` / `p_runtsk==NULL`）は `xsns_dpn_W-a` / `xsns_dpn_W-b`（custom idle 方式）で到達し、`all` で 9/10。これにより (A) が 6→7、(B) が 78→77 となった（残 1 分岐 `kerflg_table==false` は構造的到達不能）。
+> exception.c の 2 分岐（`check_tskctx()==false` / `p_runtsk==NULL`）は `xsns_dpn_W-a` / `xsns_dpn_W-b`（custom idle 方式）で到達し、`all` で 9/10（残 1 分岐 `kerflg_table==false` は構造的到達不能）。※当初6本WB時点では (A) 6→7・(B) 78→77 の遷移。2026-06-10 のサブ優先度WB2本追加で (A) は 12 に。
 
-> WBテスト追加後の最終到達率（`all` モード = 1545/1597 = 96.7%）とファイル別 all 数値・ASP比較は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
+> WBテスト追加後の最終到達率（`all` モード = 1549/1597 = 97.0%）とファイル別 all 数値・ASP比較は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
 
 ---
 

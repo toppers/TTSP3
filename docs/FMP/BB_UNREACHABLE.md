@@ -6,7 +6,7 @@
 
 このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
 - **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +7 分岐）
-- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 77 分岐, `all` 1520/1597 = 95.2%、-O2+インライン抑制）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（**残存 48 分岐, `all` 1549/1597 = 97.0%**、-O2+インライン抑制・2026-06-10 再計測）
 
 > **計測方式（2026-06-10 変更）**: `-O2` + インライン抑制（`-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions`）。`static inline` 展開による gcov 分岐水増し（wait.h 等）を除去し、論理分岐をそのまま計測、bb/all 分母も一致（1597）。理由詳細は [`BB_COVERAGE.md`](BB_COVERAGE.md) 計測条件。旧 -O2 計測（分母 1677, wait.h 64分岐）からの移行。
 
@@ -18,7 +18,9 @@
 
 # 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
 
-> 自動生成 BBテスト（`bb` モード、1513/1597 = 94.7%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1520/1597 = 95.2%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a` / `W-b`）を FMP に移植・拡張したもの。
+> 自動生成 BBテストでは到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a` / `W-b`）を FMP に移植・拡張したもの。
+>
+> ⚠️ **本節の数値（bb 1513 / all 1520）は当初6本のWB寄与を示す当時値**。2026-06-10 にサブ優先度BB/WB（`chg_spr_F-e-*`・`chg_spr_W-a`・`subprio_head_W-a`）＋ interrupt 負テストBB（`{ras,dis,ena,clr,prb}_int_F-e-1`）を追加し、**現状は bb 1533/1597=96.0% / all 1549/1597=97.0%**（→ [`BB_COVERAGE.md`](BB_COVERAGE.md) / [`ALL_COVERAGE.md`](ALL_COVERAGE.md)）。
 
 ## WBテストによるカバレッジ寄与サマリ
 
@@ -124,7 +126,7 @@ else {
 
 # 第2部 — WBテストでも到達しない残存分岐
 
-> `all` モード（BBテスト + WBテスト）での残存 77 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
+> `all` モード（BBテスト + WBテスト）での残存 **48 分岐**（2026-06-10 再計測・`all` 1549/1597=97.0%。旧 77）の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
 
 ## ビルド条件
 
@@ -138,7 +140,7 @@ else {
 
 ## サマリー
 
-> -O2+インライン抑制で再計測（合計 **77 / 1597**、`xsns_dpn_W-b` で exception を +1 到達後）。旧 -O2 計測の §3 wait.h アーティファクト（16）はインライン抑制で解消（現 wait.h 13/14 = 1分岐のみ未到達）。category 別の内訳は概数（インライン抑制で分岐数が再正規化されたため、interrupt.c は実分岐顕在化で増、task.c は 16→12 に減 等）。ファイル別 `all` 残存の正は [`ALL_COVERAGE.md`](ALL_COVERAGE.md)。
+> **2026-06-10 再計測：合計 48 / 1597（`all` 1549/1597=97.0%）**。下表は当時（77分岐時点）の概数分類で、その後サブ優先度BB/WB（task.c/mutex 縮小）＋ interrupt 負テストBB（§2: 27→17）で 77→52→48 に縮小（tepp1_W-a で §5-c/§9-b +4）。category 別は概数のため、ファイル別 `all` 残存の正は [`ALL_COVERAGE.md`](ALL_COVERAGE.md)、§2 の精査は本ファイル §2 を参照。
 
 | # | カテゴリ | 未到達分岐数（概数）| 主なファイル |
 |---|---|---|---|
@@ -152,7 +154,7 @@ else {
 | §8 | alarm/cyclic force_unlock_spin | 0（WBで到達済）| alarm.c, cyclic.c |
 | §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 約4 | 各1分岐 |
 | §10 | time_manage.c adj_tim 64bit 折返し | 2 | time_manage.c（zybo 実用的到達不能 / simt 到達可能・ASP §3 同分類。マルチコア起因ではない）|
-| **合計** | | **52 / 1597**（2026-06-10 再計測。旧 77。`all` 1545/1597=96.7%）| |
+| **合計** | | **48 / 1597**（2026-06-10 再計測。旧 77。`all` 1549/1597=97.0%）| |
 
 ---
 
@@ -473,7 +475,17 @@ if (p_pcb->p_tevtcb == NULL) {
 
 `initialize_event_time` の `else { p_my_pcb->p_tevtcb = NULL; }` (L168) も同様。
 
-zybo_z7_gcc (dual Cortex-A9) 構成ではPE1・PE2ともに自プロセッサのタイムイベントを管理するため，`p_tevtcb == NULL` になるPEが存在しない。
+zybo_z7_gcc (dual Cortex-A9) の**既定構成**（`TOPPERS_TEPP_PRC=0x3`＝PE1・PE2 とも TM processor）では `p_tevtcb == NULL` になる PE が存在しないため未到達。
+
+> **✅ 2026-06-10 到達（WB `tepp1_W-a`・単一TM-processor変種）**：`TOPPERS_TEPP_PRC=0x1`（PRC1 のみ TEPP）で
+> ビルドすると PRC2 が `p_tevtcb==NULL` になる。PRC2 タスクが `tslp_tsk`/`dly_tsk`（相対タイムアウト登録）と
+> `wup_tsk`（待ち解除）を発行し、**L168（init else）/ L583（`tmevtb_enqueue_reltim` 転送）/ L627（`tmevtb_dequeue`
+> 転送）の3分岐を到達**（gcov: L582 forward ×3・L626 forward ×1・L168 ×1、execute.log 緑）。
+> ビルドは `wb_test/FMP/time_event/tepp1_W-a/wb_extra_copts.txt`（`-DTOPPERS_TEPP_PRC=0x1`）を
+> `coverage_gcov_fmp.sh all` の WB COPTS フックが適用（fmp3 は `target_kernel.h` の `TOPPERS_TEPP_PRC` を
+> `#ifndef` ガード化＝既定 0x3 不変・[`DIVERGENCE_MAP.md`](../../DIVERGENCE_MAP.md)）。
+> **残 L522（`tmevtb_register`＝cyclic ハンドラ文脈・PRC1 限定）/ L546（`tmevtb_enqueue`＝`mig_tsk` 移送時の
+> 再登録）は別シナリオが必要**（[`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md) Method B 続き）。
 
 ### §5-d. HRTCNT_BOUND パス（L474）
 
@@ -497,7 +509,7 @@ if (nocall == 0) {
 
 HRT割込み発生時にタイムイベントが処理されなかった場合。テストでは常にいずれかのタイムイベントが処理される。
 
-**分類**: §5-a, §5-b = **WBテストで到達済み**（`time_event_W-a`/`W-b`、計+3分岐）。§5-c = 実用的到達不能（テスト設定のTM processor構成）。§5-d = 到達困難（制約あり：テストシナリオの制限）。§5-e = 実用的到達不能。残存 10 分岐は §5-c/§5-d/§5-e（実用的到達不能・ターゲット設定依存）。
+**分類**: §5-a, §5-b = **WBテストで到達済み**（`time_event_W-a`/`W-b`、計+3分岐）。§5-c = **3/5 到達**（`tepp1_W-a`・単一TM-processor変種で L168/L583/L627／残 L522・L546 は別シナリオ）。§5-d（HRTCNT_BOUND）= 到達困難・**simt 候補**（Method A）。§5-e（signal_time nocall）= **simt 候補**（Method A）。→ [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
 
 ---
 
@@ -530,7 +542,7 @@ else {
 >
 > ASP と共通の `arch/arm_gcc/common/core_support.S` アイドルループ `dispatcher_2` は、`TOPPERS_CUSTOM_IDLE` 定義時に `toppers_asm_custom_idle`（ターゲット依存マクロ）を実行する。このループは自 PE の `p_runtsk == NULL`（実行タスクなし）の状態で回る。カスタムアイドルフック内で CPU 例外を発火させると、CPU 例外コンテキスト（`excpt_nest_count > 0` → `check_tskctx()==true`）で `xsns_dpn(p_excinf)` が呼ばれ、`if (check_tskctx())` 本体に入って `p_my_pcb->p_runtsk == NULL` 分岐に到達する。
 >
-> **カーネル無改変で注入**: `fmp3` を編集せず（禁則②）、`COPTS` に `-include <wb_dir>/ttsp_custom_idle.inc` を渡して `toppers_asm_custom_idle` をテストスイート側で定義する。SMP では MAIN_TASK を PE1 のみに割り当てて PE2 をアイドルにし、`sil_get_pid` で PE2 を判定して発火する点が ASP との差異。`xsns_dpn_W-b` として実装済み（`all` 計測に反映: exception.c 9/10、kernel/ 1520/1597）。
+> **カーネル無改変で注入**: `fmp3` を編集せず（禁則②）、`COPTS` に `-include <wb_dir>/ttsp_custom_idle.inc` を渡して `toppers_asm_custom_idle` をテストスイート側で定義する。SMP では MAIN_TASK を PE1 のみに割り当てて PE2 をアイドルにし、`sil_get_pid` で PE2 を判定して発火する点が ASP との差異。`xsns_dpn_W-b` として実装済み（`all` 計測に反映: exception.c 9/10。当時の kernel/ total 1520/1597・現状 1549/1597）。
 
 **分類**: 残存 1 分岐（`kerflg_table==false`）は構造的到達不能。`p_runtsk==NULL` は `xsns_dpn_W-b` で到達済み。
 
@@ -680,8 +692,8 @@ if (adjtim > 0
 
 | カテゴリ | 分岐数（概数）| 備考 |
 |---|---|---|
-| マルチコア遅延ディスパッチパス（§1,§2の一部） | 約30 | FMP固有。並行実行シナリオ不在。→ [`TIMING_TEST.md`](TIMING_TEST.md) 案3で到達実証済み |
-| interrupt.c chg_ipm 複合パス（§2） | 約29 | dispatch + 終了フロー複合（inline抑制で実分岐顕在化）|
+| マルチコア遅延ディスパッチパス（§1,§2の一部） | 残数本 | FMP固有。並行実行シナリオ不在。timing 専用の正味ギャップは +2（dis_dsp/chg_ipm）まで縮小・到達実証済み → [`TIMING_TEST.md`](TIMING_TEST.md) §8。大半は BB が単核で網羅済 |
+| interrupt.c 割込み番号バリデーション(VALID_INTNO)異常系＋chg_ipm（§2） | 17 | 旧称「chg_ipm複合パス・約29」は**誤分類**。2026-06-10 の combination 負テスト（`<api>_F-e-1`）で 27→17。残は構造的dead/SGIマクロ無/chg_ipm timing-affinity（§2 精査）|
 | wait.h（§3） | 1 | 過渡状態分岐（旧アーティファクト16はinline抑制で解消）|
 | サブ優先度機能（§4, §7） | 約3 | **2026-06-10 更新**：サブ優先度BB（`chg_spr_F-e-1/3/4/6`）＋WB（`chg_spr_W-a`/`subprio_head_W-a`）追加で大幅縮小。`current_subpri`/`queue_insert_subprio_tail`/`queue_insert_subprio_head` は **branch 100%**、chg_spr local dispatch も到達済。残＝`change_subprio` の防御的再チェック2（§4-d・到達不能）＋`change_priority` 残1 等 |
 | time_event.c ヒープ・マルチコアパス（§5） | 約10 | TM設定依存（§5-a/b は WBで到達済み） |
@@ -689,7 +701,7 @@ if (adjtim > 0
 | alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み（`all` で各 1 残存はマルチコア起因の §1 側）|
 | その他（§9） | 約4 | 各ファイル1分岐 |
 | **time_manage.c adj_tim 64bit 折返し（§10）** | 2 | zybo 実用的到達不能 / simt 到達可能（ASP §3 と同分類）。マルチコア起因ではない |
-| **合計** | **62 / 1597** | **96.1% branch coverage**（all モード、-O2+インライン抑制。**2026-06-10**：サブ優先度テスト追加で 77→62＝**+15 分岐到達**。旧値 77/1597・95.2%）|
+| **合計** | **48 / 1597** | **97.0% branch coverage**（all 1549/1597、-O2+インライン抑制。**2026-06-10 再計測**：サブ優先度BB/WB で 77→62（+15）、interrupt 負テストBB で 62→52（+10）、単一TM-processor変種 tepp1_W-a で 52→48（+4: §5-c/§9-b）。旧値 77/1597・95.2%）|
 
 ---
 

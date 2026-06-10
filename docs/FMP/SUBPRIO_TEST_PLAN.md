@@ -263,7 +263,7 @@ WB 全8件緑（chg_spr_W-a・subprio_head_W-a 含む）、autocode/check_librar
 
 | 範囲 | line | branch |
 |---|---|---|
-| **kernel/ TOTAL** | **3535/3621 = 97.6%** | **1535/1597 = 96.1%** |
+| **kernel/ TOTAL（サブ優先度追加直後の中間値）** | **3535/3621 = 97.6%** | **1535/1597 = 96.1%** |
 | task.c | 166/167 = 99.4% | 74/78 = 94.9% |
 | task_manage.c | 267/271 = 98.5% | 149/152 = 98.0% |
 | mutex.c | 252/256 = 98.4% | 129/132 = 97.7% |
@@ -276,6 +276,8 @@ WB 全8件緑（chg_spr_W-a・subprio_head_W-a 含む）、autocode/check_librar
 
 **寄与**：本セッションのサブ優先度テスト（BB F-e-1/3/4/6 ＋ WB chg_spr_W-a/subprio_head_W-a）で
 全体分岐は旧 `all` **1520/1597(95.2%) → 1535/1597(96.1%)＝+15 分岐**。挿入3関数は全て branch 100%。
+> その後、別途 interrupt 割込み番号バリデーション異常系BB（`{ras,dis,ena,clr,prb}_int_F-e-1`）で +10 され、
+> **FMP `all` の現状確定値は 1549/1597 = 97.0%**（[`ALL_COVERAGE.md`](ALL_COVERAGE.md)・[`BB_UNREACHABLE.md §2`](BB_UNREACHABLE.md)）。
 
 **`change_subprio` 4/6 の精査（2026-06-10）**：残2分岐は内部の `if(TSTAT_RUNNABLE)`(L442)・
 `if(subprio_primap & PRIMAP_BIT(pri))`(L443) の **false アーム**。`change_subprio` は `chg_spr` L602 から
