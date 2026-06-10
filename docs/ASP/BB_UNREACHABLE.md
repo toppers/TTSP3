@@ -307,9 +307,9 @@ if (current_evttim < monotonic_evttim) {
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L168 br[0] | 64 bit `EVTTIM` 折返し後に `current_evttim < monotonic_evttim` | `EVTTIM` は uint64_t。折返しには約 5.85 × 10¹¹ 年の連続動作が必要。QEMU テストでは不可能。 | **実用的到達不能** |
+| L168 br[0] | 64 bit `EVTTIM` 折返し後に `current_evttim < monotonic_evttim` | zybo 実 GIC タイマでは折返しに約 5.85 × 10¹¹ 年の連続動作が必要で実用的に到達不能。**ただし ASP3 公式 simt テスト（simulation timer, HRT_CONFIG3/64bit）で C1 到達可能**（→ 第3部）。 | **zybo: 実用的到達不能 / simt: 到達可能（実証済）** |
 
-**結論**: WB テストは不要。
+**結論**: zybo の BB/WB では到達不能だが、ASP3 simt スイートで `adj_tim` 14/14 = 100% 到達済み（第3部）。
 
 ---
 
@@ -335,31 +335,31 @@ if (current_evttim < monotonic_evttim) {
 
 ## 6. time_event.c — 内部タイムイベント管理（4 branches, 92.9%）
 
-### 7-a. `_kernel_update_current_evttim` L390 br[0]
+### 6-a. `_kernel_update_current_evttim` L390 br[0]（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L390 br[0]（`current_evttim < monotonic_evttim`） | 64 bit EVTTIM 折返し後の単調増加保証パス | §4 と同構造。約 5.8 × 10¹¹ 年の連続動作が必要。 | **実用的到達不能** |
+| L390 br[0]（`current_evttim < monotonic_evttim`） | 64 bit EVTTIM 折返し後の単調増加保証パス | zybo 実タイマでは §4 同様 約 5.8 × 10¹¹ 年が必要で実用的到達不能。**ASP3 simt スイート（64hrt）で到達**（`update_current_evttim` 6/6 = 100%）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-### 7-b. `_kernel_set_hrt_event` L439 br[0]
-
-| gcov 位置 | 条件 | 未到達理由 | 分類 |
-|---|---|---|---|
-| L439 br[0]（`hrtcnt > HRTCNT_BOUND`） | 次タイムイベントまで HRTCNT_BOUND（≈ 4,000 秒）超の待ち | QEMU テストの時間スケールでは発生しない。 | **実用的到達不能** |
-
-### 7-c. `_kernel_signal_time` L624 br（`nocall == 0`）
+### 6-b. `_kernel_set_hrt_event` L439 br[0]（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| L624 br[0]（`nocall == 0`） | HRT 割込みが発生したが期限切れイベントが 0 件 | spurious interrupt / early fire が必要。QEMU の cycle-accurate モデルでは再現困難。 | **実用的到達不能**（タイミング依存） |
+| L439 br[0]（`hrtcnt > HRTCNT_BOUND`） | 次タイムイベントまで HRTCNT_BOUND（≈ 4,000 秒）超の待ち | zybo 実タイマの時間スケールでは発生しない。**ASP3 simt スイート（simulation timer で HRT を任意操作）で到達**（`set_hrt_event` 6/6 = 100%、`simt_systim1` 項目 A-4 ［ASPD1006］）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-### 7-d. `_kernel_tmevt_down`（内部状態依存 ×1）
+### 6-c. `_kernel_signal_time` L624 br（`nocall == 0`）（→ simt 到達済）
 
 | gcov 位置 | 条件 | 未到達理由 | 分類 |
 |---|---|---|---|
-| sift-down 内部分岐 ×1 | 特定のヒープ配置でのみ通る経路 | `tmevt_down` の L221/L231 周辺は WBテスト [`time_event_W-a`](../../wb_test/ASP/time_event/time_event_W-a/out.c) で大半を到達済み（本ファイル第1部 §1-4）だが、残 1 分岐は更に特定のヒープ深さ・配置を要し、外部 API 操作での再現が難しい。 | **到達困難（内部状態依存）** |
+| L624 br[0]（`nocall == 0`） | HRT 割込みが発生したが期限切れイベントが 0 件 | zybo の cycle-accurate モデルでは spurious/early fire の再現困難。**ASP3 simt スイートで到達**（`simt_systim1` 項目 C-1、実行ログ "no time event is processed in hrt interrupt" で確認）。 | **zybo: 実用的到達不能 / simt: 到達済** |
 
-**結論（time_event.c 全体）**: 残 4 未到達分岐はすべて WB テスト追加不要（実用的到達不能 ×3 + 内部状態依存 ×1）。
+### 6-d. `_kernel_tmevt_down`（内部状態依存 ×1, simt でも未到達）
+
+| gcov 位置 | 条件 | 未到達理由 | 分類 |
+|---|---|---|---|
+| sift-down 内部分岐 ×1 | 特定のヒープ配置でのみ通る経路 | `tmevt_down` の L221/L231 周辺は WBテスト [`time_event_W-a`](../../wb_test/ASP/time_event/time_event_W-a/out.c) で大半を到達済み（本ファイル第1部 §1-4）だが、残 1 分岐は更に特定のヒープ深さ・配置を要し、simt スイートでも未到達（`tmevt_down` 7/8）。外部 API 操作での再現が難しい。 | **到達困難（内部状態依存）** |
+
+**結論（time_event.c 全体）**: 残 4 のうち **3（update_current_evttim/set_hrt_event/signal_time）は ASP3 simt スイートで到達済み**（第3部）。残る `tmevt_down` の 1 分岐のみ内部状態依存で未到達。zybo の BB/WB テスト追加は不要。
 
 ---
 
@@ -367,16 +367,56 @@ if (current_evttim < monotonic_evttim) {
 
 | ファイル | 未到達数 | 分類 | 対応方針 |
 |---|---|---|---|
-| time_event.c | 4 | 実用的到達不能 ×3（64bit折返し/HRTCNT_BOUND/nocall）+ 内部状態依存 ×1 | 不要 |
+| time_event.c | 4 | **simt スイートで 3 到達**（64bit折返し/HRTCNT_BOUND/nocall）+ 内部状態依存 ×1（tmevt_down, simt でも未到達）| 第3部参照 |
 | interrupt.c | 2 | 構造的到達不能（`clr_int`/`ras_int`: GIC で check_intno_clear/raise 恒真） | 不要（zybo） |
 | exception.c | 1 | 構造的到達不能（`p_runtsk==NULL` テスト文脈） | 不要 |
 | mutex.c | 1 | 構造的到達不能（`remove_mutex` NULL exit） | 不要 |
 | task_refer.c | 1 | 構造的到達不能（switch JT 境界チェック） | 不要 |
-| time_manage.c | 1 | 実用的到達不能（64 bit 折返し） | 不要 |
-| **合計** | **10** | — | 全て WB/追加 BB テスト不要と判断 |
+| time_manage.c | 1 | **simt スイートで到達**（64bit折返し, `adj_tim` 14/14）| 第3部参照 |
+| **合計** | **10**（zybo all モード） | — | zybo の BB/WB テスト追加は不要 |
 
 > 旧 -O2 計測で残存に計上していた wait.h(15)/wait.c(2)/task.c(4) のインライン展開アーティファクトは、インライン抑制（`-fno-inline` 系）で解消（各 100%）。`bb`/`all` の分母も 1379 で一致する。
 > `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達し、11→10 に減少。
 
-**現状の 99.3%（1369/1379、`all` モード）はテスト充足率として十分。**  
-残存 10 箇所は、カーネルの不変条件・物理的制約・タイミング依存性により到達不能または到達困難であり、テストを追加しても仕様適合性の確認にはならない。
+**zybo `all` モードは 1369/1379 = 99.3%。** 残存 10 のうち **時刻関連 4 分岐（time_event 3 + time_manage 1）は ASP3 公式 simt スイートで C1 到達可能**であることを実証（第3部）。これらは「zybo 実 GIC タイマでは実用的到達不能だが、シミュレーションタイマでは到達可能」であり、未到達は計測手段に依存する。残る 6 分岐（interrupt 2・exception 1・mutex 1・task_refer 1・time_event tmevt_down 1）は構造的到達不能または内部状態依存で、テスト追加は仕様適合性の確認に寄与しない。
+
+---
+
+# 第3部 — ASP3 公式 simt スイートによるタイマー分岐の到達（参考・別ビルド）
+
+> zybo 実 GIC タイマでは「実用的到達不能」とした時刻関連分岐が、**ASP3 開発元の simt（simulation timer）テスト**で C1 到達できることを実証した記録（2026-06-10）。
+> simt テストは `kernel/time_event.c`・`kernel/time_manage.c`（共有・CPU非依存）を別ビルド・別ターゲットで実行するもので、**zybo の `all` モード数値（1369/1379）には含めない**（計測手段が異なるため参考扱い）。
+
+## 実証結果（simt スイート: simt_systim1-4 + 64hrt×3、全 All check points passed）
+
+| 関数（kernel/）| zybo all | **simt スイート** | 到達した残存分岐 |
+|---|---|---|---|
+| `_kernel_set_hrt_event` | 5/6 | **6/6 = 100%** | HRTCNT_BOUND 超（[ASPD1006]）|
+| `_kernel_update_current_evttim` | 3/4 | **6/6 = 100%** | 64bit 単調折返し |
+| `_kernel_signal_time`（nocall）| 7/8 | nocall 分岐到達 | 空ヒープ HRT 割込み（[ASPD....] C-1）|
+| `adj_tim`（time_manage.c）| 13/14 | **14/14 = 100%** | 64bit 折返し |
+| `_kernel_tmevt_down` | 7/8 | **7/8（未到達のまま）** | 内部ヒープ分岐は simt でも未到達 |
+
+→ zybo 残存タイマー **4/5 分岐が simt で到達**。残る `tmevt_down` の 1 分岐のみ内部状態依存。
+
+## 仕組み・再現手順（asp3 無改変・ワークスペース完結）
+
+- **ターゲット**: `simtimer_ct11mpcore_gcc`（既存 asp3 ターゲット。`ct11mpcore_gcc` を流用し `arch/simtimer/sim_timer.c` で実タイマを置換、HRT を `simtim_advance` で決定的に駆動）
+- **QEMU**: `realview-eb-mpcore`（ARM11MPCore）、`-semihosting`
+- **gcov 計装はワークスペース側のみ**（asp3 を編集しない）:
+  - `scripts/simt_coverage/ct11mpcore_gcov.ld` = `ct11mpcore.ld` ＋ `.gcov_info` 収集 ＋ `_heap`/`_heap_limit`
+  - `scripts/simt_coverage/gcov_dump.c` = `software_term_hook` で `__gcov_info_to_gcda()` をセミホスティング出力（zybo の gcov 機構を流用）
+  - 生成 Makefile に gcov ブロックを追記（`--coverage -fprofile-info-section`、`-specs=rdimon.specs`、`-Wl,-u,toppers_gcov_end` で dump 強制リンク、`LDSCRIPT=ct11mpcore_gcov.ld`）
+
+```bash
+# 1テストのビルド・実行例（systim1）
+ruby asp3/configure.rb -T simtimer_ct11mpcore_gcc -A simt_systim1 -C test_pf.cdl \
+    -a asp3/test -O "-DTOPPERS_USE_QEMU -DHRT_CONFIG1 -DSIMTIM_TEST"
+# → 生成 Makefile に gcov ブロック追記（build_simt の方法）→ make
+qemu-system-arm -M realview-eb-mpcore -semihosting -nographic -kernel asp
+# → objs/*.gcda → gcov / ttsp_gcov_report.py で集計
+```
+- 全7テスト一括スクリプト: [`scripts/simt_coverage/simt_suite.sh`](../../scripts/simt_coverage/simt_suite.sh)（補助ファイル一式は [`scripts/simt_coverage/`](../../scripts/simt_coverage/)）（各 HRT_CONFIG1/2/3、CFG は 64hrt のみ別指定）
+- 64bit 折返し系（update_current_evttim / adj_tim）は `-DHRT_CONFIG3`（`USE_64BIT_HRTCNT`）の `_64hrt` 変種で到達
+
+> 本トラックは TTSP3 の zybo カバレッジ計測とは別系統（別ターゲット・simulation timer）。共有 `kernel/` ソースの分岐を到達させる「到達可能性の実証」であり、zybo の合否ゲート／カバレッジ数値には算入しない。

@@ -288,12 +288,12 @@
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
-| 1 | time_event.c | 92.9% | 4 | L391/L440(実用的到達不能), L625(タイミング依存), tmevt_down 内部状態依存 ×1 |
+| 1 | time_event.c | 92.9% | 4 | L391/L440/L625 は **ASP3 simt スイートで到達済**（zybo 実タイマでは到達不能）+ tmevt_down 内部状態依存 ×1（simt でも未到達）→ [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第3部 |
 | 2 | interrupt.c | 96.8% | 2 | `clr_int`/`ras_int` ×各1（GIC で `check_intno_clear/raise` 恒真 → 構造的到達不能）|
 | 3 | exception.c | 87.5% | 1 | `xsns_dpn` p_runtsk==NULL（構造的到達不能・テスト文脈） |
 | 4 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
 | 5 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |
-| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → 実用的到達不能 |
+| 6 | time_manage.c | 95.5% | 1 | `adj_tim` 64bit折返し → zybo 実タイマでは到達不能、**ASP3 simt スイートで到達済**（adj_tim 14/14）→ 第3部 |
 
 **BBテスト・WBテストで解消済み（100%到達）**：
 
