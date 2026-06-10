@@ -1,0 +1,20 @@
+# FMP3 改変パッチ — TOPPERS_TEPP_PRC を COPTS で上書き可能にする
+#
+# 目的: カバレッジ計測の単一TM-processor変種（time_event.c §5-c 非TM-processor 転送パス
+#       L168/L583/L627 到達。WBテスト tepp1_W-a）のため、ビルド時に
+#       -DTOPPERS_TEPP_PRC=0x1 等で上書きできるよう #ifndef ガードを追加する。
+# 影響: 未定義時の既定は従来どおり 0x3（PRC1+PRC2）。通常ビルド・CI（ci_run_fmp.sh）の
+#       挙動は不変。coverage_gcov_fmp.sh all の WB ビルドでのみ上書きされる。
+# 適用: fmp3 ツリー先頭で  patch -p1 < この.patch  （または手動で #ifndef ガード付与）
+# 記録: UPSTREAM_KERNEL.md / DIVERGENCE_MAP.md（ライセンス改変明記）
+--- a/target/zybo_z7_gcc/target_kernel.h
++++ b/target/zybo_z7_gcc/target_kernel.h
+@@
+ /*
+  *  タイムイベント処理プロセッサとするプロセッサ
++ *  [TTSP3改変] COPTS で -DTOPPERS_TEPP_PRC=0x1 等の上書きを許可する #ifndef ガード。
++ *  既定(未定義時)は 0x3(PRC1+PRC2)で従来挙動と不変。
+  */
++#ifndef TOPPERS_TEPP_PRC
+ #define TOPPERS_TEPP_PRC	0x3  /* PRC1とPRC2 */
++#endif /* TOPPERS_TEPP_PRC */

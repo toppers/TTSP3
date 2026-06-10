@@ -117,6 +117,12 @@ if [ "$MODE" = "all" ]; then
 				cp "${wb_src}/ttsp_custom_idle.inc" "$wb_dir/ttsp_custom_idle.inc"
 				wb_extra_copts="-include $(cd "$wb_dir" && pwd)/ttsp_custom_idle.inc"
 			fi
+			# 任意: 追加 COPTS 注入（WB テスト固有のビルド定義）．
+			# wb_extra_copts.txt があれば内容を COPTS に追記する（その test 限定）．
+			# 例: tepp1_W-a（-DTOPPERS_TEPP_PRC=0x1 で time_event.c §5-c 非TM-processor 転送を到達）．
+			if [ -f "${wb_src}/wb_extra_copts.txt" ]; then
+				wb_extra_copts="${wb_extra_copts} $(cat "${wb_src}/wb_extra_copts.txt")"
+			fi
 			( cd "$wb_dir" && COPTS="${COPTS}${wb_extra_copts:+ $wb_extra_copts}" \
 				make ENABLE_GCOV=true -j4 \
 				KERNEL_COBJS="$WB_KERNEL_COBJS_COMMON $KERNEL_COBJS_TARGET" \
