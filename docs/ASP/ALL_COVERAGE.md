@@ -6,8 +6,8 @@
 > ※ 集計バグ修正済（union 方式）。per-API テーブルも同一ツール値で更新済み。  
 >
 > このファイルは **BBテスト + WBテストを統合した `all` モードの最終カバレッジ** と **BBテストの追加履歴** を記録する。  
-> - WBテスト単独の寄与・カタログ → [`WB_COVERAGE.md`](WB_COVERAGE.md)  
-> - 残存未到達分岐の詳細分析 → [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md)
+> - BBテストのみのカバレッジ（ファイル別） → [`BB_COVERAGE.md`](BB_COVERAGE.md)  
+> - BB未到達分岐の分析・WBテスト対応・残存未到達 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md)（第1部=WBで到達 / 第2部=残存未到達）
 >
 > **計測条件（コンパイルオプション）:**  
 > - `ENABLE_GCOV=true` — gcov 計装（`-fprofile-arcs -ftest-coverage`）  
@@ -62,7 +62,7 @@
 - `chg_ipm_e.yaml` — dis_dsp後にchg_ipm(TIPM_ENAALL)→enadsp=falseでdispatch不発（interrupt.c L369 (t)分岐）
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
-> **WBテスト（方式2: 手書き、`all` モードのみ）の追加履歴・カタログは [`WB_COVERAGE.md`](WB_COVERAGE.md) を参照。**  
+> **WBテスト（方式2: 手書き、`all` モードのみ）のカタログ・到達手法は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部を参照。**  
 > WBテストは `bb` モード（1426/1459 = 97.7%）に対し 7 分岐（計 +8 分岐）を追加し、`all` モードで 1434/1459 = 98.3% に到達する。
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
@@ -377,7 +377,7 @@
 
 > wait.c: 8/8 = **100%**（NDEBUG により assert 失敗パス除去）  
 > wait.h: 49/64 = 76.6%（NDEBUG+O2 インライン展開増加によるアーティファクト。  
->   論理的カバレッジは両分岐とも確認済み。詳細は WB_UNREACHABLE.md §5 wait.h 参照）
+>   論理的カバレッジは両分岐とも確認済み。詳細は BB_UNREACHABLE.md 第2部 §5 wait.h 参照）
 
 | API | 行 C0 | 分岐 C1 | 未到達 | W |
 |---|---|---|---|---|
@@ -403,7 +403,7 @@
 
 > 全 25 箇所（1434/1459 = 98.3%、`all` モード）。未到達数の多い順。  
 > ※ wait.h の 15 箇所はインライン展開アーティファクト（論理的カバレッジは確認済み）。  
-> **各分岐の詳細分析（到達不能理由・分類）は [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md) を参照。**
+> **各分岐の詳細分析（到達不能理由・分類）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 を参照。**
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
