@@ -163,3 +163,35 @@ MTTCG で実並行する事実を使い、外部制御なしでレースを自�
 3. 案A で安定して当たらない頑固な分岐だけ **案4（GDB scheduler-locking で決定的に強制）**へ escalate
 
 要するに「時間待ち」より **「反復回数で確定終了 ＋ オフライン gcov 判定」** が再現性・CI適性で勝り、ブレークは **「検出 ＆ N 見積もりの計測器」** として使うのが綺麗。
+
+---
+
+## 8. 実測結果（案3 プロトタイプ, 2026-06-10）★案3 実証済み
+
+`dis_dsp` の多コアレース分岐（sys_manage.c L603-606）を対象に案3を試作・実測。
+
+- プロトタイプ: `wb_test/FMP/timing/dis_dsp_race/`
+  - PE1 `MAIN_TASK`: `dis_dsp()`/`ena_dsp()` を **500,000 回**密ループ
+  - PE2 `RACER_TASK`: `sus_tsk(MAIN_TASK)`/`rsm_tsk(MAIN_TASK)` を `done` まで密ループ
+- 実行: QEMU 11.0.0 `-M xilinx-zynq-a9 -smp 2`（MTTCG）、`-O2 -DNDEBUG`、All check points passed
+
+**gcov 実測（dis_dsp）**:
+
+```
+   513599:  601:	acquire_glock();
+   513599:  603:	if (p_selftsk != p_my_pcb->p_schedtsk) {
+branch  0 taken 13599 (fallthrough)   ← 多コアレース分岐（従来 #### 未到達）
+branch  1 taken 500000
+    13599:  604:		release_glock();
+    13599:  605:		dispatch();
+    13599:  606:		goto retry;
+```
+
+- レース分岐が **13,599 回 taken**（500,000 回中）。**ヒット率 約 2.7%/回**
+- 「稀に当たる」ではなく**高頻度**。外部ツールなしの純2コアストレスループで安定到達
+
+**結論**:
+- 案3（純ストレスループ）は `dis_dsp` で **実証済み**。ヒット率 2.7% なら N=数百でほぼ確実、CI フレーキ懸念は実質なし
+- 他の多コアレース分岐（`mrot_rdq` / `act_tsk` / `ter_tsk` / alarm・cyclic ハンドラ後 dispatch 等）も同機構。ただし **PE2 が p_schedtsk を変える操作は API ごとに適切なものを選ぶ**必要がある（dis_dsp では `sus_tsk` が有効）
+- 残りは「各分岐に対し PE2 レーサー操作を合わせた WBテストを横展開」すれば案3で広くカバーできる見込み。当たりにくい分岐のみ案4（GDB）へ
+- 本番採用時は `dis_dsp_race` → `dis_dsp_W-a` 等にリネームし、CI はカバレッジ蓄積ジョブで実行（合否ゲートにはしない）
