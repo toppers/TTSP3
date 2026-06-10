@@ -5,8 +5,8 @@
 > 方式: gcov（`bash scripts/coverage_gcov_fmp.sh all` / `bb`）
 
 このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
-- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +6 分岐）
-- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 78 分岐, `all` 1519/1597 = 95.1%、-O2+インライン抑制）
+- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +7 分岐）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 77 分岐, `all` 1520/1597 = 95.2%、-O2+インライン抑制）
 
 > **計測方式（2026-06-10 変更）**: `-O2` + インライン抑制（`-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions`）。`static inline` 展開による gcov 分岐水増し（wait.h 等）を除去し、論理分岐をそのまま計測、bb/all 分母も一致（1597）。理由詳細は [`BB_COVERAGE.md`](BB_COVERAGE.md) 計測条件。旧 -O2 計測（分母 1677, wait.h 64分岐）からの移行。
 
@@ -18,19 +18,19 @@
 
 # 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
 
-> 自動生成 BBテスト（`bb` モード、1513/1597 = 94.7%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1519/1597 = 95.1%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a`）を FMP に移植したもの。
+> 自動生成 BBテスト（`bb` モード、1513/1597 = 94.7%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1520/1597 = 95.2%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a` / `W-b`）を FMP に移植・拡張したもの。
 
 ## WBテストによるカバレッジ寄与サマリ
 
-WBテスト（方式2）は以下の 6 分岐を新規に到達させ、`bb` → `all` で **+6 分岐** を追加する（未到達は 84 → 78）。
+WBテスト（方式2）は以下の 7 分岐を新規に到達させ、`bb` → `all` で **+7 分岐** を追加する（未到達は 84 → 77）。
 
 | ファイル | `bb` 分岐 | `all` 分岐 | 増分 | WBテスト |
 |---|---|---|---|---|
 | alarm.c | 48/50 | 49/50 | +1 | `alarm_W-a` |
 | cyclic.c | 46/48 | 47/48 | +1 | `cyclic_W-a` |
-| exception.c | 7/10 | 8/10 | +1 | `xsns_dpn_W-a` |
+| exception.c | 7/10 | 9/10 | +2 | `xsns_dpn_W-a`（check_tskctx 偽）/ `xsns_dpn_W-b`（p_runtsk=NULL）|
 | time_event.c | 63/76 | 66/76 | +3 | `time_event_W-a`（×2）/ `time_event_W-b`（×1） |
-| **合計** | **1513/1597 (94.7%)** | **1519/1597 (95.1%)** | **+6** | — |
+| **合計** | **1513/1597 (94.7%)** | **1520/1597 (95.2%)** | **+7** | — |
 
 > ※ -O2+インライン抑制計測。分岐番号は旧 -O2 と異なる（exception.c 8→10 分岐等）。各節の行番号・branch 番号は論理分岐の意味を示す。
 
@@ -45,6 +45,7 @@ WBテスト（方式2）は以下の 6 分岐を新規に到達させ、`bb` →
 | `alarm_W-a` | alarm.c `if(sense_lock())` 真 | 通知ハンドラが `iloc_cpu()` を保持して戻る → `call_alarm` が `force_unlock_spin()` を実行 | [out.c](../../wb_test/FMP/alarm/alarm_W-a/out.c) |
 | `cyclic_W-a` | cyclic.c `if(sense_lock())` 真 | 周期ハンドラが `iloc_cpu()` を保持して戻る → `call_cyclic` が `force_unlock_spin()` を実行 | [out.c](../../wb_test/FMP/cyclic/cyclic_W-a/out.c) |
 | `xsns_dpn_W-a` | exception.c L105 `check_tskctx()` 偽 | タスクコンテキストから `xsns_dpn(NULL)` を直接呼出し → else 分岐 `state=true`（NGKI3152） | [out.c](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) |
+| `xsns_dpn_W-b` | exception.c L114 `p_my_pcb->p_runtsk != NULL` 偽 | MAIN_TASK を PE1 のみに割当て、PE2 をアイドル（`p_runtsk==NULL`）にして custom idle フックから CPU 例外を発生 → CPU 例外ハンドラ（PE2）から `xsns_dpn(p_excinf)` → `p_runtsk==NULL` で短絡評価 → `state=true`（custom idle 方式・カーネル無改変）| [out.c](../../wb_test/FMP/exception/xsns_dpn_W-b/out.c) |
 | `time_event_W-a` | time_event.c L234 / L244 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../../wb_test/FMP/time_event/time_event_W-a/out.c) |
 | `time_event_W-b` | time_event.c L315 | `tmevtb_delete`: go-up パス（last < parent） | [out.c](../../wb_test/FMP/time_event/time_event_W-b/out.c) |
 
@@ -87,7 +88,7 @@ FMP のヒープ操作（`tmevt_down` L224, `tmevtb_delete` L292）は ASP と�
 
 ---
 
-## 1-3. exception.c — `xsns_dpn` L105 `check_tskctx()` 偽分岐（`xsns_dpn_W-a`）
+## 1-3. exception.c — `xsns_dpn` L105 `check_tskctx()` 偽分岐 / L114 `p_runtsk==NULL` 分岐（`xsns_dpn_W-a` / `xsns_dpn_W-b`）
 
 **ソース** (`fmp3/kernel/exception.c` L104–119):
 ```c
@@ -113,11 +114,17 @@ else {
 
 **WBテスト** [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c): MAIN_TASK（タスクコンテキスト）から `xsns_dpn(NULL)` を直接呼び出し、戻り値が `true` であることを確認。gcov 実測で L105 偽分岐 taken・if-body（kerflg 評価）未実行を確認済み。
 
+| gcov 位置 | 条件 | BBテストで未到達の理由 |
+|---|---|---|
+| L114 `p_my_pcb->p_runtsk != NULL` 偽 → state=true | `check_tskctx()==true`（例外コンテキスト）かつ自 PE がアイドル（`p_runtsk==NULL`）で CPU 例外が発生 | BB テストの CPU 例外はすべて実行中タスクのある PE で発生するため `p_runtsk != NULL`。アイドル PE で CPU 例外を起こすシナリオは自動生成テストでは生成されない。 |
+
+**WBテスト** [`xsns_dpn_W-b`](../../wb_test/FMP/exception/xsns_dpn_W-b/out.c): `MAIN_TASK` を PE1 のみに割り当て、PE2 を実行可能タスクの無いアイドル状態（`p_runtsk==NULL`）にする。`core_support.S` のアイドルループ `dispatcher_2` は `TOPPERS_CUSTOM_IDLE` 定義時に `toppers_asm_custom_idle` を実行する。これを **COPTS の `-include <wb_dir>/ttsp_custom_idle.inc`**（カーネル無改変・禁則②非抵触）で注入し、フックから C 関数 `xsns_dpn_W_b_idle()` を呼ぶ。同関数は `sil_get_pid` で PE2 のみを判定し CPU 例外を発生させ、CPU 例外ハンドラ `xsns_dpn_W_b_exc()`（PE2）が `check_tskctx()==true` かつ `p_my_pcb->p_runtsk==NULL` のまま `xsns_dpn(p_excinf)` を呼んで `state=true`（L114 短絡）を確認する。注入は `scripts/coverage_gcov_fmp.sh` の WB ビルドが `ttsp_custom_idle.inc` の有無で当該テストにのみ適用（他テスト・カーネル本体には波及しない）。**実証**: 8 dir（check_library/exception + xsns_dpn BB split6 + `W-a`）では exception.c 8/10、`W-b` 追加で 9/10（merge 計測で確認）。残る 1 分岐（`kerflg_table==false`）は構造的到達不能（第2部 §6）。ASP `xsns_dpn_W-b` と同型だが SMP のため PE2 をアイドルにする点が差異。
+
 ---
 
 # 第2部 — WBテストでも到達しない残存分岐
 
-> `all` モード（BBテスト + WBテスト）での残存 78 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
+> `all` モード（BBテスト + WBテスト）での残存 77 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
 
 ## ビルド条件
 
@@ -140,7 +147,7 @@ else {
 | §3 | wait.h | 1 | wait.h（旧アーティファクト16はinline抑制で解消） |
 | §4 | task.c サブ優先度機能 | 約12 | task.c |
 | §5 | time_event.c ヒープ操作・マルチコアパス | 約10 | time_event.c（§5-a/b は WBで到達済） |
-| §6 | exception.c xsns_dpn | 2 | exception.c（else は WBで到達済、残2は構造的到達不能）|
+| §6 | exception.c xsns_dpn | 1 | exception.c（else・`p_runtsk==NULL` は WBで到達済（`xsns_dpn_W-a`/`W-b`）。残1: `kerflg_table` は構造的到達不能）|
 | §7 | mutex.c サブ優先度パス | 約7 | mutex.c |
 | §8 | alarm/cyclic force_unlock_spin | 0（WBで到達済）| alarm.c, cyclic.c |
 | §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 約4 | 各1分岐 |
@@ -416,15 +423,22 @@ else {
 }
 ```
 
-`check_tskctx()` は `sense_context()`（`excpt_nest_count > 0`、例外コンテキストで真）を返す。8分岐中、BBテストで5、WBテストで+1 = 6/8 をカバー済み。
+`check_tskctx()` は `sense_context()`（`excpt_nest_count > 0`、例外コンテキストで真）を返す。10分岐中、BBテストで7、WBテストで+2 = 9/10 をカバー済み。
 
-**✅ 2026-06-10 WBテストで到達済み（+1分岐）**: L105 `check_tskctx()` 偽分岐（タスクコンテキスト → else `state=true`、NGKI3152）を WBテスト [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) でカバー。MAIN_TASK から `xsns_dpn(NULL)` を直接呼び出す。詳細 → 本ファイル第1部 §1-3。
+**✅ 2026-06-10 WBテストで到達済み（+2分岐）**:
+- L105 `check_tskctx()` 偽分岐（タスクコンテキスト → else `state=true`、NGKI3152）を WBテスト [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) でカバー。MAIN_TASK から `xsns_dpn(NULL)` を直接呼び出す。詳細 → 本ファイル第1部 §1-3。
+- L114 `p_my_pcb->p_runtsk == NULL` 分岐を WBテスト [`xsns_dpn_W-b`](../../wb_test/FMP/exception/xsns_dpn_W-b/out.c) でカバー（custom idle 方式）。MAIN_TASK を PE1 のみに割当て、PE2 をアイドル（`p_runtsk==NULL`）にして CPU 例外を発生 → CPU 例外ハンドラから `xsns_dpn(p_excinf)==true` を確認。詳細 → 本ファイル第1部 §1-3。
 
-**残存 2 分岐（構造的到達不能）**:
-- `kerflg_table[prcid]==false`: `kerflg_table` は `start_dispatch`（startup.c L237）直前の L235 で true 化され、`check_tskctx()==true`（例外コンテキスト）成立時は常に true。例外コンテキストで kerflg_table=false となる窓が存在しない。**構造的到達不能**（ASP は `xsns_dpn` に `check_tskctx()` ガードが無いため初期化ルーチンで到達できたが、FMP では不可）。
-- `p_my_pcb->p_runtsk == NULL`: アイドルループ中（全タスク休眠）の CPU 例外が必要。テスト実行中は常に `p_runtsk != NULL`。**構造的到達不能**（テスト文脈）。
+**残存 1 分岐（構造的到達不能）**:
+- `kerflg_table[prcid]==false`: `kerflg_table` は `start_dispatch`（startup.c L237）直前の L235 で true 化され、`check_tskctx()==true`（例外コンテキスト）成立時は常に true。例外コンテキストで kerflg_table=false となる窓が存在しない。**構造的到達不能**（ASP は `xsns_dpn` に `check_tskctx()` ガードが無いため初期化ルーチンで到達できたが、FMP では不可）。custom idle 方式でも到達不能（窓が無い）。
 
-**分類**: 残存 2 分岐は構造的到達不能。WBテスト追加不要。
+> **【到達経路の記録】custom idle 方式（`p_runtsk==NULL` を到達）**
+>
+> ASP と共通の `arch/arm_gcc/common/core_support.S` アイドルループ `dispatcher_2` は、`TOPPERS_CUSTOM_IDLE` 定義時に `toppers_asm_custom_idle`（ターゲット依存マクロ）を実行する。このループは自 PE の `p_runtsk == NULL`（実行タスクなし）の状態で回る。カスタムアイドルフック内で CPU 例外を発火させると、CPU 例外コンテキスト（`excpt_nest_count > 0` → `check_tskctx()==true`）で `xsns_dpn(p_excinf)` が呼ばれ、`if (check_tskctx())` 本体に入って `p_my_pcb->p_runtsk == NULL` 分岐に到達する。
+>
+> **カーネル無改変で注入**: `fmp3` を編集せず（禁則②）、`COPTS` に `-include <wb_dir>/ttsp_custom_idle.inc` を渡して `toppers_asm_custom_idle` をテストスイート側で定義する。SMP では MAIN_TASK を PE1 のみに割り当てて PE2 をアイドルにし、`sil_get_pid` で PE2 を判定して発火する点が ASP との差異。`xsns_dpn_W-b` として実装済み（`all` 計測に反映: exception.c 9/10、kernel/ 1520/1597）。
+
+**分類**: 残存 1 分岐（`kerflg_table==false`）は構造的到達不能。`p_runtsk==NULL` は `xsns_dpn_W-b` で到達済み。
 
 ---
 
@@ -552,10 +566,10 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 | wait.h（§3） | 1 | 過渡状態分岐（旧アーティファクト16はinline抑制で解消）|
 | サブ優先度機能（§4, §7） | 約19 | TA_SUBPRI/ENA_SPR 未使用設定 |
 | time_event.c ヒープ・マルチコアパス（§5） | 約10 | TM設定依存（§5-a/b は WBで到達済み） |
-| exception.c xsns_dpn（§6） | 2 | 構造的到達不能（else は WBで到達済み） |
+| exception.c xsns_dpn（§6） | 1 | else・`p_runtsk==NULL` は WBで到達済み（`xsns_dpn_W-a`/`W-b`）。`kerflg_table` は構造的到達不能 |
 | alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み |
 | その他（§9） | 約4 | 各ファイル1分岐 |
-| **合計** | **78 / 1597** | 95.1% branch coverage（all モード、-O2+インライン抑制）|
+| **合計** | **77 / 1597** | 95.2% branch coverage（all モード、-O2+インライン抑制）|
 
 ---
 
@@ -578,7 +592,7 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 | wait.h 過渡状態（§3） | 困難（内部状態依存）| 残 1 分岐（旧アーティファクト16はinline抑制で解消）|
 | **サブ優先度機能（§4, §7）** | **可能（最有力）** | `ENA_SPR(tskpri)` 静的API で `subprio_primap` ビットを立て、当該優先度のタスク + `chg_spr` を組み合わせれば到達。auto_code は `ENA_SPR(13)` を持つが当該優先度のタスク構成が不足。最大 +約15実分岐 |
 | time_event.c 非TM path（§5-c/d/e） | 困難 | ターゲットHW構成・長期タイムアウト依存 |
-| exception.c xsns_dpn 残2（§6） | 不要 | 構造的到達不能（kerflg_table/p_runtsk） |
+| exception.c xsns_dpn 残1（§6） | 完了（`p_runtsk==NULL`）/ `kerflg_table` は不要 | `p_runtsk==NULL`: `xsns_dpn_W-b`（custom idle 方式）で到達済み（§6）。`kerflg_table`: 構造的到達不能 |
 | alarm/cyclic force_unlock（§8） | 完了 | WBテストで到達済み |
 
 **次の最有力候補はサブ優先度機能（§4, §7, 19分岐）**: `ENA_SPR` で特定優先度をサブ優先度スケジューリング対象にし、その優先度に複数タスクを作成して `chg_spr` / mutex 優先度継承を試験することで、`subprio_primap & PRIMAP_BIT(pri)` 真分岐群に到達できる。ただし cfg 設計と複数タスクの優先度・サブ優先度の組合せ制御が必要。

@@ -2,7 +2,7 @@
 
 > 計測日: 2026-06-10（`all` モード = BBテスト + WBテスト）
 > 方式: gcov（`bash scripts/coverage_gcov_fmp.sh all` → `python3 scripts/ttsp_gcov_report.py --filter /fmp3/kernel/`）
-> 対象: FMP3 3.4.0 `kernel/`、APIオートコード 20グループ + check_library + WBテスト5本（計28ディレクトリ, union集計）
+> 対象: FMP3 3.4.0 `kernel/`、APIオートコード 20グループ + check_library + WBテスト6本（計29ディレクトリ, union集計）
 > ターゲット: zybo_z7_gcc (Cortex-A9 dual-core, QEMU, -smp 2)
 >
 > このファイルは **BBテスト + WBテストを統合した `all` モードの最終カバレッジ** を記録する。
@@ -16,13 +16,14 @@
 
 ## 全体サマリ
 
-**分岐カバレッジ（C1）: 1519/1597 = 95.1%**（`all` モード、union集計、-O2+インライン抑制）
+**分岐カバレッジ（C1）: 1520/1597 = 95.2%**（`all` モード、union集計、-O2+インライン抑制）
 行カバレッジ（C0）: 3518/3621 = 97.2%
 
 - `bb` モード（WBテストなし）: 1513/1597 = 94.7% → [`BB_COVERAGE.md`](BB_COVERAGE.md)
-- WBテスト5本（`alarm_W-a` / `cyclic_W-a` / `xsns_dpn_W-a` / `time_event_W-a` / `W-b`）が **+6 分岐**（alarm +1 / cyclic +1 / exception +1 / time_event +3）を追加 → 詳細は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部
-- ASP の WBテスト群を移植したもの。**bb/all とも分母 1597 で一致**（インライン抑制でビルド差が解消）
-- 旧 -O2（インライン展開あり）計測: all 1582/1677（wait.h 等の水増しを含む。bb 1576 と分母不一致）。インライン抑制で分母が 1677→1597 に正規化し C1 は 95.1% に。
+- WBテスト6本（`alarm_W-a` / `cyclic_W-a` / `xsns_dpn_W-a` / `xsns_dpn_W-b` / `time_event_W-a` / `W-b`）が **+7 分岐**（alarm +1 / cyclic +1 / exception +2 / time_event +3）を追加 → 詳細は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部
+- ASP の WBテスト群を移植・拡張したもの。**bb/all とも分母 1597 で一致**（インライン抑制でビルド差が解消）
+- `xsns_dpn_W-b`（custom idle 方式）で exception.c の `p_my_pcb->p_runtsk==NULL` 分岐を到達（8/10→9/10、all 1519→1520）。MAIN_TASK を PE1 のみに割り当て PE2 をアイドルにして CPU 例外を発生させる。検証: 8 dir（check_library/exception + xsns_dpn BB split6 + `W-a`）で 8/10、`W-b` 追加で 9/10。
+- 旧 -O2（インライン展開あり）計測: all 1582/1677（wait.h 等の水増しを含む。bb 1576 と分母不一致）。インライン抑制で分母が 1677→1597 に正規化し C1 は 95.2% に。
 
 ## ファイル別 分岐カバレッジ（all モード）
 
@@ -33,7 +34,7 @@
 | cyclic.c | 111/111 (100.0%) | 47/48 (97.9%) | 1 |
 | dataqueue.c | 317/333 (95.2%) | 132/132 (100.0%) | — |
 | eventflag.c | 204/208 (98.1%) | 106/106 (100.0%) | — |
-| exception.c | 12/12 (100.0%) | 8/10 (80.0%) | 2 |
+| exception.c | 12/12 (100.0%) | 9/10 (90.0%) | 1 |
 | interrupt.c | 114/123 (92.7%) | 87/116 (75.0%) | 29 |
 | mempfix.c | 182/186 (97.8%) | 72/74 (97.3%) | 2 |
 | mutex.c | 250/256 (97.7%) | 125/132 (94.7%) | 7 |
@@ -53,9 +54,9 @@
 | time_manage.c | 67/68 (98.5%) | 20/22 (90.9%) | 2 |
 | wait.c | 66/66 (100.0%) | 8/8 (100.0%) | — |
 | wait.h | 36/37 (97.3%) | 13/14 (92.9%) | 1 |
-| **TOTAL** | **3518/3621 (97.2%)** | **1519/1597 (95.1%)** | **78** |
+| **TOTAL** | **3518/3621 (97.2%)** | **1520/1597 (95.2%)** | **77** |
 
-> インライン抑制により分母が 1677→1597 に正規化（wait.h 64→14、task.c 92→78、dataqueue 136→132 等）。残存 78 分岐の分類・到達不能理由・追加 WBテスト候補（サブ優先度機能・タイミングテスト）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) を参照。
+> インライン抑制により分母が 1677→1597 に正規化（wait.h 64→14、task.c 92→78、dataqueue 136→132 等）。残存 77 分岐の分類・到達不能理由・追加 WBテスト候補（サブ優先度機能・タイミングテスト）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) を参照。
 
 ## ASP との比較
 
@@ -64,11 +65,11 @@
 | 指標 | ASP (all) | FMP (all) |
 |---|---|---|
 | 総分岐数 | 1379 | 1597 |
-| 到達分岐 | 1368 | 1519 |
-| カバレッジ | 99.2% | 95.1% |
+| 到達分岐 | 1370 | 1520 |
+| カバレッジ | 99.3% | 95.2% |
 | 未到達分岐 | 11 | 78 |
 
-FMP の残存 78 分岐の主要因はマルチコア遅延ディスパッチパス・サブ優先度機能（`TA_SUBPRI`/`ENA_SPR`）・interrupt.c chg_ipm 複合パス。FMP 固有のマルチコア協調処理・サブ優先度機能が ASP に対し分岐数を +218 増やしている。マルチコアレース分岐は [`TIMING_TEST.md`](TIMING_TEST.md) の案3（2コアストレスループ）で到達可能なことが実証済み。
+FMP の残存 77 分岐の主要因はマルチコア遅延ディスパッチパス・サブ優先度機能（`TA_SUBPRI`/`ENA_SPR`）・interrupt.c chg_ipm 複合パス。FMP 固有のマルチコア協調処理・サブ優先度機能が ASP に対し分岐数を +218 増やしている。マルチコアレース分岐は [`TIMING_TEST.md`](TIMING_TEST.md) の案3（2コアストレスループ）で到達可能なことが実証済み。
 
 ## 更新手順
 
