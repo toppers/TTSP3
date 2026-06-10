@@ -37,9 +37,23 @@ QEMU_TIMEOUT="${QEMU_TIMEOUT:-1800}"
 
 test -d ../asp3 || { echo "ERROR: ../asp3 (sibling kernel) not found"; exit 1; }
 
-# assert を無効化してカバレッジ計測対象から除外する
-# COPTS は環境変数として渡し，Makefile の "COPTS := -g ... $(COPTS)" で末尾に展開される
-export COPTS="${COPTS:+$COPTS }-DNDEBUG"
+# カバレッジ計測用コンパイルオプション（COPTS は環境変数として渡し，
+# Makefile の "COPTS := -O2 $(COPTS)" 等で -O2 の後ろに展開される＝末尾の指定が優先）
+#
+#  (1) -DNDEBUG : assert() を無効化しカバレッジ計測対象から除外する
+#       （assert 失敗パスはデバッグ用で，仕様適合性の分岐ではないため）
+#
+#  (2) インライン抑制（-fno-inline 系） : -O2 を維持したまま inline 展開のみ無効化する．
+#       【理由】-O2 は wait.h 等の `static inline`（TOPPERS の Inline マクロ）関数を
+#       多数の呼出し元へ展開する．gcov は展開後の各 call-site インスタンスを独立に
+#       計測するため，同一ソース行の分岐数が水増しされ（例: wait.h 16→64 分岐），
+#       一部インスタンスが「未到達」に見える計測アーティファクトを生む．さらに
+#       bb/all でビルド差により分母が変動する．inline を抑制すると各 inline 関数は
+#       1 実体として計測され，ソースの論理分岐がそのまま反映され，bb/all の分母も一致する．
+#       -O0 ではなく -O2 を維持するのは，codegen を production 同等に保ち，
+#       -O0 で観測された実行時クラッシュ・タイミング変化を避けるため．
+#       （-finline-functions-called-once は -O2 で別途 inline するため併せて抑制）
+export COPTS="${COPTS:+$COPTS }-DNDEBUG -fno-inline -fno-inline-functions-called-once -fno-inline-small-functions"
 
 # NDEBUG フラグ変更後は旧 .o/.gcno が stale になるため削除して再コンパイルを強制する
 echo "===== clean stale objects for NDEBUG rebuild ====="
