@@ -23,6 +23,13 @@
   ※インライン抑制移行後: wait.h 64→14・wait.c・task.c のインライン展開アーティファクトが解消（各 100% / 論理分岐がそのまま）
   ※chg_ipm_f.yaml 追加（BB）で interrupt.c chg_ipm 13/14→14/14（raster&&enater 自終了パス到達）
   ※残存未到達 10 分岐（all モード）: exception(1)/interrupt(2)/mutex(1)/task_refer(1)/time_event(4)/time_manage(1)
+  ==== simt スイート合算（到達可能性ベース）====
+  ※all + simt: 1373/1379 = 99.6%（時刻関連4分岐を ASP3 公式 simt スイートで到達: 第3部）
+      time_event.c set_hrt_event(HRTCNT_BOUND)/update_current_evttim(64bit折返し)/signal_time(空ヒープ nocall)
+      ＋ time_manage.c adj_tim(64bit折返し) の計4分岐。simt は別ターゲット（simulation timer）計測のため
+      zybo の all モード数値(1369)とは別系統。合算は「到達可能性」の観点。
+  ※合算後の真の残存 6 分岐: interrupt(2 GIC恒真)/exception(1)/mutex(1)/task_refer(1)/time_event tmevt_down(1)
+      — すべて構造的到達不能 or 内部状態依存。
   --- 旧 -O2（インライン展開あり）計測の履歴参考値 ---
   ※-O2 all: 1435/1471 = 97.6%（wait.h 49/64 等のインライン水増しを含む。分母が bb 1459 と不一致）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -281,9 +288,10 @@
 
 ## 残存未到達分岐リスト（2026-06-10 `all` モード、-O2+インライン抑制）
 
-> 全 10 箇所（1369/1379 = 99.3%、`all` モード）。未到達数の多い順。  
+> 全 10 箇所（1369/1379 = 99.3%、zybo `all` モード）。未到達数の多い順。  
 > ※ 旧 -O2 計測で 15 箇所を占めていた wait.h のインライン展開アーティファクトは inline 抑制で解消済み（現 14/14 = 100%）。  
 > ※ `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達済み（11→10）。  
+> **※ simt スイート合算（到達可能性）**: 下表 #1 の 3 分岐 + #6 の 1 分岐（計 4）は ASP3 公式 simt スイートで到達済み → **真の残存 6 分岐**（#2 interrupt 2 / #3 exception 1 / #4 mutex 1 / #5 task_refer 1 / #1 time_event tmevt_down 1）。合算 1373/1379 = 99.6%。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第3部。  
 > **各分岐の詳細分析（到達不能理由・分類）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 を参照。**
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
