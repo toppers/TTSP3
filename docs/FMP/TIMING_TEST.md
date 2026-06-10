@@ -43,8 +43,9 @@ if (p_selftsk != p_my_pcb->p_schedtsk) {
 | sys_manage.c | 3 | `rot_rdq`(L277-278), `dis_dsp`(L604-606) |
 | task_manage.c | 4 | `act_tsk`(L161-162), `mact_tsk`(L232-233) |
 | task_term.c | 1 | `ter_tsk`(L374-375) |
-| time_manage.c | 1 | `adj_tim` 後処理 |
 | interrupt.c | （§2-a）| `chg_ipm` retry パス（同型） |
+
+> **注記（2026-06-10 レビュー）**: 旧版は本表に `time_manage.c | 1 | adj_tim 後処理` を含めていたが、これは誤り。`adj_tim` には `if (p_selftsk != p_schedtsk)` 型のディスパッチ分岐は無く、`time_manage.c` の `all` 残存 2 分岐は `adj_tim` の **64bit `EVTTIM` 折返し**（L174–178）で、案3（タイミングレース）では到達不能・simt スイートでのみ到達可能。詳細は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) §10。
 
 **従来の未到達理由**: TTSP3 の APIテストは 1タスク（少数タスク）が順次 API を呼ぶ構成で、QEMU で 2コア起動していても PE2 は `idle_loop` のみ実行し PE1 のスケジューリングを変更しない。そのため `p_selftsk == p_my_pcb->p_schedtsk` が常に成立する。
 
@@ -185,8 +186,8 @@ timing_test/FMP/interrupt/chg_ipm_race/  … chg_ipm retry race (L383)
 
 | 指標 | 分岐 C1 |
 |---|---|
-| BB+WB（timing なし）| 1519/1597 (95.1%) |
-| **BB+WB+timing** | **1521/1597 (95.2%)** |
+| BB+WB（timing なし）| 1520/1597 (95.2%) |
+| **BB+WB+timing** | **1522/1597 (95.3%)** |
 
 | timing test | 対象分岐 | 寄与 | 備考 |
 |---|---|---|---|

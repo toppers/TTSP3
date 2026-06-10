@@ -138,11 +138,11 @@ else {
 
 ## サマリー
 
-> -O2+インライン抑制で再計測（合計 78 / 1597）。旧 -O2 計測の §3 wait.h アーティファクト（16）はインライン抑制で解消（現 wait.h 13/14 = 1分岐のみ未到達）。category 別の内訳は概数（インライン抑制で分岐数が再正規化されたため、interrupt.c は実分岐顕在化で増、task.c は 16→12 に減 等）。
+> -O2+インライン抑制で再計測（合計 **77 / 1597**、`xsns_dpn_W-b` で exception を +1 到達後）。旧 -O2 計測の §3 wait.h アーティファクト（16）はインライン抑制で解消（現 wait.h 13/14 = 1分岐のみ未到達）。category 別の内訳は概数（インライン抑制で分岐数が再正規化されたため、interrupt.c は実分岐顕在化で増、task.c は 16→12 に減 等）。ファイル別 `all` 残存の正は [`ALL_COVERAGE.md`](ALL_COVERAGE.md)。
 
 | # | カテゴリ | 未到達分岐数（概数）| 主なファイル |
 |---|---|---|---|
-| §1 | マルチコア遅延ディスパッチパス | 約30 | alarm.c, cyclic.c, mempfix.c, mutex.c(一部), sys_manage.c, task_manage.c, task_term.c, time_manage.c |
+| §1 | マルチコア遅延ディスパッチパス | 約30 | alarm.c, cyclic.c, mempfix.c, mutex.c(一部), sys_manage.c, task_manage.c, task_term.c |
 | §2 | interrupt.c chg_ipm 複合パス | 約29 | interrupt.c（inline抑制で実分岐顕在化） |
 | §3 | wait.h | 1 | wait.h（旧アーティファクト16はinline抑制で解消） |
 | §4 | task.c サブ優先度機能 | 約12 | task.c |
@@ -151,7 +151,8 @@ else {
 | §7 | mutex.c サブ優先度パス | 約7 | mutex.c |
 | §8 | alarm/cyclic force_unlock_spin | 0（WBで到達済）| alarm.c, cyclic.c |
 | §9 | startup.c / task_refer.c / task_term.c / spin_lock.c | 約4 | 各1分岐 |
-| **合計** | | **78 / 1597** | |
+| §10 | time_manage.c adj_tim 64bit 折返し | 2 | time_manage.c（zybo 実用的到達不能 / simt 到達可能・ASP §3 同分類。マルチコア起因ではない）|
+| **合計** | | **77 / 1597** | |
 
 ---
 
@@ -205,7 +206,10 @@ if (p_selftsk != p_my_pcb->p_schedtsk) {
 | sys_manage.c | 3 | `rot_rdq`(L277-278), `dis_dsp`(L604-606) |
 | task_manage.c | 4 | `act_tsk`(L161-162), `mact_tsk`(L232-233) |
 | task_term.c | 1 | `ter_tsk`(L374-375) |
-| time_manage.c | 1 | `adj_tim` 後処理 |
+
+> **注記（2026-06-10 レビュー）**:
+> - alarm.c / cyclic.c の「2」は `bb` モードの未到達数。うち各 1 分岐（`force_unlock_spin` 系）は `alarm_W-a` / `cyclic_W-a`（§8）で到達済みのため、`all` モードの残存は各 **1**（マルチコア起因の `force_unlock_spin` リトライ系）。ファイル別 `all` 残存は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を正とする。
+> - **time_manage.c は本カテゴリ（マルチコア遅延ディスパッチ）に該当しない**。`all` 残存 **2 分岐**はいずれも `adj_tim` の 64bit `EVTTIM` 折返しパス（`fmp3/kernel/time_manage.c` L174–178 の `if (current_evttim < monotonic_evttim) { systim_offset += 1LLU << 32; }`）で、マルチコアの `set_hrt_event` ループ（L183–188）は到達済み。これは ASP の `adj_tim` 64bit 折返し分岐と同一で、**zybo 実 GIC タイマでは実用的到達不能・ASP3 公式 simt スイートでのみ C1 到達可能**（ASP `BB_UNREACHABLE.md` 第2部 §3 と同分類）。FMP では simt 計測を未実施。→ 下記 §10 参照。
 
 **分類**: 到達困難（マルチコアタイミング依存）。WBテストで到達するには，PE2上のタスクがPE1のAPIコール中に優先度の高いタスクを起動するタイミング制御が必要。
 
@@ -557,6 +561,31 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 
 ---
 
+## §10. time_manage.c — `adj_tim` 64bit `EVTTIM` 折返し（2 branches, 20/22）
+
+```c
+/* fmp3/kernel/time_manage.c L171-181 (adj_tim) */
+current_evttim += adjtim;                              /* L171 */
+boundary_evttim = current_evttim - BOUNDARY_MARGIN;    /* L172 */
+if (adjtim > 0
+        && monotonic_evttim - previous_evttim < (EVTTIM) adjtim) {   /* L174-175 */
+#ifdef UINT64_MAX
+    if (current_evttim < monotonic_evttim) {           /* L177 */
+        systim_offset += 1LLU << 32;                   /* L178 ← 未到達 */
+    }
+#endif
+    monotonic_evttim = current_evttim;                 /* L181 */
+}
+```
+
+`all` モードで残る 2 分岐は、いずれも `adj_tim` の **正方向大調整時の 64bit `EVTTIM` 折返し**経路（L174–175 の複合条件成立 + L177 の `current_evttim < monotonic_evttim`）。`adjtim > 0` かつ単調時刻が大きく進む条件を要し、特に L177 の折返しは 64bit `EVTTIM` が `monotonic_evttim` を下回る巨大調整でのみ成立する。BBテストの `adj_tim` 系は通常範囲の調整のみで、この折返しを起こさない。
+
+> **マルチコア起因ではない**: §1 の「マルチコア遅延ディスパッチ」とは無関係。本関数のマルチコア部（`set_hrt_event` ループ L183–188）は到達済み。
+
+**分類**: **zybo 実 GIC タイマでは実用的到達不能 / ASP3 公式 simt スイートでのみ C1 到達可能**。ASP の `adj_tim` 64bit 折返し分岐（ASP [`BB_UNREACHABLE.md`](../ASP/BB_UNREACHABLE.md) 第2部 §3）と同一構造で、ASP では simt スイート（HRT_CONFIG3/64bit）で `adj_tim` 14/14=100% に到達済み。**FMP では simt 計測を未実施**のため未到達のまま計上。FMP のタイマー共有部（`time_event.c`/`time_manage.c`）は CPU 非依存で ASP と同実装のため、FMP でも simt 同型ビルドで到達可能と見込まれる（未実証）。
+
+---
+
 ## 未到達分岐 総括
 
 | カテゴリ | 分岐数（概数）| 備考 |
@@ -567,8 +596,9 @@ if (p_selftsk->raster && p_my_pcb->dspflg) {
 | サブ優先度機能（§4, §7） | 約19 | TA_SUBPRI/ENA_SPR 未使用設定 |
 | time_event.c ヒープ・マルチコアパス（§5） | 約10 | TM設定依存（§5-a/b は WBで到達済み） |
 | exception.c xsns_dpn（§6） | 1 | else・`p_runtsk==NULL` は WBで到達済み（`xsns_dpn_W-a`/`W-b`）。`kerflg_table` は構造的到達不能 |
-| alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み |
+| alarm/cyclic force_unlock_spin（§8） | 0 | WBテストで到達済み（`all` で各 1 残存はマルチコア起因の §1 側）|
 | その他（§9） | 約4 | 各ファイル1分岐 |
+| **time_manage.c adj_tim 64bit 折返し（§10）** | 2 | zybo 実用的到達不能 / simt 到達可能（ASP §3 と同分類）。マルチコア起因ではない |
 | **合計** | **77 / 1597** | 95.2% branch coverage（all モード、-O2+インライン抑制）|
 
 ---
