@@ -19,9 +19,9 @@
 
 ## BBカバレッジ サマリ
 
-**分岐カバレッジ（C1）: 1359/1379 = 98.5%**（gcov, ttsp_gcov_report.py, union集計, 23ディレクトリ = check_library 3 + auto_code 20）
+**分岐カバレッジ（C1）: 1360/1379 = 98.6%**（`chg_ipm_f` 追加後）（gcov, ttsp_gcov_report.py, union集計, 23ディレクトリ = check_library 3 + auto_code 20）
 
-行カバレッジ（C0）: 2445/2458 = 99.5%
+行カバレッジ（C0）: 2447/2458 = 99.6%
 
 ---
 
@@ -34,7 +34,7 @@
 | dataqueue.c | 253/253 (100.0%) | 152/152 (100.0%) | — |
 | eventflag.c | 165/165 (100.0%) | 120/120 (100.0%) | — |
 | exception.c | 7/7 (100.0%) | 6/8 (75.0%) | 2 ◀ |
-| interrupt.c | 108/110 (98.2%) | 59/62 (95.2%) | 3 ◀ |
+| interrupt.c | 110/110 (100.0%) | 60/62 (96.8%) | 2 ◀ |
 | mempfix.c | 150/150 (100.0%) | 86/88 (97.7%) | 2 ◀ |
 | mutex.c | 212/212 (100.0%) | 135/136 (99.3%) | 1 ◀ |
 | pridataq.c | 244/244 (100.0%) | 148/148 (100.0%) | — |
@@ -51,7 +51,7 @@
 | time_manage.c | 55/56 (98.2%) | 21/22 (95.5%) | 1 ◀ |
 | wait.c | 61/61 (100.0%) | 6/6 (100.0%) | — |
 | wait.h | 39/39 (100.0%) | 14/14 (100.0%) | — |
-| **TOTAL** | **2445/2458 (99.5%)** | **1359/1379 (98.5%)** | **20** |
+| **TOTAL** | **2447/2458 (99.6%)** | **1360/1379 (98.6%)** | **19** |
 
 > インライン抑制により wait.h（旧 49/64=76.6%）・wait.c・task.c のインライン展開アーティファクトが解消し、各 100%（論理分岐がそのまま計測される）。
 
@@ -59,14 +59,14 @@
 
 ## BBで未到達の分岐（概要）
 
-BBテスト（自動生成）では計 20 分岐が未到達。2 群に分かれる。
+BBテスト（自動生成）では計 19 分岐が未到達。2 群に分かれる。
 
 | 群 | 内容 | 対応 |
 |---|---|---|
 | **(A) WBテストで到達可能（9分岐）** | alarm.c (1) / cyclic.c (1) / exception.c (1) / mempfix.c (2) / time_event.c (4) | 手書き WBテスト（方式2）で到達 → `all` モードで解消。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部 |
-| **(B) WBテストでも到達不能/困難（11分岐）** | exception.c (1) / interrupt.c (3) / mutex.c (1) / task_refer.c (1) / time_event.c (4) / time_manage.c (1) | 構造的・実用的到達不能、または到達困難（競合/64bit折返し/HRTCNT_BOUND 等）。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 |
+| **(B) WBテストでも到達不能/困難（10分岐）** | exception.c (1) / interrupt.c (2: clr_int/ras_int GIC恒真) / mutex.c (1) / task_refer.c (1) / time_event.c (4) / time_manage.c (1) | 構造的・実用的到達不能、または到達困難（競合/64bit折返し/HRTCNT_BOUND 等）。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 |
 
-> WBテスト追加後の最終到達率（`all` モード = 1368/1379 = 99.2%）とファイル別 all 数値は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
+> WBテスト追加後の最終到達率（`all` モード = 1369/1379 = 99.3%）とファイル別 all 数値は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
 
 ---
 

@@ -17,11 +17,12 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-分岐カバレッジ(kernel/): 1368/1379 = 99.2%  (C1, 2026-06-10 NDEBUG + -O2インライン抑制計測、all モード)
-  ※bbモード（WBテストなし）: 1359/1379 = 98.5%（手書き WBテスト alarm/cyclic/mempfix/time_event/exception 含まず）
-  ※WBテスト寄与: +9 分岐（bb 1359 → all 1368）。bb/all で分母 1379 が一致（インライン抑制によりビルド差が解消）
+分岐カバレッジ(kernel/): 1369/1379 = 99.3%  (C1, 2026-06-10 NDEBUG + -O2インライン抑制計測、all モード、chg_ipm_f 追加後)
+  ※bbモード（WBテストなし）: 1360/1379 = 98.6%（手書き WBテスト alarm/cyclic/mempfix/time_event/exception 含まず）
+  ※WBテスト寄与: +9 分岐（bb 1360 → all 1369）。bb/all で分母 1379 が一致（インライン抑制によりビルド差が解消）
   ※インライン抑制移行後: wait.h 64→14・wait.c・task.c のインライン展開アーティファクトが解消（各 100% / 論理分岐がそのまま）
-  ※残存未到達 11 分岐（all モード）: exception(1)/interrupt(3)/mutex(1)/task_refer(1)/time_event(4)/time_manage(1)
+  ※chg_ipm_f.yaml 追加（BB）で interrupt.c chg_ipm 13/14→14/14（raster&&enater 自終了パス到達）
+  ※残存未到達 10 分岐（all モード）: exception(1)/interrupt(2)/mutex(1)/task_refer(1)/time_event(4)/time_manage(1)
   --- 旧 -O2（インライン展開あり）計測の履歴参考値 ---
   ※-O2 all: 1435/1471 = 97.6%（wait.h 49/64 等のインライン水増しを含む。分母が bb 1459 と不一致）
   ※NDEBUG適用前（参考）: 1386/1405 = 98.6%（assert失敗パスを含む）
@@ -58,7 +59,7 @@
 - `get_mpf_k.yaml` — rel_mpf後のfreelist再利用によるget_mpf（mempfix.c L149 (f)分岐）
 
 > **WBテスト（方式2: 手書き、`all` モードのみ）のカタログ・到達手法は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部を参照。**  
-> WBテストは `bb` モード（1359/1379 = 98.5%）に対し **+9 分岐**を追加し、`all` モードで 1368/1379 = 99.2% に到達する。
+> WBテストは `bb` モード（1360/1379 = 98.6%）に対し **+9 分岐**を追加し、`all` モードで 1369/1379 = 99.3% に到達する。
 
 **2026-06-08 追加した BBテスト（全20グループ PASS）**:
 - `ena_dsp_b-3.yaml` — 割込み優先度マスク全解除でない場合のdspflgクリア（sys_manage.c L398 (t)分岐）
@@ -74,7 +75,7 @@
 | dataqueue.c | 253/253 100% | 152 | 152 | **100%** |
 | eventflag.c | 165/165 100% | 120 | 120 | **100%** |
 | exception.c | 7/7 100% | 7 | 8 | 87.5% ◀ |
-| interrupt.c | 108/110 98.2% | 59 | 62 | 95.2% ◀ |
+| interrupt.c | 110/110 100% | 60 | 62 | 96.8% ◀ |
 | mempfix.c | 150/150 100% | 88 | 88 | **100%** |
 | mutex.c | 212/212 100% | 135 | 136 | 99.3% ◀ |
 | pridataq.c | 244/244 100% | 148 | 148 | **100%** |
@@ -91,7 +92,7 @@
 | time_manage.c | 55/56 98.2% | 21 | 22 | 95.5% ◀ |
 | wait.c | 61/61 100% | 6 | 6 | **100%** |
 | wait.h | 39/39 100% | 14 | 14 | **100%** |
-| **TOTAL** | **2452/2458 99.8%** | **1368** | **1379** | **99.2%** |
+| **TOTAL** | **2454/2458 99.8%** | **1369** | **1379** | **99.3%** |
 
 > ※ インライン抑制（`-fno-inline` 系）により wait.h は 64→14 分岐（旧 -O2 のインライン展開水増しが解消）、wait.c・task.c も論理分岐どおりに計測され各 100%。
 > ※ インライン抑制で interrupt.c の実分岐が顕在化（58→62）、exception.c の xsns_dpn も 6→8 分岐に（論理分岐がそのまま見える）。
@@ -147,7 +148,7 @@
 | `clr_int` | interrupt.c | 16/16 | 9/10 | ◀ |
 | `ras_int` | interrupt.c | 16/16 | 9/10 | ◀ |
 | `prb_int` | interrupt.c | 15/15 | 8/8 |  |
-| `chg_ipm` | interrupt.c | 18/20 | 13/14 | ◀ |
+| `chg_ipm` | interrupt.c | 20/20 | 14/14 |  |
 | `get_ipm` | interrupt.c | 11/11 | 4/4 |  |
 | `_kernel_initialize_mempfix` | mempfix.c | 11/11 | 2/2 |  |
 | `_kernel_get_mpf_block` | mempfix.c | 12/12 | 2/2 |  |
@@ -280,14 +281,15 @@
 
 ## 残存未到達分岐リスト（2026-06-10 `all` モード、-O2+インライン抑制）
 
-> 全 11 箇所（1368/1379 = 99.2%、`all` モード）。未到達数の多い順。  
+> 全 10 箇所（1369/1379 = 99.3%、`all` モード）。未到達数の多い順。  
 > ※ 旧 -O2 計測で 15 箇所を占めていた wait.h のインライン展開アーティファクトは inline 抑制で解消済み（現 14/14 = 100%）。  
+> ※ `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達済み（11→10）。  
 > **各分岐の詳細分析（到達不能理由・分類）は [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 を参照。**
 
 | # | ファイル | C1 | 未到達 | 主な未到達行・内容 |
 |---|---|---|---|---|
 | 1 | time_event.c | 92.9% | 4 | L391/L440(実用的到達不能), L625(タイミング依存), tmevt_down 内部状態依存 ×1 |
-| 2 | interrupt.c | 95.2% | 3 | `clr_int`/`ras_int` ×各1（GIC で `check_intno_clear/raise` 恒真 → 構造的到達不能）/ `chg_ipm` ×1（raster&&enater 自終了、`chg_ipm_f.yaml` で BB 到達可）|
+| 2 | interrupt.c | 96.8% | 2 | `clr_int`/`ras_int` ×各1（GIC で `check_intno_clear/raise` 恒真 → 構造的到達不能）|
 | 3 | exception.c | 87.5% | 1 | `xsns_dpn` p_runtsk==NULL（構造的到達不能・テスト文脈） |
 | 4 | mutex.c | 99.3% | 1 | `remove_mutex` NULL exit（構造的到達不能） |
 | 5 | task_refer.c | 97.1% | 1 | `ref_tsk` switch JT境界チェック（構造的到達不能） |
@@ -302,7 +304,8 @@
 | sys_manage.c | ena_dsp_b-3/b-4 (BB・方式1) | **100%** |
 | task_term.c (`ena_ter`) | ena_ter_c (BB・方式1) | **100%** |
 | task_term.c (`ras_ter` L180) | ras_ter_g (BB・方式1) | **100%** |
-| interrupt.c (`chg_ipm` L369) | chg_ipm_e (BB・方式1) | 57/58 (**98.3%**、L371残1: 到達不能) |
+| interrupt.c (`chg_ipm` L369 dispatch不発) | chg_ipm_e (BB・方式1) | — |
+| interrupt.c (`chg_ipm` raster&&enater 自終了) | chg_ipm_f (BB・方式1、2026-06-10 追加) | **14/14 100%** |
 | mempfix.c (`_kernel_get_mpf_block` L149) | get_mpf_k (BB・方式1) | 86/88 (97.7%、残2) |
 | mempfix.c (`rel_mpf` L309 br[0]) | rel_mpf_W-a (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |
 | mempfix.c (`rel_mpf` L310 br[0]) | rel_mpf_W-b (WB・方式2、`api_test/ASP/mempfix/rel_mpf/`) | **100%** |

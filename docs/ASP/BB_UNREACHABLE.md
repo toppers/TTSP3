@@ -6,7 +6,7 @@
 
 このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
 - **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（`bb`→`all` で +9 分岐）
-- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由と分類（残存 11 分岐, `all` 1368/1379 = 99.2%）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由と分類（残存 10 分岐, `all` 1369/1379 = 99.3%）
 
 関連:
 - BBテストのみのカバレッジ（ファイル別） → [`BB_COVERAGE.md`](BB_COVERAGE.md)
@@ -28,7 +28,7 @@
 
 # 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
 
-> BBテスト（`bb` モード、1359/1379 = 98.5%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1368/1379 = 99.2%。
+> BBテスト（`bb` モード、1360/1379 = 98.6%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1369/1379 = 99.3%（`chg_ipm_f` BB追加後）。
 > 各分岐について「分岐の意味」「`bb` で未到達となる理由」「WBテストの到達手法」を示す。**WBテストの妥当性**（分岐の意味を正しく検証しているか等）は、これをもとに人間が確認する。
 >
 > ※ 計測は `-O2` + インライン抑制。`bb`/`all` で分母 1379 が一致する（旧 -O2 のインライン展開差による分母変動は解消）。
@@ -46,7 +46,9 @@ WBテスト（方式2）は `bb` → `all` で **+9 分岐**（alarm/cyclic/exce
 | exception.c | 6/8 | 7/8 | +1 | `xsns_dpn_W-a` |
 | mempfix.c | 86/88 | 88/88 | +2 | `rel_mpf_W-a` / `rel_mpf_W-b` |
 | time_event.c | 48/56 | 52/56 | +4 | `time_event_W-a`（複合条件×2 + 早期break）/ `time_event_W-b`（go-up） |
-| **合計** | **1359/1379 (98.5%)** | **1368/1379 (99.2%)** | **+9** | — |
+| **合計** | **1360/1379 (98.6%)** | **1369/1379 (99.3%)** | **+9** | — |
+
+> ※ `bb` 合計 1360・`all` 合計 1369 は `chg_ipm_f.yaml`（BB, +1）追加後の値。WB 寄与 +9 は不変（chg_ipm とは独立）。
 
 > ※ インライン抑制計測のため分岐番号は旧 -O2 と異なる（例: exception.c は 6→8 分岐、mempfix.c は 90→88 分岐）。以降の各節の行番号・branch 番号は論理分岐の意味を示すもので、gcov 上の番号と一致しない場合がある。
 
@@ -215,7 +217,7 @@ else {
 
 # 第2部 — WBテストでも到達しない残存分岐
 
-> `all` モード（BBテスト + WBテスト）での残存 11 分岐の詳細分析。到達不能理由・分類を示す。
+> `all` モード（BBテスト + WBテスト）での残存 10 分岐の詳細分析。到達不能理由・分類を示す。
 > （旧 -O2 計測の wait.h/wait.c/task.c インライン展開アーティファクトはインライン抑制で解消したため本部から除外。）
 
 ## 1. exception.c — `xsns_dpn`（1 branch, 87.5%）
@@ -311,10 +313,10 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## 5. interrupt.c — `clr_int` / `ras_int` / `chg_ipm`（3 branches, 95.2%）
+## 5. interrupt.c — `clr_int` / `ras_int`（2 branches, 96.8%）
 
 > 旧版 §5（wait.h インライン展開アーティファクト 15 分岐）は **インライン抑制で解消**（wait.h 14/14 = 100%）したため削除。
-> インライン抑制により `clr_int`/`ras_int` の実分岐が顕在化し、interrupt.c の未到達が 1→3 に増えた（旧 -O2 ではインライン併合で `clr_int`/`ras_int` が 8/8 と見えていた）。
+> インライン抑制により `clr_int`/`ras_int` の実分岐が顕在化し、interrupt.c の未到達が 1→3 に増えた（旧 -O2 ではインライン併合で `clr_int`/`ras_int` が 8/8 と見えていた）。その後 `chg_ipm` の 1 分岐は **`chg_ipm_f.yaml`（BB）で到達済み**となり、残存は `clr_int`/`ras_int` の 2 分岐。
 
 各未到達分岐の正体を特定した（`ena_int` は `check_intno_cfg` 1条件のみで 100%、`clr_int`/`ras_int` は `&& check_intno_clear/raise` の**第2条件**が追加されている点が差）。
 
@@ -322,11 +324,12 @@ if (current_evttim < monotonic_evttim) {
 |---|---|---|---|
 | `clr_int` | `check_intno_clear(intno)` が偽 → `E_OBJ` | zybo（GIC）の [`gic_kernel_impl.h`](../../../asp3/arch/arm_gcc/common/gic_kernel_impl.h) で `check_intno_clear` は **`return(true)` 恒真**。「configured だが clear 不可な割込み」が存在せず false 分岐に到達できない（カーネル編集なしには不可＝禁則②）| **構造的到達不能（ターゲット依存: GIC 恒真）** |
 | `ras_int` | `check_intno_raise(intno)` が偽 → `E_OBJ` | 同上（`check_intno_raise` も `return(true)` 恒真）| **構造的到達不能（ターゲット依存: GIC 恒真）** |
-| `chg_ipm` | `if (p_runtsk->raster && p_runtsk->enater)` 真 → 自タスク終了 | `chg_ipm(TIPM_ENAALL)` 時に raster=true（`ras_ter` 済）かつ enater=true の自タスク終了パス。単核・単一シナリオで再現可能 | **BBテストで到達可能**（→ `chg_ipm_f.yaml` で対応） |
+
+> **`chg_ipm` は到達済み**: `if (p_runtsk->raster && p_runtsk->enater)` 真（自タスク終了）パスは **`chg_ipm_f.yaml`（BB・方式1、2026-06-10 追加）で到達**（chg_ipm 13/14→14/14、All check points passed で検証済み）。手順は `ena_dsp_b-4.yaml` と同型（dister+raster → chg_ipm(マスク) → ena_ter → chg_ipm(TIPM_ENAALL) で自終了）。
 
 **結論**:
 - `clr_int`/`ras_int`: zybo（GIC）では `check_intno_clear`/`check_intno_raise` が恒真のため**構造的到達不能**。非クリア/非要求可能な割込みを持つ別ターゲットでのみ到達可（BB/WB ともに zybo では不可）。
-- `chg_ipm`: **BBテスト（`chg_ipm_f.yaml`）で到達可能**。既存 `ena_dsp_b-4.yaml`（ena_dsp の同型 raster&&enater 自終了）と同じ構成。
+- `chg_ipm`: **解消済み**（`chg_ipm_f.yaml`）。
 
 ---
 
@@ -360,19 +363,20 @@ if (current_evttim < monotonic_evttim) {
 
 ---
 
-## サマリ（残存 11 未到達分岐、`all` モード: 1368/1379 = 99.2%、-O2+インライン抑制）
+## サマリ（残存 10 未到達分岐、`all` モード: 1369/1379 = 99.3%、-O2+インライン抑制）
 
 | ファイル | 未到達数 | 分類 | 対応方針 |
 |---|---|---|---|
 | time_event.c | 4 | 実用的到達不能 ×3（64bit折返し/HRTCNT_BOUND/nocall）+ 内部状態依存 ×1 | 不要 |
-| interrupt.c | 3 | 到達困難（chg_ipm 自タスク終了・競合タイミング依存） | 低優先度・未対応で可 |
+| interrupt.c | 2 | 構造的到達不能（`clr_int`/`ras_int`: GIC で check_intno_clear/raise 恒真） | 不要（zybo） |
 | exception.c | 1 | 構造的到達不能（`p_runtsk==NULL` テスト文脈） | 不要 |
 | mutex.c | 1 | 構造的到達不能（`remove_mutex` NULL exit） | 不要 |
 | task_refer.c | 1 | 構造的到達不能（switch JT 境界チェック） | 不要 |
 | time_manage.c | 1 | 実用的到達不能（64 bit 折返し） | 不要 |
-| **合計** | **11** | — | 全て WB テスト追加不要と判断 |
+| **合計** | **10** | — | 全て WB/追加 BB テスト不要と判断 |
 
 > 旧 -O2 計測で残存に計上していた wait.h(15)/wait.c(2)/task.c(4) のインライン展開アーティファクトは、インライン抑制（`-fno-inline` 系）で解消（各 100%）。`bb`/`all` の分母も 1379 で一致する。
+> `chg_ipm` の raster&&enater 自終了分岐は `chg_ipm_f.yaml`（BB）で到達し、11→10 に減少。
 
-**現状の 99.2%（1368/1379、`all` モード）はテスト充足率として十分。**  
-残存 11 箇所は、カーネルの不変条件・物理的制約・タイミング依存性により到達不能または到達困難であり、テストを追加しても仕様適合性の確認にはならない（interrupt.c の競合系のみ低優先で対応余地あり）。
+**現状の 99.3%（1369/1379、`all` モード）はテスト充足率として十分。**  
+残存 10 箇所は、カーネルの不変条件・物理的制約・タイミング依存性により到達不能または到達困難であり、テストを追加しても仕様適合性の確認にはならない。
