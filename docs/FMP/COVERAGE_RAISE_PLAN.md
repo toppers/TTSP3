@@ -3,11 +3,11 @@
 > FMP3 `kernel/` の分岐カバレッジをさらに引き上げるための方法検討。
 > **前提：被テストカーネル fmp3 の編集を許可**（通常は禁則②で不可。本プランは target/構成の追加・
 > 変種ビルドのために fmp3 編集を認める特例前提）。2026-06-10 策定。
-> 現状 → [`ALL_COVERAGE.md`](ALL_COVERAGE.md)（all **1549/1597 = 97.0%**・残 48）、分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md)。
+> 現状 → [`ALL_COVERAGE.md`](ALL_COVERAGE.md)（all **1550/1597 = 97.1%**・残 47）、分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md)。
 
 ---
 
-## 0. 現状の到達余地（下表は Method B 着手前=残 52 時点の内訳。**Method B 適用後 = 残 48**）
+## 0. 現状の到達余地（下表は Method B 着手前=残 52 時点の内訳。**Method B 適用後 = 残 47**）
 
 | 分類 | 残 | 本プランでの扱い |
 |---|---|---|
@@ -19,18 +19,18 @@
 | サブ優先度/防御コード/構造残 | 残り | 到達不能（防御的再チェック等）|
 
 → 本プランで現実的に追加到達できるのは **Method B（約5-6）＋ Method A（約4）＝ 約10 分岐**。
-達成見込み：**52 → 約42、96.7% → 約97.4%**（うち Method B は **52→48 達成済**・96.7→97.0%、Method A 残 ~4）。interrupt.c 残（Method C）は構造的に閉じない。
+達成見込み：**52 → 約42、96.7% → 約97.4%**（うち Method B は **52→47 達成済**・96.7→97.1%、Method A 残 ~3）。interrupt.c 残（Method C）は構造的に閉じない。
 
 ---
 
 ## Method B：単一 TM-processor 構成変種で §5-c を到達 ★最優先 — ✅ 着手・PoC到達（2026-06-10）
 
-> **進捗**：`wb_test/FMP/time_event/tepp1_W-a`（`-DTOPPERS_TEPP_PRC=0x1`）で **§5-c の 3 分岐
-> （L168 init else / L583 `tmevtb_enqueue_reltim` 転送 / L627 `tmevtb_dequeue` 転送）を到達**・QEMU 緑。
+> **進捗**：`wb_test/FMP/time_event/tepp1_W-a`（`-DTOPPERS_TEPP_PRC=0x1`）で **§5-c の 4 分岐
+> （L168 init else / L583 `tmevtb_enqueue_reltim` 転送 / L627 dequeue 転送 ＋ tepp1_W-b で L546 enqueue 転送）を到達**・QEMU 緑。
 > fmp3 は `target/zybo_z7_gcc/target_kernel.h` の `TOPPERS_TEPP_PRC` を `#ifndef` ガード化（既定 0x3 不変）、
-> `coverage_gcov_fmp.sh` に `wb_extra_copts.txt` フックを追加。残 L522（`tmevtb_register`＝cyclic・PRC1限定）/
-> L546（`tmevtb_enqueue`＝`mig_tsk` 再登録）は別シナリオ。**`all` 再計測で確定：52→48**（time_event.c §5-c +3
-> ＋ startup.c §9-b +1＝計+4。`all` 1545→1549/1597=97.0%。`ALL_COVERAGE.md`）。
+> `coverage_gcov_fmp.sh` に `wb_extra_copts.txt` フックを追加。残 L522（`tmevtb_register`＝cyclic・PRC1限定）は構造的到達不能。旧記の
+> L546 は tepp1_W-b（mig_tsk）で到達済。**`all` 再計測で確定：52→47**（time_event.c §5-c +4
+> ＋ startup.c §9-b +1＝計+5。`all` 1545→1550/1597=97.1%。`ALL_COVERAGE.md`）。
 
 
 ### 機構
@@ -114,7 +114,7 @@ ASP3 は `simtimer_ct11mpcore_gcc`（simulation timer・HRT を任意操作）�
 
 - **Method B から着手**を推奨（FMP固有・最良コスパ・小さな変種で済む）。
 - 続いて **Method A**（ASP 前例あり・要 target 新設）。
-- 到達実績/見込み：**Method B 達成 52→48（97.0%）**、Method A で更に ~4（約97.4% 見込み）。timing_test の +2（dis_dsp/chg_ipm L383）を union に
+- 到達実績/見込み：**Method B 達成 52→47（97.1%）**、Method A で更に ~3（約97.4% 見込み）。timing_test の +2（dis_dsp/chg_ipm L383）を union に
   含めれば追加で +2。
 - **検証**：いずれも変種ビルドの gcov を `ttsp_gcov_report.py --filter /fmp3/kernel/` で集計し、
   本流（zybo all）とは別トラックで union（simt_coverage と同じ「参考トラック」運用）。

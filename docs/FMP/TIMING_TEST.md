@@ -189,7 +189,7 @@ timing_test/FMP/interrupt/chg_ipm_race/  … chg_ipm retry race (L383)
 | BB+WB（timing なし）| 1520/1597 (95.2%) |
 | **BB+WB+timing** | **1522/1597 (95.3%)** |
 
-> ⚠️ 上表の絶対値（1520/1522）は本計測時点（サブ優先度/interrupt 負テスト追加前）のもの。**現状の BB+WB は 1549/1597 = 97.0%**（[`ALL_COVERAGE.md`](ALL_COVERAGE.md)）で、timing の**正味寄与 +2 分岐（dis_dsp/chg_ipm L383）は不変**（timing は `all` union に常時は含めない運用）。timing を加えた現状はおよそ 1551/1597。
+> ⚠️ 上表の絶対値（1520/1522）は本計測時点（サブ優先度/interrupt 負テスト追加前）のもの。**現状の BB+WB は 1550/1597 = 97.1%**（[`ALL_COVERAGE.md`](ALL_COVERAGE.md)）で、timing の**正味寄与 +2 分岐（dis_dsp/chg_ipm L383）は不変**（timing は `all` union に常時は含めない運用）。timing を加えた現状はおよそ 1552/1597。
 
 | timing test | 対象分岐 | 寄与 | 備考 |
 |---|---|---|---|

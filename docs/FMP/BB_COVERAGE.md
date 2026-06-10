@@ -70,12 +70,12 @@ BBテスト（自動生成）では計 64 分岐が未到達（2026-06-10 再計
 
 | 群 | 内容 | 対応 |
 |---|---|---|
-| **(A) WBテストで到達可能（16分岐）** | exception.c (2) / time_event.c §heap (3) / alarm.c (1) / cyclic.c (1) ＝当初6本(+7) ／ サブ優先度 task.c・mutex (+5：`chg_spr_W-a`・`subprio_head_W-a`) ／ time_event.c §5-c + startup.c §9-b (+4：`tepp1_W-a`・単一TM-processor変種) | 手書き WBテスト（方式2）で到達 → `all` で bb 64→48（WB寄与 all−bb = +16）。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部・§5-c |
-| **(B) all モードでも残る未到達（48分岐・2026-06-10 再計測）** | interrupt.c (17・`VALID_INTNO`構造的dead/check_intno_cfg複合/chg_ipm) / time_event (7) / マルチコア遅延ディスパッチ各所（timing） など。※サブ優先度(旧12+7)・割込み番号異常系(旧29→17)・time_event §5-c は 2026-06-10 のBB/WB追加で大幅縮小 | マルチコアタイミング依存・構造的到達不能等。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) |
+| **(A) WBテストで到達可能（17分岐）** | exception.c (2) / time_event.c §heap (3) / alarm.c (1) / cyclic.c (1) ＝当初6本(+7) ／ サブ優先度 task.c・mutex (+5：`chg_spr_W-a`・`subprio_head_W-a`) ／ time_event.c §5-c + startup.c §9-b (+5：`tepp1_W-a`/`tepp1_W-b`・単一TM-processor変種) | 手書き WBテスト（方式2）で到達 → `all` で bb 64→47（WB寄与 all−bb = +17）。詳細 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第1部・§5-c |
+| **(B) all モードでも残る未到達（47分岐・2026-06-10 再計測）** | interrupt.c (17・`VALID_INTNO`構造的dead/check_intno_cfg複合/chg_ipm) / time_event (6) / マルチコア遅延ディスパッチ各所（timing） など。※サブ優先度(旧12+7)・割込み番号異常系(旧29→17)・time_event §5-c は 2026-06-10 のBB/WB追加で大幅縮小 | マルチコアタイミング依存・構造的到達不能等。詳細・分類 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) 第2部 / [`TIMING_TEST.md`](TIMING_TEST.md) |
 
 > exception.c の 2 分岐（`check_tskctx()==false` / `p_runtsk==NULL`）は `xsns_dpn_W-a` / `xsns_dpn_W-b`（custom idle 方式）で到達し、`all` で 9/10（残 1 分岐 `kerflg_table==false` は構造的到達不能）。※当初6本WB時点では (A) 6→7・(B) 78→77 の遷移。2026-06-10 のサブ優先度WB2本追加で (A) は 12 に。
 
-> WBテスト追加後の最終到達率（`all` モード = 1549/1597 = 97.0%）とファイル別 all 数値・ASP比較は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
+> WBテスト追加後の最終到達率（`all` モード = 1550/1597 = 97.1%）とファイル別 all 数値・ASP比較は [`ALL_COVERAGE.md`](ALL_COVERAGE.md) を参照。
 
 ---
 
