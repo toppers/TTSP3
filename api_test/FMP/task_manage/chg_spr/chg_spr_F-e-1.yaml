@@ -1,0 +1,39 @@
+version: "chg_spr_F-e-1.yaml : TTSP3 subprio reorder PoC (2026-06-10)"
+FMP_task_manage_chg_spr_F_e_1:
+  note: 【NGKI3673】subprio reorder effect (porder) ＝ TTSP3拡張ケース(2026-06-10追加)
+  variation:
+    profile: FMP
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_HIGH
+      tskstat: running
+      prcid  : PRC_SELF
+
+    TASK2:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: ready
+      subpri : 1
+      prcid  : PRC_SELF
+
+    TASK3:
+      type   : TASK
+      tskpri : TSK_PRI_SUBPRI
+      tskstat: ready
+      subpri : 2
+      prcid  : PRC_SELF
+
+  do:
+    id     : TASK1
+    syscall: chg_spr(TASK2, 3)
+    ercd   : E_OK
+
+  post_condition:
+    TASK3:
+      porder: 1
+
+    TASK2:
+      subpri: 3
+      porder: 2
