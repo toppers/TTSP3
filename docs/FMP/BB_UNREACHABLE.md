@@ -1,12 +1,119 @@
-# FMP 未到達分岐分析
+# BB_UNREACHABLE.md — FMP3 kernel/ BBテスト未到達分岐の分析とWBテスト対応
 
-> 更新: 2026-06-10（WBテスト5本追加後）
-> `all` モード（BBテスト + WBテスト）で未到達となった 95 分岐の分析。
-> WBテストで到達済みの分岐・カバレッジ計測結果は [WB_COVERAGE.md](WB_COVERAGE.md) を参照。
->
-> **2026-06-10 更新**: ASP 前例の WBテスト5本（`alarm_W-a` / `cyclic_W-a` / `xsns_dpn_W-a` / `time_event_W-a` / `W-b`）を FMP に移植し、§6（exception 1分岐）・§5-a/§5-b（time_event 3分岐）・§8（alarm/cyclic 2分岐）の計 **6分岐を到達済みに変更**。未到達は 102 → 95 に減少（all モード 1582/1677 = 94.3%）。
+> 更新: 2026-06-10
+> 対象: FMP3 3.4.0 `kernel/`（zybo_z7_gcc, QEMU -smp 2）
+> 方式: gcov（`bash scripts/coverage_gcov_fmp.sh all` / `bb`）
+
+このファイルは **BBテスト（自動生成）で到達できない分岐** の顛末を記録する。
+- **第1部**: BBの穴を手書き WBテスト（方式2）で到達させたもの — テスト内容と到達手法（6分岐, `bb`→`all` で +6 分岐）
+- **第2部**: WBテストを加えてもなお到達しない分岐 — 到達不能理由・分類と追加 WBテスト候補（残存 95 分岐, `all` 1582/1677 = 94.3%）
+
+関連:
+- BBテストのみのカバレッジ（ファイル別） → [`BB_COVERAGE.md`](BB_COVERAGE.md)
+- BBテスト + WBテスト統合の最終カバレッジ・ASP比較 → [`ALL_COVERAGE.md`](ALL_COVERAGE.md)
 
 ---
+
+# 第1部 — BBの穴を WBテストで到達（方式2: 手書き）
+
+> 自動生成 BBテスト（`bb` モード、1576/1677 = 94.0%）では到達できない分岐を、ソースを直接読んで設計した手書き WBテストで補う。WBテストを加えた `all` モードは 1582/1677 = 94.3%。ASP の WBテスト群（`alarm_W-a` / `cyclic_W-a` / `time_event_W-a` / `W-b` / `xsns_dpn_W-a`）を FMP に移植したもの。
+
+## WBテストによるカバレッジ寄与サマリ
+
+WBテスト（方式2）は以下の 6 分岐を新規に到達させ、`bb` → `all` で **+6 分岐** を追加する（未到達は 101 → 95）。
+
+| ファイル | `bb` 分岐 | `all` 分岐 | 増分 | WBテスト |
+|---|---|---|---|---|
+| alarm.c | 48/50 | 49/50 | +1 | `alarm_W-a` |
+| cyclic.c | 46/48 | 47/48 | +1 | `cyclic_W-a` |
+| exception.c | 5/8 | 6/8 | +1 | `xsns_dpn_W-a` |
+| time_event.c | 65/78 | 68/78 | +3 | `time_event_W-a`（×2）/ `time_event_W-b`（×1） |
+| **合計** | **1576/1677 (94.0%)** | **1582/1677 (94.3%)** | **+6** | — |
+
+> ASP との差異: ASP の `xsns_dpn_W-a` は `kerflg==false` 短絡評価パスを対象としたが、FMP の `xsns_dpn` は `check_tskctx()` ガードを持つため `kerflg_table=false` 分岐は構造的到達不能。FMP 版は代わりに `check_tskctx()==false`（タスクコンテキスト呼び出し、NGKI3152）の else 分岐を対象とする。詳細は §1-3。
+
+## WBテストカタログ（方式2: 手書き）
+
+内部カーネル機能（APIではない）を対象とするため、すべて `wb_test/FMP/` に分類する。
+
+| WBテスト | 対象分岐 | 内容 | 配置 |
+|---|---|---|---|
+| `alarm_W-a` | alarm.c `if(sense_lock())` 真 | 通知ハンドラが `iloc_cpu()` を保持して戻る → `call_alarm` が `force_unlock_spin()` を実行 | [out.c](../../wb_test/FMP/alarm/alarm_W-a/out.c) |
+| `cyclic_W-a` | cyclic.c `if(sense_lock())` 真 | 周期ハンドラが `iloc_cpu()` を保持して戻る → `call_cyclic` が `force_unlock_spin()` を実行 | [out.c](../../wb_test/FMP/cyclic/cyclic_W-a/out.c) |
+| `xsns_dpn_W-a` | exception.c L105 `check_tskctx()` 偽 | タスクコンテキストから `xsns_dpn(NULL)` を直接呼出し → else 分岐 `state=true`（NGKI3152） | [out.c](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) |
+| `time_event_W-a` | time_event.c L234 / L244 | `tmevt_down`: 右子ノードなし + 早期 break（heap sift-down） | [out.c](../../wb_test/FMP/time_event/time_event_W-a/out.c) |
+| `time_event_W-b` | time_event.c L315 | `tmevtb_delete`: go-up パス（last < parent） | [out.c](../../wb_test/FMP/time_event/time_event_W-b/out.c) |
+
+---
+
+## 1-1. alarm.c / cyclic.c — `call_alarm` / `call_cyclic` の `force_unlock_spin` パス
+
+**ソース** (`fmp3/kernel/alarm.c` L315–321, cyclic.c も同型):
+```c
+(*(p_almcb->p_alminib->nfyhdr))(p_almcb->p_alminib->exinf);  /* ハンドラ呼出し */
+if (sense_lock()) {                                          /* L316 */
+    force_unlock_spin(p_my_pcb);                             /* L317 */
+}
+else {
+    lock_cpu();                                              /* L320 */
+}
+acquire_glock();
+```
+
+| gcov 位置 | 条件 | BBテストで未到達の理由 |
+|---|---|---|
+| `if (sense_lock())` 真 → L317 | ハンドラが CPU ロック（`iloc_cpu()`）を保持したまま戻る → `force_unlock_spin()` で保持スピンロックをクリーンアップ | `call_alarm` はハンドラを `release_glock()`/`unlock_cpu()` 後に呼び出し、戻り後に `sense_lock()` で CPU ロック状態を確認する。BB テストのハンドラは CPU ロックを操作せず、戻り時は常にロック解除状態（`sense_lock()==false` → `lock_cpu()` 側）。`iloc_cpu()` を保持して戻るシナリオは自動生成テストでは生成されない。 |
+
+> ASP の対応分岐は `if(!sense_lock()) lock_cpu();` の真分岐スキップ（[ASP BB_UNREACHABLE.md](../ASP/BB_UNREACHABLE.md) 第1部 §1-1/§1-2）。FMP では並行制御のため当該コードが `force_unlock_spin()` 呼出しに置き換わっている。`iloc_cpu()` をハンドラ内で呼ぶことは NGKI 上許容された動作であり、誤使用ではない。
+
+**WBテスト** [`alarm_W-a`](../../wb_test/FMP/alarm/alarm_W-a/out.c) / [`cyclic_W-a`](../../wb_test/FMP/cyclic/cyclic_W-a/out.c): 通知ハンドラ内で `iwup_tsk(MAIN_TASK)` の後に `iloc_cpu()` を呼び、CPU ロックを保持したまま戻ることで `force_unlock_spin()` パスを到達させる。gcov 実測で L317 `force_unlock_spin(p_my_pcb)` の実行と `if(sense_lock())` 真分岐 taken を確認済み。
+
+---
+
+## 1-2. time_event.c — `tmevt_down` / `tmevtb_delete`（`time_event_W-a` / `W-b`）
+
+FMP のヒープ操作（`tmevt_down` L224, `tmevtb_delete` L292）は ASP と算法が同一（マクロが per-PE `p_tmevt_heap` 引数を取る点のみ異なる）。MAIN_TASK は PE1 上で動作し、登録アラームは PE1 の `p_tmevt_heap` に入るため、単一ヒープに対する ASP の配置・推論がそのまま成立する。
+
+| WBテスト | 対象分岐 | 内容 |
+|---|---|---|
+| `time_event_W-a` | L234（右子なし）+ L244（早期 break） | 5アラームで右子の無いヒープ形状を構築し、index-2 を削除。`tmevt_down` で右子なし・早期break を同時カバー（+2 分岐） |
+| `time_event_W-b` | L315（go-up） | 6アラームで、中間ノード削除時に最後尾ノードが削除位置の親より早い配置を構築（+1 分岐） |
+
+詳細なヒープ配置・分岐到達ロジックは各 out.c のヘッダコメント、および [ASP BB_UNREACHABLE.md](../ASP/BB_UNREACHABLE.md) 第1部 §1-4/§1-6（同一算法）を参照。
+
+---
+
+## 1-3. exception.c — `xsns_dpn` L105 `check_tskctx()` 偽分岐（`xsns_dpn_W-a`）
+
+**ソース** (`fmp3/kernel/exception.c` L104–119):
+```c
+if (check_tskctx()) {                       /* L105: sense_context()=excpt_nest_count>0 */
+    p_my_pcb = get_my_pcb();
+    state = (kerflg_table[INDEX_PRC(p_my_pcb->prcid)]
+                && exc_sense_intmask(p_excinf)
+                && p_my_pcb->enadsp
+                && p_my_pcb->p_runtsk != NULL) ? false : true;
+}
+else {
+    state = true;                           /* L117: NGKI3152 タスクコンテキスト */
+}
+```
+
+`check_tskctx()` は `sense_context()`（`excpt_nest_count > 0`、すなわち非タスク=例外コンテキストで真）を返す。
+
+| gcov 位置 | 条件 | BBテストで未到達の理由 |
+|---|---|---|
+| L105 `check_tskctx()` 偽 → L117 | タスクコンテキスト（`excpt_nest_count==0`）から `xsns_dpn` を呼出し → `state=true`（NGKI3152） | BB テストの `check_library/exception` は CPU 例外ハンドラ内（`excpt_nest_count>0` → `check_tskctx()==true`）から `xsns_dpn` を呼ぶため、タスクコンテキスト呼出しの else 分岐は到達しない。 |
+
+> **FMP 固有の制約**: FMP の `kerflg_table=false` 分岐は ASP と異なり構造的到達不能。`kerflg_table[prcid]` は `start_dispatch`（startup.c L237）の直前 L235 で true 化され、`check_tskctx()==true`（例外コンテキスト）が成立する時点では常に true。よって ASP `xsns_dpn_W-a` の初期化ルーチン手法は FMP では `check_tskctx()==false`（else）に落ち、`kerflg_table` 分岐を評価しない。残存分岐は本ファイル第2部 §6。
+
+**WBテスト** [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c): MAIN_TASK（タスクコンテキスト）から `xsns_dpn(NULL)` を直接呼び出し、戻り値が `true` であることを確認。gcov 実測で L105 偽分岐 taken・if-body（kerflg 評価）未実行を確認済み。
+
+---
+
+# 第2部 — WBテストでも到達しない残存分岐
+
+> `all` モード（BBテスト + WBテスト）での残存 95 分岐の分析。到達不能理由・分類と追加 WBテスト候補を示す。第1部の WBテストで到達済みの分岐（§5-a/§5-b, §6, §8）は本部の各節で「到達済み」と注記している。
 
 ## ビルド条件
 
@@ -212,7 +319,7 @@ while ((child = LCHILD(index)) <= LAST_INDEX(p_tmevt_heap)) {
 }
 ```
 
-**→ WBテスト [`time_event_W-a`](../../wb_test/FMP/time_event/time_event_W-a/out.c) で到達済み（+2 分岐）**。5アラームで右子の無いヒープ形状を構築し、index-2 削除で「右子なし（L234）」+「早期break（L244）」を同時カバー。ヒープ算法は ASP と同一。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §2。
+**→ WBテスト [`time_event_W-a`](../../wb_test/FMP/time_event/time_event_W-a/out.c) で到達済み（+2 分岐）**。5アラームで右子の無いヒープ形状を構築し、index-2 削除で「右子なし（L234）」+「早期break（L244）」を同時カバー。ヒープ算法は ASP と同一。詳細 → 本ファイル第1部 §1-2。
 
 ### §5-b. tmevtb_delete go-up パス（✅ 2026-06-10 WBテストで到達済み）
 
@@ -290,7 +397,7 @@ else {
 
 `check_tskctx()` は `sense_context()`（`excpt_nest_count > 0`、例外コンテキストで真）を返す。8分岐中、BBテストで5、WBテストで+1 = 6/8 をカバー済み。
 
-**✅ 2026-06-10 WBテストで到達済み（+1分岐）**: L105 `check_tskctx()` 偽分岐（タスクコンテキスト → else `state=true`、NGKI3152）を WBテスト [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) でカバー。MAIN_TASK から `xsns_dpn(NULL)` を直接呼び出す。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §3。
+**✅ 2026-06-10 WBテストで到達済み（+1分岐）**: L105 `check_tskctx()` 偽分岐（タスクコンテキスト → else `state=true`、NGKI3152）を WBテスト [`xsns_dpn_W-a`](../../wb_test/FMP/exception/xsns_dpn_W-a/out.c) でカバー。MAIN_TASK から `xsns_dpn(NULL)` を直接呼び出す。詳細 → 本ファイル第1部 §1-3。
 
 **残存 2 分岐（構造的到達不能）**:
 - `kerflg_table[prcid]==false`: `kerflg_table` は `start_dispatch`（startup.c L237）直前の L235 で true 化され、`check_tskctx()==true`（例外コンテキスト）成立時は常に true。例外コンテキストで kerflg_table=false となる窓が存在しない。**構造的到達不能**（ASP は `xsns_dpn` に `check_tskctx()` ガードが無いため初期化ルーチンで到達できたが、FMP では不可）。
@@ -341,7 +448,7 @@ else {
 
 **→ WBテスト [`alarm_W-a`](../../wb_test/FMP/alarm/alarm_W-a/out.c) / [`cyclic_W-a`](../../wb_test/FMP/cyclic/cyclic_W-a/out.c) で到達済み（各+1分岐）**。
 
-> **当初分類の訂正**: 旧版は「ハンドラ内 CPU ロック保持＝API誤使用につき到達不要」としていたが、これは誤り。ハンドラ内での `iloc_cpu()` 呼出しは NGKI 上許容された動作であり、ASP の `alarm_W-a`/`cyclic_W-a`（`if(!sense_lock()) lock_cpu()` の対応分岐）で実証済みのパスである。通知ハンドラが `iwup_tsk` 後に `iloc_cpu()` を呼んで CPU ロック状態で戻ることで、`call_alarm` は `force_unlock_spin()` を実行する。gcov 実測で L317 到達・`if(sense_lock())` 真分岐 taken を確認済み。詳細 → [`WB_COVERAGE.md`](WB_COVERAGE.md) §1。
+> **当初分類の訂正**: 旧版は「ハンドラ内 CPU ロック保持＝API誤使用につき到達不要」としていたが、これは誤り。ハンドラ内での `iloc_cpu()` 呼出しは NGKI 上許容された動作であり、ASP の `alarm_W-a`/`cyclic_W-a`（`if(!sense_lock()) lock_cpu()` の対応分岐）で実証済みのパスである。通知ハンドラが `iwup_tsk` 後に `iloc_cpu()` を呼んで CPU ロック状態で戻ることで、`call_alarm` は `force_unlock_spin()` を実行する。gcov 実測で L317 到達・`if(sense_lock())` 真分岐 taken を確認済み。詳細 → 本ファイル第1部 §1-1。
 
 ---
 
