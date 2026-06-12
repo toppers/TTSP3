@@ -182,6 +182,13 @@ if [ "${SKIP_RUN:-0}" != "1" ]; then
 			# POSIXターゲット: ネイティブ実行
 			( cd "$dir" && rm -f objs/*.gcda && \
 				timeout "$QEMU_TIMEOUT" "./$KERNEL_NAME" < /dev/null > execute.log 2>&1 )
+		elif declare -f parallel_simulation > /dev/null; then
+			# [改変] 2026-06-12: ターゲット依存のQEMU起動
+			# （ttsp_target.shがparallel_simulationを定義する場合．
+			#   カレントディレクトリで実行し，execute.logに出力すること）
+			( cd "$dir" && rm -f objs/*.gcda && \
+				timeout "$QEMU_TIMEOUT" bash -c parallel_simulation \
+					< /dev/null > execute.log 2>&1 )
 		else
 			( cd "$dir" && rm -f objs/*.gcda && \
 				timeout "$QEMU_TIMEOUT" qemu-system-arm -M xilinx-zynq-a9 -semihosting \
@@ -193,6 +200,8 @@ if [ "${SKIP_RUN:-0}" != "1" ]; then
 		echo "RUN auto_code_$i: finish=$fin"
 	}
 	export -f run_group
+	declare -f parallel_simulation > /dev/null && export -f parallel_simulation
+	export QEMU_UPSTREAM
 	# POSIXターゲット（linux_gcc）はネイティブ実行
 	RUN_NATIVE=0
 	[ "$TARGET_NAME" = "linux_gcc" ] && RUN_NATIVE=1
