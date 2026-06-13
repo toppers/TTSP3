@@ -1,0 +1,26 @@
+version: "TTSP3 HRP get_nth H-a (added 2026-06)"
+#
+#  (H-a) p_tskid が指すメモリ領域への書込みアクセスが許可されていない場合，
+#        E_MACVエラーが返ること．【NGKI3645】
+#        CHECK_MACV_WRITE(p_tskid, ID) 偽分岐．
+#
+HRP_sys_manage_get_nth_H_a:
+  note: 【NGKI3645】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_nth(TSK_PRI_MID, 0, (ID*)TTSP_MACV_ADDRESS)
+    ercd   : E_MACV
+
+  post_condition:

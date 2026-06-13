@@ -1,0 +1,28 @@
+version: "TTSP3 HRP mget_nth H-h-2 (added 2026-06)"
+#
+#  (H-h-2) CPUロック状態で呼び出して，E_CTXエラーが返ること．
+#          【NGKI3653】 CHECK_TSKCTX_UNL() の sense_lock() 真分岐．
+#
+HRP_sys_manage_mget_nth_H_h_2:
+  note: 【NGKI3653】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_tskid:
+          type: ID
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: mget_nth(TDOM_KERNEL, TSK_PRI_MID, 0, &p_tskid)
+    ercd   : E_CTX
+
+  post_condition:

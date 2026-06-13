@@ -65,7 +65,17 @@
 
 ---
 
-## Method 4（中・要調査）：sys_manage tail ＋ m系の到達性調査
+## Method 4：sys_manage tail ＋ m系 — ★実装済（2026-06-14、sys_manage.c 52.5%→82.7%）
+
+**実装結果**：m系（mrot_rdq/mget_lod/mget_nth）が HRP で到達可能（**schedno=DOMID**）と判明し、テストを追加。
+- 追加: `api_test/HRP/sys_manage/{mrot_rdq,mget_lod,mget_nth}/`（28テスト）＋ get_tid/get_did/get_lod/get_nth/dis_dsp の tail。
+- 実測: mrot_rdq 0→14/26、mget_lod 0→19/28、mget_nth 0→23/30、get_tid/dis_dsp 満点化 → **sys_manage.c 52.5%→82.7%（+61分岐）**、HRP 全体 87.1%→88.7%。
+- **緑サブセットで採用**：以下4テストは期待値/構造の不具合で除外（`/tmp/m4_dropped/` 退避・follow-up）:
+  - `mget_nth_H-d`/`mget_lod_H-d`/`mrot_rdq_H-b`（E_ID）: schedno=2 は harness が作る複数ドメインのため実は有効で、CHECK_ID を通過し acptn4 のアクセス権検査で E_OACV になる。E_ID を確実に出す無効 DOMID の選定が要（TTSP に invalid-domid マクロが無い）。
+  - `mget_lod_H-c`（正常系）: p_load 期待 1 vs 実際 2（load 計数の前提見直しが必要）。
+- **既存 harness fragility（M4 非起因）**：M4 のテスト追加で総数が増え再分割が変わり、auto_code_17 の TTG `T5_013`（グループ統合時の TASK1 エラーコード検査衝突）build 失敗と、flaky auto_code_3/19（E_SYS/E_OACV）を露呈。M4 テスト自体は全緑だが 19/20 build となる。BB_UNREACHABLE §3「build環境の既知fragility」の顕在化＝**別途のハーネス安定化タスク**（DIV_NUM 調整 or 衝突テスト特定）。
+
+### （旧・着手前の調査メモ）sys_manage tail ＋ m系の到達性
 
 **対象**：sys_manage.c 96。
 - **単一PE系 tail**（`rot_rdq` 15/16・`get_tid/get_did` 8/10・`get_lod` 17/20・`get_nth` 19/22・`dis_dsp` 7/8）

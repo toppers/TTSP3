@@ -1,0 +1,60 @@
+version: "TTSP3 HRP mrot_rdq H-f ntc (added 2026-06)"
+#
+#  (H-f) 非タスクコンテキスト（アラームハンドラ）からの正常系．
+#        【NGKI2699】 mrot_rdq を非タスクコンテキストから呼ぶことで
+#        (tskpri==TPRI_SELF && !sense_context()) の sense_context() 真，
+#        および dispatch ではなく request_dispatch_retint() を通る経路を
+#        カバーする．ハンドラ復帰後にディスパッチが起きることを確認する．
+#
+HRP_sys_manage_mrot_rdq_H_f:
+  note: 【NGKI2699】
+
+  pre_condition:
+    DUMMY_ALM:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      porder : 1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      domain : KERNEL
+
+  do_0:
+    id     : DUMMY_ALM
+    syscall: mrot_rdq(TDOM_KERNEL, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+      porder : 2
+
+    TASK2:
+      tskstat: ready
+      porder : 1
+
+  do_1:
+    id  : DUMMY_ALM
+    code: return
+
+  post_condition_1:
+    DUMMY_ALM:
+      hdlstat: STP
+
+    TASK1:
+      tskstat: ready
+
+    TASK2:
+      tskstat: running

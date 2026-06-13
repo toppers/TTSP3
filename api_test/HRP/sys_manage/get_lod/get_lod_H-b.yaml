@@ -1,0 +1,37 @@
+version: "TTSP3 HRP get_lod H-b (added 2026-06)"
+#
+#  (H-b) 自タスクが属する保護ドメインに対する参照操作（通常操作4）が
+#        許可されていない場合，E_OACVエラーが返ること．【NGKI3767】
+#        CHECK_ACPTN(p_runtsk->p_dominib->acvct.acptn4) の VIOLATE_ACPTN 真分岐．
+#        自ドメインの acptn4 が自ドメインを含まない構成（rot_rdq_H-a と同型）．
+#
+HRP_sys_manage_get_lod_H_b:
+  note: 【NGKI3767】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      access1: TACP(DOM_KERNEL)
+      access2: TACP(DOM_KERNEL)
+      access3: TACP(DOM_KERNEL)
+      access4: TACP(DOM_KERNEL)
+      var    :
+        p_load:
+          type: uint_t
+      domain : DOM_KERNEL
+
+    DOM_KERNEL:
+      type   : DOMAIN
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+  do:
+    id     : TASK1
+    syscall: get_lod(TSK_PRI_MID, &p_load)
+    ercd   : E_OACV
+
+  post_condition:

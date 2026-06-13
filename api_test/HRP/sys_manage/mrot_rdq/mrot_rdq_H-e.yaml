@@ -1,0 +1,26 @@
+version: "TTSP3 HRP mrot_rdq H-e (added 2026-06)"
+#
+#  (H-e) CPUロック状態で呼び出して，E_CTXエラーが返ること．
+#        【NGKI2695】 CHECK_UNL() の sense_lock() 真分岐．
+#
+HRP_sys_manage_mrot_rdq_H_e:
+  note: 【NGKI2695】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      porder : 1
+      domain : KERNEL
+
+    CPU_STATE:
+      type   : CPU_STATE
+      loc_cpu: true
+
+  do:
+    id     : TASK1
+    syscall: mrot_rdq(TDOM_KERNEL, TSK_PRI_MID)
+    ercd   : E_CTX
+
+  post_condition:

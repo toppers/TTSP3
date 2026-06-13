@@ -1,0 +1,26 @@
+version: "TTSP3 HRP get_did H-d (added 2026-06)"
+#
+#  (H-d) p_domid が型のアライメント境界に整合しない場合，E_MACVが返ること．
+#        【NGKI2715】 CHECK_MACV_WRITE→KERNEL_PROBE_MEM_WRITE の
+#        ALIGN_TYPE(p_var, type) 偽分岐（get_did_H-b は整合アドレスで
+#        probe_mem_write 偽分岐を通るため，本ケースで非整合側を補う）．
+#        ユーザドメイン（DOM1）から非整合アドレス TTSP_MACV_ADDRESS+1 を渡す．
+#
+HRP_sys_manage_get_did_H_d:
+  note: 【NGKI2715】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: get_did((ID*)(TTSP_MACV_ADDRESS+1))
+    ercd   : E_MACV
+
+  post_condition:

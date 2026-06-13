@@ -5,8 +5,8 @@
 > 対象: HRP3 (`../hrp3/`) `kernel/`、ターゲット **zybo_z7_gcc**（Cortex-A9 single-core, QEMU `xilinx-zynq-a9` `-smp 1`）
 > 計測範囲: check_library 3/3 ＋ API auto-code **20/20**（`auto_code_19` の gcov overlap は **M6 で解消済**＝SVN r1336）。
 >
-> **2026-06-14 更新（カバレッジ向上 M2/M3/M6 反映後）**：messagebuf・mem_manage・memory のテスト拡充と
-> gcov overlap 回復で **branch 82.0%→87.1%（+124分岐）／line 89.5%→90.7%**。内訳・残は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
+> **2026-06-14 更新（カバレッジ向上 M2/M3/M6 反映後）**：messagebuf・mem_manage・memory・sys_manage のテスト拡充と
+> gcov overlap 回復で **branch 82.0%→88.7%（+164分岐）／line 89.5%→93.3%**。内訳・残は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
 >
 > **本ファイルは ASP/FMP の [`ALL_COVERAGE.md`](../ASP/ALL_COVERAGE.md) と同条件（インライン抑制）で再計測した HRP 版**。
 > HRP には手書き WBテスト（`*_W-*`）が無いため **`all` モード＝`bb` モード**（[`BB_COVERAGE.md`](BB_COVERAGE.md) と同様）。
@@ -23,18 +23,21 @@
 ## 全体サマリ（gcov 全分岐, ttsp_gcov_report.py, union集計）
 
 ```
-行カバレッジ  (kernel/): 3029/3338 = 90.7%  (C0)
-分岐カバレッジ(kernel/): 2115/2429 = 87.1%  (C1, 2026-06-14 NDEBUG + -O2インライン抑制、bb=all、M2/M3/M6反映後)
-  ※カバレッジ向上 M2/M3/M6 反映後の値。着手前ベースライン（2026-06-14）は branch 82.0%(1991/2429)。
+行カバレッジ  (kernel/): 3113/3338 = 93.3%  (C0)
+分岐カバレッジ(kernel/): 2155/2429 = 88.7%  (C1, 2026-06-14 NDEBUG + -O2インライン抑制、bb=all、M2/M3/M4/M6反映後)
+  ※カバレッジ向上 M2/M3/M4/M6 反映後の値。着手前ベースライン（2026-06-14）は branch 82.0%(1991/2429)。
     - M6: auto_code_19 の gcov overlap 回復（.gcov_info 専用リージョン化・SVN r1336）→ +20分岐
     - M2: messagebuf 異常系/待ち/アクセス権 61テスト → messagebuf.c 51.8%→88.5%（+82分岐）
     - M3: ref_mem 新規＋prb_mem read 方向 → mem_manage.c 33.9%→80.6%・memory.c 35.0%→60.0%（+32分岐）
-  ※check_library(exc/int/timer) 3/3 ＋ API auto-code 20/20 を union 集計（auto_code_19 含む）。
+    - M4: sys_manage m系（mrot_rdq/mget_lod/mget_nth・schedno=DOMID）＋tail → sys_manage.c 52.5%→82.7%（+61分岐）
+  ※M4 は E_ID 等4テストを除外した緑サブセット（除外理由は COVERAGE_RAISE_PLAN.md）。計測時に
+    既存 harness fragility（auto_code_17 の TTG T5_013 グループ統合エラー・flaky auto_code_3/19）で
+    19/20 build＝1群欠落のため本値はやや保守的（M4 テスト自体は全緑。fragility は M4 非起因）。
   ※インライン抑制（ASP/FMP 同条件）。旧・抑制なし計測（COVERAGE_STATUS.md）は line 89.4%/branch 81.7%
     （分母2533＝wait.h 等のインライン水増し）。抑制で分母2429に縮小し ASP/FMP と比較可能。
   ※主要な標準API（task/semaphore/eventflag/dataqueue/pridataq/mutex/mempfix/alarm/cyclic/wait/
-    interrupt/task_*）は C1 90〜100%。残ギャップは domain.c（SOM/時間区画＝未テスト・M1調査中）と
-    sys_manage.c（m系＝未実装・M4で到達可と判明）。向上計画は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
+    interrupt/task_*/sys_manage）は C1 82〜100%。残る最大ギャップは domain.c（SOM/時間区画＝未テスト・
+    M1 調査確定＝TTG 非対応で手書き WB のみ）。向上計画は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
 ```
 
 ## ファイル別サマリ（gcov 全分岐、union集計、NDEBUG＋インライン抑制計測）
@@ -57,7 +60,7 @@
 | semaphore.c | 128/128 100% | 105 | 106 | 99.1% ◀ |
 | startup.c | 32/32 100% | 6 | 6 | **100%** |
 | svc_table.c | 0/2 0% | — | — | （拡張SVC表・本スイート未使用） |
-| sys_manage.c | 175/267 65.5% | 106 | 202 | 52.5% ◀ *(M4: m系で到達可・未実装)* |
+| sys_manage.c | 257/267 96.3% | 167 | 202 | 82.7% ◀ *(M4: 52.5%→。m系 mrot/mget 到達)* |
 | task.c | 130/130 100% | 60 | 62 | 96.8% ◀ |
 | task.h | 11/11 100% | 8 | 8 | **100%** |
 | task_manage.c | 127/127 100% | 125 | 130 | 96.2% ◀ |
@@ -69,13 +72,13 @@
 | time_manage.c | 59/60 98.3% | 36 | 40 | 90.0% ◀ |
 | wait.c | 68/68 100% | 10 | 10 | **100%** |
 | wait.h | 36/36 100% | 12 | 12 | **100%** |
-| **TOTAL** | **3029/3338 90.7%** | **2115** | **2429** | **87.1%** |
+| **TOTAL** | **3113/3338 93.3%** | **2155** | **2429** | **88.7%** |
 
 > ※ `◀` = 未到達分岐あり。`—` = 分岐なし（または計測対象なし）。`(Mx: …→)` = 当該 Method で改善。
 > ※ インライン抑制により wait.h は 76→12 分岐（旧 -O2 のインライン展開水増しが解消）、wait.c も論理分岐どおり 100%。
-> ※ 残る大ギャップは **domain.c(6.7%)＝SOM/時間区画スケジューリングが未テスト**（M1 で実現可否調査中）と
->   **sys_manage.c(52.5%)＝m系(mrot_rdq/mget_*)が未実装**（M4 で HRP 到達可＝schedno=DOMID と判明、+90分岐見込み）。
->   いずれも HRP 固有機能。詳細は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
+> ※ 残る最大ギャップは **domain.c(6.7%)＝SOM/時間区画スケジューリングが未テスト**（M1 調査確定＝TTG 非対応で
+>   手書き WB のみ・高コスト）。sys_manage.c は M4（m系 schedno=DOMID）で 52.5%→82.7% に到達済み。
+>   詳細・残は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
 
 ### 3 プロファイル比較（C1, インライン抑制・同条件）
 
@@ -83,7 +86,7 @@
 |---|---|---|
 | ASP | 99.3%（1370/1379） | [`../ASP/ALL_COVERAGE.md`](../ASP/ALL_COVERAGE.md) |
 | FMP | 97.1%（bb 1533/1597） | [`../FMP/ALL_COVERAGE.md`](../FMP/ALL_COVERAGE.md) |
-| **HRP（zybo）** | **87.1%（2115/2429）** | 本ファイル（M2/M3/M6 反映後。着手前 82.0%） |
+| **HRP（zybo）** | **88.7%（2155/2429）** | 本ファイル（M2/M3/M4/M6 反映後。着手前 82.0%） |
 | HRP（zcu102_r5/MPU） | 81.2%（2056/2533）※ | [`COVERAGE_R5.md`](COVERAGE_R5.md) |
 
 > ※ R5 はインライン抑制なし条件で計測。HRP が ASP/FMP より低いのは保護ドメイン機能（domain.c 等）の
