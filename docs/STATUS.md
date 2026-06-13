@@ -20,7 +20,7 @@
 | ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。asp3_core 後段の雛形 |
 | ASP | nucleo_f401re_gcc（M4） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M4） |
 | HRP | zybo_z7_gcc | ✅ **20/20** | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh HRP` → `PASS=136 FAIL=0`（完全グリーン） |
-| HRP | zynqmp_r5_gcc（R5） | ❓ 未測定（QEMU可） | ❓ | ❓ | 2026-06-12 追加 | コミット `fef2f9e`。`parallel_simulation()` で QEMU 実行 |
+| HRP | zynqmp_r5_gcc（R5） | ⚠ **19/20**（注7） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-13 実測 | `TTSP_TARGET_NAME=zynqmp_r5_gcc PAR_GROUPS=4 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`） |
 | HRMP | zybo_z7_gcc | ⚠ **14/20**（注6） | ✅ exc/int/timer | ✅ OK=156（許容 `DEF_INH_c`） | 2026-06-13 実測 | `bash scripts/ci_run.sh HRMP` → `PASS=173 FAIL=6`（FAIL=API注6の既知） |
 
 > **統一ランナー**：4プロファイルとも **`bash scripts/ci_run.sh <ASP|FMP|HRP|HRMP>`**（zybo・QEMU）で実行可。
@@ -79,6 +79,12 @@
   動作し **20/20 緑**（QEMU・execute.log 実体確認）。旧 `docs/HRP/COVERAGE_STATUS.md` の「19/20集計／
   並列未対応」は更新前の記述。check_library/cfg-error は未測定。
 - **注5**：HRMP は `DEF_INH_c` ほか（`docs/HRMP/COVERAGE_STATUS.md`／`DIVERGENCE_MAP.md` C）。
+- **注7（HRP zynqmp_r5 19/20 の内訳）**：2026-06-13 実測。check_library exc/int/timer 緑、
+  API 19群 すべて QEMU(`xlnx-zcu102`/Cortex-R5)で All check points passed。残1群（ATT_PMA を含む）は
+  `out.cfg: E_NOSPT: ATT_PMA is not supported on this target` で **build 不可**。これは **R5（MPU）の
+  ターゲット能力差**（kernel の `target/zynqmp_r5_gcc/target_user.txt` に「ATT_PMA非サポート」と明記）で，
+  **ファイル欠落＝コミット忘れではない**（chip/core/gic/target_kernel_impl/ttc_hrt 等は全てビルド成功）。
+  実行には upstream QEMU 11（aarch64）が必要（システムの 8.2.2 では不可）。
 - **注6（HRMP zybo 14/20 の内訳）**：本セッション実測。**5群が link 失敗**＝
   `undefined reference to chg_spr`（HRMP3 **3.4 にサブ優先度API `chg_spr` が無い**のに TESRY が
   chg_spr 系を生成。プロファイル×仕様差＝3.4 と 3.7 の差）。残1群は実行時 NG。
