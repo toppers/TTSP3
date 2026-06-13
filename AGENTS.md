@@ -151,7 +151,8 @@ feat/*    ← 機能ブランチ（仕様差分対応・新ターゲット等）
 |---|---|
 | **現状の合否基準・既知残（再計測の前にここ）** | **`docs/STATUS.md`** |
 | **ターゲット能力・非対応・実行コマンド** | **`docs/TARGETS.md`** |
-| ワークスペース配置・SVN手順 | `docs/WORKSPACE.md` |
+| 用語（TTG/TESRY/check_library/bb-all/residual/VERDICT 等） | `docs/GLOSSARY.md` |
+| ワークスペース配置・SVN手順・**実dir地図（どれが正本か）** | `docs/WORKSPACE.md` |
 | SVN→git 移行（一度だけ） | `docs/MIGRATION.md` |
 | 開発の始め方・人間/AI分担 | `START.md` |
 | 仕様差分(3.4→3.7)・改変台帳 | `DIVERGENCE_MAP.md` |

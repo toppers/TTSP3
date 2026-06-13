@@ -32,6 +32,32 @@ OS_PATH="../asp3/"      # ASP3
 
 ---
 
+## 実ワークスペースの地図（付加ディレクトリの見分け方）
+
+開発機では上記 canonical 名（`fmp3` 等）の他に**比較・追従用の別版**が並ぶことが多い。
+**どれが正本かは「symlink がどこを指すか」で判断する**（`configure.sh` が見るのは symlink 名）。
+
+| 規則 | 意味 | 例 | 触ってよいか |
+|---|---|---|---|
+| `<kernel>`（版なし名） | canonical への **symlink**。configure.sh はこれを参照 | `fmp3 -> fmp3_3.4` | 実体（下記）を編集 |
+| `<kernel>_<版>`（symlink先の実体） | **正本**（被テストカーネル本体・SVN） | `fmp3_3.4` | ユーザ指示時のみ（禁則②）。SVN別管理 |
+| `<kernel>_old` | 古いスナップショット（baseline 参照） | `fmp3_3.4_old`（r384） | 読み取り専用・比較用 |
+| `<kernel>_git` | git 版スナップショット（比較・退行前 baseline） | `fmp3_git`（r479＝暫定修正版） | 読み取り専用・比較用 |
+| `<kernel>_trunk` | 上流 trunk の最新（追従元） | `hrmp3_trunk`（r1249＝POSIX修正入り） | 読み取り専用・追従元 |
+| `<kernel>_stepN` / 外部symlink | 別作業ツリーへのリンク | `hrp3_step5 -> …/HRP3/work/…` | 読み取り専用 |
+
+> 現状スナップショット（2026-06-13・開発機）：`asp3->asp3_3.7`(SVN) / `fmp3->fmp3_3.4`(SVN・正本)
+> ＋`fmp3_3.4_old`(r384)・`fmp3_git`(r479) / `hrmp3->hrmp3_3.4`(SVN)＋`hrmp3_trunk`(r1249最新) /
+> `hrp3->hrp3_3.4`(SVN)＋`hrp3_step5`(外部) / `ttsp3`(git・正本)。構成は変わり得るので
+> **着手前に `ls -l ../` で symlink 先を必ず確認**する。
+
+### TTSP3 リポジトリ外の関連物（兄弟階層／別管理）
+- `posix/posix_<N>/` … POSIX依存部の不具合の**自己完結 再現＋修正案パッケージ**
+  （`fmp3_orig`/`fmp3_fixed` 全ソース＋スタンドアロン再現テスト＋`run_all.sh`）。
+  番号は HRMP3 trac チケット由来（例 `posix_50`=#50）。**TTSP3 git には含めない**。
+
+---
+
 ## セットアップ手順
 
 ```bash
