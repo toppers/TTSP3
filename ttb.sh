@@ -229,4 +229,22 @@ echo -n " $INPUT_NO "
 }
 
 # 処理開始
-ttsp_main_menu
+#
+# 非対話モード（CI/自動化用）：第4引数に名前付きコマンドを与えると、対応する
+# メニュー操作（キー列）を内部で投入して終了する。対話メニューのキー列を
+# 1か所に集約・命名したもので、呼び出し側の `printf 'c\n1\n1...' |` を不要にする。
+# 第4引数を省略すると従来どおりの対話（標準入力をそのまま読む）。
+#   例: bash ttb.sh ../fmp3/ FMP obj_fmp --check-all
+#   コマンド: check-all | check-exc | check-int | check-timer | scratch
+#   （check-* は exception/interrupt/timer の build のみ。実行は呼出側で行う）
+#
+TTB_CMD="${4:-}"; TTB_CMD="${TTB_CMD#--}"   # 先頭の -- は許容
+case "$TTB_CMD" in
+	"")          ttsp_main_menu ;;                                  # 対話（従来）
+	check-all)   printf 'c\n1\n1\nr\nr\nq\n'       | ttsp_main_menu ;;
+	check-exc)   printf 'c\n2\n1\nr\nr\nq\n'       | ttsp_main_menu ;;
+	check-int)   printf 'c\n3\n1\nr\nr\nq\n'       | ttsp_main_menu ;;
+	check-timer) printf 'c\n4\n1\nr\nr\nq\n'       | ttsp_main_menu ;;
+	scratch)     printf '1\n2\n1\n2\nr\nr\nr\nq\n' | ttsp_main_menu ;;
+	*) echo "ERROR: 未知の ttb コマンド: '${4:-}'（check-all|check-exc|check-int|check-timer|scratch）" >&2; exit 2 ;;
+esac

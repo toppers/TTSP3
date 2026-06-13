@@ -79,7 +79,7 @@ require_binary() { # $1=dir $2=label $3=buildlog
 
 # ===== stage 1: ターゲット依存チェック（exception/interrupt/timer）=====
 echo "===== stage 1: target-dependent check (exception/interrupt/timer) ====="
-printf 'c\n1\n1\nr\nr\nq\n' | TTSP_TARGET_NAME="$TARGET" bash ttb.sh "$OS" "$PROFILE" "$OBJ" > ci_${KN}_chk.log 2>&1
+TTSP_TARGET_NAME="$TARGET" bash ttb.sh "$OS" "$PROFILE" "$OBJ" --check-all > ci_${KN}_chk.log 2>&1
 for d in exception interrupt timer; do
 	dir=$OBJ/check_library/$d
 	require_binary "$dir" "check_library/$d" ci_${KN}_chk.log || continue
@@ -100,7 +100,7 @@ if [ "$MODE" = "full" ]; then
 	# ===== stage 3: API scratch code（ASP のみ）=====
 	if [ "$DO_SCRATCH" -eq 1 ]; then
 		echo "===== stage 3: API scratch code ====="
-		printf '1\n2\n1\n2\nr\nr\nr\nq\n' | TTSP_TARGET_NAME="$TARGET" bash ttb.sh "$OS" "$PROFILE" "$OBJ" > ci_${KN}_scr.log 2>&1
+		TTSP_TARGET_NAME="$TARGET" bash ttb.sh "$OS" "$PROFILE" "$OBJ" --scratch > ci_${KN}_scr.log 2>&1
 		scr_found=0
 		for dir in $OBJ/api_test/scratch_code/*/; do
 			[ -d "$dir" ] || continue

@@ -35,7 +35,8 @@ bash scripts/ci_run_fmp.sh                       # check_library + API20 + cfg-e
 
 # 副：FMP linux_gcc（native）— ターゲット切替は環境変数
 TTSP_TARGET_NAME=linux_gcc bash scripts/ttsp_parallel_api.sh ../fmp3/ FMP obj_fmp_posix 20
-#   check_library 個別: ttb.sh の c メニュー（exc=2 / int=3 / timer=4。linux_gcc は int のみ）
+#   check_library 個別（非対話）: bash ttb.sh <OS> <PROF> <obj> --check-{all,exc,int,timer}
+#     例) TTSP_TARGET_NAME=linux_gcc bash ttb.sh ../fmp3/ FMP obj --check-int  （linux_gcc は int のみ）
 
 # ASP zybo
 bash scripts/ci_run.sh
@@ -45,7 +46,8 @@ bash scripts/coverage_gcov_fmp.sh bb     # bb=BBのみ / all=+WB / smoke=check_l
 ```
 
 > ターゲット切替は `configure.sh` の `TARGET_NAME="${TTSP_TARGET_NAME:-zybo_z7_gcc}"`。
-> **対話 `ttb.sh` のメニュー駆動（`printf 'c\n3\n1\n…'`）は自動化に不向き**（ドリフトしやすい）。
+> `ttb.sh` は対話メニューだが**非対話の名前付きコマンド**（第4引数 `--check-all`/`--check-int`/
+> `--scratch` 等）も持つ。`printf 'c\n1\n1\n…' |` 駆動は不要（メニュー列は ttb.sh に集約済み）。
 > 上記スクリプト経由を推奨。合否の現状基準は **`docs/STATUS.md`**。
 
 ---

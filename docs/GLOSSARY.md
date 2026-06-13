@@ -40,7 +40,7 @@
 
 | 用語 | 意味 |
 |---|---|
-| **ttb.sh** | 公式の**対話メニュー**ランナー。自動化では下記スクリプト経由が推奨 |
+| **ttb.sh** | 公式の対話メニューランナー。**非対話の名前付きコマンド**も持つ（第4引数 `--check-all`/`--check-exc`/`--check-int`/`--check-timer`/`--scratch`）。自動化は下記スクリプト経由が推奨 |
 | **`ci_run.sh <PROFILE>`** | 全プロファイル統一の非対話ランナー（check→API→scratch(ASP)→cfg-error→VERDICT） |
 | **`ttsp_parallel_api.sh`** | API auto_code をグループ並列でビルド・実行 |
 | **`verdict.sh`** | 実行結果を `STATUS.md` のベースラインと比較し正規化 `VERDICT:` 行を出す |
