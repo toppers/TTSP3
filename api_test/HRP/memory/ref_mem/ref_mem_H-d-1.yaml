@@ -1,0 +1,33 @@
+version: "ref_mem_H-d-1.yaml 2026-06-14 created (FUJI SOFT prb_mem_H-d-1-1.yaml を雛形に改変)"
+HRP_memory_ref_mem_H_d_1:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : DOM1
+      var    :
+        rmem:
+          type: T_RMEM
+
+    MEMORY_MODULE1:
+      type   : MEMORY_MODULE
+      file   : ttsp_mem_obj_kernel1.o
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+      domain : KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_mem((const void *)&ttsp_mem_obj_kernel1, &rmem)
+    ercd   : E_OACV
+
+  post_condition:

@@ -1,0 +1,30 @@
+version: "snd_mbf_H-a-3: dispatch disabled -> E_CTX"
+HRP_snd_mbf_H_a_3:
+  note: ディスパッチ禁止状態からの呼出しでE_CTXが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+          value  : MBF_MSG_A
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+
+    CPU_STATE:
+      type   : CPU_STATE
+      dis_dsp: true
+
+  do:
+    id     : TASK1
+    syscall: snd_mbf(MBF1, (void*)&message1, MBF_MSGSZ_A)
+    ercd   : E_CTX
+
+  post_condition:

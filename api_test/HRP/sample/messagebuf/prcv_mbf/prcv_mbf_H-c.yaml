@@ -1,0 +1,33 @@
+version: "prcv_mbf_H-c: operation not permitted -> E_OACV"
+HRP_prcv_mbf_H_c:
+  note: 対象メッセージバッファに対する通常操作2が許可されていない場合，E_OACVが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    MBF1:
+      type   : MESSAGEBUF
+      maxmsz : ANY_MAX_MSIZE
+      mbfsz  : ANY_MBF_SIZE
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prcv_mbf(MBF1, (void*)message1)
+    ercd   : E_OACV
+
+  post_condition:

@@ -1,0 +1,26 @@
+version: "ref_mbf_H-c: pk_rmbf not writable -> E_MACV"
+HRP_ref_mbf_H_c:
+  note: pk_rmbfが指すメモリ領域への書込みアクセスが許可されていない場合，E_MACVが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+      domain: DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_mbf(MBF1, (T_RMBF*)TTSP_MACV_ADDRESS)
+    ercd   : E_MACV
+
+  post_condition:

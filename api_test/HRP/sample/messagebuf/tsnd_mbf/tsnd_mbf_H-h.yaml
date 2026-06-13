@@ -1,0 +1,25 @@
+version: "tsnd_mbf_H-h: polling fails on full buffer (TMO_POL) -> E_TMOUT"
+HRP_tsnd_mbf_H_h:
+  note: tmoutがTMO_POLで，メッセージバッファ管理領域に格納するスペースがない場合，E_TMOUTが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+          value  : MBF_MSG_A
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : 0
+
+  do:
+    id     : TASK1
+    syscall: tsnd_mbf(MBF1, (void*)&message1, MBF_MSGSZ_A, TMO_POL)
+    ercd   : E_TMOUT
+
+  post_condition:

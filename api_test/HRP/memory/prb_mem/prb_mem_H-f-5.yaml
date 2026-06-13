@@ -1,0 +1,35 @@
+version: "prb_mem_H-f-5.yaml 2026-06-14 created (FUJI SOFT prb_mem_H-d-2-1.yaml を雛形に改変: 対象タスクがカーネルドメイン)"
+HRP_memory_prb_mem_H_f_5:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      domain : DOM1
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : KERNEL
+
+    MEMORY_MODULE1:
+      type   : MEMORY_MODULE
+      file   : ttsp_mem_obj_user1.o
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prb_mem((const void *)&ttsp_mem_obj_user1, 8, TASK2, TPM_READ)
+    ercd   : E_OK
+
+  post_condition:

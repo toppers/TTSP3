@@ -1,0 +1,29 @@
+version: "ini_mbf_H-c: management operation not permitted -> E_OACV"
+HRP_ini_mbf_H_c:
+  note: 対象メッセージバッファに対する管理操作が許可されていない場合，E_OACVが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+
+    MBF1:
+      type   : MESSAGEBUF
+      maxmsz : ANY_MAX_MSIZE
+      mbfsz  : ANY_MBF_SIZE
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ini_mbf(MBF1)
+    ercd   : E_OACV
+
+  post_condition:

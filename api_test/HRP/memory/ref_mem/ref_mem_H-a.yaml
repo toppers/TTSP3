@@ -1,0 +1,23 @@
+version: "ref_mem_H-a.yaml 2026-06-14 created (FUJI SOFT prb_mem_H-a.yaml を雛形に改変)"
+HRP_memory_ref_mem_H_a:
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        rmem:
+          type: T_RMEM
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+  do:
+    id     : ALM1
+    syscall: ref_mem((const void *)&rmem, &rmem)
+    ercd   : E_CTX
+
+  post_condition:

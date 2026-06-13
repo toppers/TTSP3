@@ -1,0 +1,25 @@
+version: "trcv_mbf_H-c: invalid tmout -> E_PAR"
+HRP_trcv_mbf_H_c:
+  note: tmoutが無効(TMO_FEVR-1)の時にE_PARが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+
+  do:
+    id     : TASK1
+    syscall: trcv_mbf(MBF1, (void*)&message1, TMO_FEVR-1)
+    ercd   : E_PAR
+
+  post_condition:

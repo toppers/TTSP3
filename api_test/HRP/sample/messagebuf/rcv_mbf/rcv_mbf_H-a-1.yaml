@@ -1,0 +1,32 @@
+version: "rcv_mbf_H-a-1: non-task context -> E_CTX"
+HRP_rcv_mbf_H_a_1:
+  note: 非タスクコンテキストからの呼出しでE_CTXが返ること．
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    TASK1:
+      type   : TASK
+      tskstat: running
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+
+  do:
+    id     : ALM1
+    syscall: rcv_mbf(MBF1, (void*)&message1)
+    ercd   : E_CTX
+
+  post_condition:

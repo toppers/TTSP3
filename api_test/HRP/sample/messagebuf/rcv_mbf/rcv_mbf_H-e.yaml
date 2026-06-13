@@ -1,0 +1,27 @@
+version: "rcv_mbf_H-e: task termination requested -> E_RASTER"
+HRP_rcv_mbf_H_e:
+  note: 自タスクのタスク終了要求フラグがセットされている時にE_RASTERが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      dister : true
+      raster : true
+      var    :
+        message1:
+          type   : uint8_t
+          arraysz: MBF_MSGSZ_A
+
+    MBF1:
+      type  : MESSAGEBUF
+      maxmsz: ANY_MAX_MSIZE
+      mbfsz : ANY_MBF_SIZE
+      fmbfsz: ANY_MBF_SIZE
+
+  do:
+    id     : TASK1
+    syscall: rcv_mbf(MBF1, (void*)&message1)
+    ercd   : E_RASTER
+
+  post_condition:

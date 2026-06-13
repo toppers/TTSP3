@@ -1,0 +1,33 @@
+version: "prb_mem_H-f-2.yaml 2026-06-14 created (FUJI SOFT 提供データを雛形に改変: TPM_READ で読出し権なし)"
+HRP_memory_prb_mem_H_f_2:
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : DOM1
+
+    MEMORY_MODULE1:
+      type   : MEMORY_MODULE
+      file   : ttsp_mem_obj_user1.o
+      access1: TACP_SHARED
+      access2: TACP(DOM2)
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    DOM2:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: prb_mem((const void *)&ttsp_mem_obj_user1, 8, TASK1, TPM_READ)
+    ercd   : E_MACV
+
+  post_condition:

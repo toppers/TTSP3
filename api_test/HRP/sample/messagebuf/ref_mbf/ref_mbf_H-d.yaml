@@ -1,0 +1,32 @@
+version: "ref_mbf_H-d: reference operation not permitted -> E_OACV"
+HRP_ref_mbf_H_d:
+  note: 対象メッセージバッファに対する参照操作が許可されていない場合，E_OACVが返ること．
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      domain : DOM1
+      var    :
+        pk_rmbf:
+          type: T_RMBF
+
+    MBF1:
+      type   : MESSAGEBUF
+      maxmsz : ANY_MAX_MSIZE
+      mbfsz  : ANY_MBF_SIZE
+      access1: TACP_KERNEL
+      access2: TACP_KERNEL
+      access3: TACP_KERNEL
+      access4: TACP_KERNEL
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: ref_mbf(MBF1, &pk_rmbf)
+    ercd   : E_OACV
+
+  post_condition:
