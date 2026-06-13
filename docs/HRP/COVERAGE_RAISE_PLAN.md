@@ -65,16 +65,28 @@
 
 ---
 
-## Method 4（中・要調査）：sys_manage tail ＋ m系の到達性調査
+## Method 4：sys_manage tail ＋ m系 — ★到達性 検証済／実装は deferred（2026-06-14）
 
-**対象**：sys_manage.c 96。
-- **単一PE系 tail**（`rot_rdq` 15/16・`get_tid/get_did` 8/10・`get_lod` 17/20・`get_nth` 19/22・`dis_dsp` 7/8）
-  ＝境界・エラー系の追加で回収（~20 分岐）。ttsp3 側。
-- **m系**（`mrot_rdq` 0/26・`mget_lod` 0/28・`mget_nth` 0/30＝84分岐）＝`#ifdef TOPPERS_m*` でコンパイル済だが
-  `schedno`（スケジューリング単位）指定 API。**HRP 単一スケジューリング単位での到達性を要調査**：到達可能なら
-  schedno=自スケジューラのテスト追加（大ゲイン）、構造的単一なら到達不能として文書化（[`BB_UNREACHABLE.md`](BB_UNREACHABLE.md)へ）。
+**対象**：sys_manage.c 96。m系（`mrot_rdq` 0/26・`mget_lod` 0/28・`mget_nth` 0/30＝84分岐）＋単一PE系 tail（~12分岐）。
 
-**コスト**：中（tail）＋調査。**ゲイン**：中〜大（m系の判定次第）。
+**到達性 判定：到達可能（schedno=保護ドメインID）。** `#ifdef TOPPERS_m*` でコンパイル済み
+（`hrp3/kernel/Makefile.kernel` L119-120）。HRP では第1引数 `ID schedno` は **DOMID** として解釈される
+（FMP/HRMP は schedno=プロセッサ。`sys_manage.c` mrot_rdq L251-265 が TDOM_KERNEL/TDOM_SELF/VALID_DOMID と突合）。
+0% の原因は不在APIではなく **HRP 用 m系テストが皆無**（m系 yaml は FMP/HRMP ツリーのみで HRP build に含まれない）。
+PoC で実測：m系テストを書くと mrot_rdq/mget_lod/mget_nth が到達し sys_manage.c 52.5%→~83%（+~60分岐）を確認済み。
+
+**実装は deferred（自動生成テストの品質が不足）**：エージェント自動生成の m系テストは、
+(a) **マージ安定性**＝状態変化を伴う rotation テスト（mrot_rdq は呼出しタスクが running→ready）で、TTG が
+グループ統合時に「後続 post_condition で caller が running か」を検査する `T5_012`/`T5_013`（ercd 指定有無で
+表裏）に抵触し、分割の度に別群が build 失敗（収束しない）。(b) E_ID（無効 DOMID の選定）・load 計数・
+非タスク文脈 E_CTX 等の **runtime 期待値**に複数の誤り。→ **正しく実装するには post_condition を
+マージ安定（caller を確実に running に保つ／rotation は非self優先度を回す等）に再設計し、各 runtime 期待値を
+HRP セマンティクスで検証する必要**（PoC は一旦 revert）。
+
+**コスト**：中〜大（再設計＋反復ビルド検証）。**ゲイン**：~60-90分岐（sys_manage.c 52.5%→~83-98%）。
+**次着手時の要点**：①全 ercd テストの post に `caller: tskstat: running` を明示（T5_012/013 回避）、
+②mrot_rdq は TASK1 が running を保つ優先度/構成にする、③E_ID は確実に無効な DOMID（TTSP に invalid-domid
+マクロが無いため要工夫）、④非タスク文脈 E_CTX のチェック順序（HRP は acptn 検査との順序に注意）。
 
 ---
 
