@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-#  TTSP3 HRP（zynqmp_r5_gcc / Cortex-R5）GCOVカバレッジ計測ランナー
+#  TTSP3 HRP（zcu102_r5_gcc / Cortex-R5）GCOVカバレッジ計測ランナー
 #
-#  HRP3 の zynqmp_r5_gcc ターゲット依存部に追加した GCOV 対応
+#  HRP3 の zcu102_r5_gcc ターゲット依存部に追加した GCOV 対応
 #  （ENABLE_GCOV=true：Makefile.target の計装フラグ，target_kernel_impl.c の
 #  __gcov_info_to_gcda ダンプ＋セミホスティング書き出し＋QEMU 終了，
 #  target_ldscript.trb の GenerateProvide，chip_ldscript.trb の GenerateProvide
@@ -11,7 +11,7 @@
 #  R5/MPU・upstream QEMU 版．
 #
 #  zybo 版との差分：
-#    - ターゲット＝zynqmp_r5_gcc（TTSP_TARGET_NAME で指定）
+#    - ターゲット＝zcu102_r5_gcc（TTSP_TARGET_NAME で指定）
 #    - QEMU＝upstream qemu-system-aarch64（11以降．xlnx-zcu102＋loader で R5 起動）
 #      ※システムの qemu 8.2.2 では不可．環境変数 QEMU_UPSTREAM で上書き可
 #    - R5 の target_exit がセミホスティングで QEMU を自動終了するため，
@@ -46,7 +46,7 @@ DIV_NUM="${API_DIV_NUM:-20}"
 QEMU_TIMEOUT="${QEMU_TIMEOUT:-1800}"
 QEMU_UPSTREAM="${QEMU_UPSTREAM:-$HOME/qemu/qemu-11.0.0/build/qemu-system-aarch64}"
 
-export TTSP_TARGET_NAME=zynqmp_r5_gcc
+export TTSP_TARGET_NAME=zcu102_r5_gcc
 
 test -d ../hrp3 || { echo "ERROR: ../hrp3 (sibling kernel) not found"; exit 1; }
 test -x "$QEMU_UPSTREAM" || { echo "ERROR: upstream QEMU not found: $QEMU_UPSTREAM"; exit 1; }

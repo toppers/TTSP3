@@ -20,7 +20,7 @@
 | ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。asp3_core 後段の雛形 |
 | ASP | nucleo_f401re_gcc（M4） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M4） |
 | HRP | zybo_z7_gcc | ✅ **20/20** | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh HRP` → `PASS=136 FAIL=0`（完全グリーン） |
-| HRP | zynqmp_r5_gcc（R5） | ⚠ **19/20**（注7） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-13 実測 | `TTSP_TARGET_NAME=zynqmp_r5_gcc PAR_GROUPS=4 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`） |
+| HRP | zcu102_r5_gcc（R5） | ⚠ **19/20**（注7） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-13 実測 | `TTSP_TARGET_NAME=zcu102_r5_gcc PAR_GROUPS=4 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`） |
 | HRMP | zybo_z7_gcc | ⚠ **14/20**（注6） | ✅ exc/int/timer | ✅ OK=156（許容 `DEF_INH_c`） | 2026-06-13 実測 | `bash scripts/ci_run.sh HRMP` → `PASS=173 FAIL=6`（FAIL=API注6の既知） |
 
 > **統一ランナー**：4プロファイルとも **`bash scripts/ci_run.sh <ASP|FMP|HRP|HRMP>`**（zybo・QEMU）で実行可。
@@ -41,10 +41,10 @@
 | FMP | 1550/1597 ≈ 97.1% | `docs/FMP/ALL_COVERAGE.md` | bb=1533/1597 |
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
 | HRP（zybo） | branch 81.7%（line 89.4%） | `docs/HRP/COVERAGE_STATUS.md` | 19/20集計 |
-| HRP（**zynqmp_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | 2026-06-14 実測（注8） | check_library 3/3＋API 18/20。upstream QEMU |
+| HRP（**zcu102_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | 2026-06-14 実測（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
 > 計測条件は各 `BB_COVERAGE.md`（`-O2`＋インライン抑制＋`-DNDEBUG`）。`scripts/coverage_gcov_<prof>.sh`。
-> R5（zynqmp_r5_gcc）は `scripts/coverage_gcov_hrp_r5.sh [smoke|bb|all]`（upstream QEMU・semihosting）。
+> R5（zcu102_r5_gcc）は `scripts/coverage_gcov_hrp_r5.sh [smoke|bb|all]`（upstream QEMU・semihosting）。
 
 ---
 
@@ -81,14 +81,14 @@
   動作し **20/20 緑**（QEMU・execute.log 実体確認）。旧 `docs/HRP/COVERAGE_STATUS.md` の「19/20集計／
   並列未対応」は更新前の記述。check_library/cfg-error は未測定。
 - **注5**：HRMP は `DEF_INH_c` ほか（`docs/HRMP/COVERAGE_STATUS.md`／`DIVERGENCE_MAP.md` C）。
-- **注7（HRP zynqmp_r5 19/20 の内訳）**：2026-06-13 実測。check_library exc/int/timer 緑、
+- **注7（HRP zcu102_r5 19/20 の内訳）**：2026-06-13 実測。check_library exc/int/timer 緑、
   API 19群 すべて QEMU(`xlnx-zcu102`/Cortex-R5)で All check points passed。残1群（ATT_PMA を含む）は
   `out.cfg: E_NOSPT: ATT_PMA is not supported on this target` で **build 不可**。これは **R5（MPU）の
-  ターゲット能力差**（kernel の `target/zynqmp_r5_gcc/target_user.txt` に「ATT_PMA非サポート」と明記）で，
+  ターゲット能力差**（kernel の `target/zcu102_r5_gcc/target_user.txt` に「ATT_PMA非サポート」と明記）で，
   **ファイル欠落＝コミット忘れではない**（chip/core/gic/target_kernel_impl/ttc_hrt 等は全てビルド成功）。
   実行には upstream QEMU 11（aarch64）が必要（システムの 8.2.2 では不可）。
-- **注8（HRP zynqmp_r5 gcov カバレッジ）**：2026-06-14 実測。R5（Cortex-R5／PMSAv7 MPU）の
-  ターゲット依存部に gcov 対応を追加（`hrp3/target/zynqmp_r5_gcc` の Makefile.target／
+- **注8（HRP zcu102_r5 gcov カバレッジ）**：2026-06-14 実測。R5（Cortex-R5／PMSAv7 MPU）の
+  ターゲット依存部に gcov 対応を追加（`hrp3/target/zcu102_r5_gcc` の Makefile.target／
   target_kernel_impl.c／target_ldscript.trb／target_mem.cfg＋chip 側 `arch/arm_gcc/zynqmp_r5/
   chip_ldscript.trb` の `GenerateProvide` フック呼出し）して計測可能にした。upstream QEMU
   （`xlnx-zcu102`/aarch64）を `-semihosting` 起動し，`target_exit` のセミホスティング終了で

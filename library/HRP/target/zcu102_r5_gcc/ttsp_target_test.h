@@ -46,7 +46,7 @@
 
 /*
  *  [改変] 2026-06-12: zybo_z7_gcc版をベースに，HRP3のZynqMP Cortex-R5
- *  （zynqmp_r5_gcc）ターゲット向けに新規作成．割込み番号・例外番号は
+ *  （zcu102_r5_gcc）ターゲット向けに新規作成．割込み番号・例外番号は
  *  GIC（SPI 0x20〜）構成のため同一．
  */
 #ifndef TTSP_TARGET_TEST_H

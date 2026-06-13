@@ -10,7 +10,7 @@
  *  る利用条件を参照のこと．
  *
  *  [改変] 2026-06-12: zybo_z7_gcc版をベースに，HRP3のZynqMP Cortex-R5
- *  （zynqmp_r5_gcc）ターゲット向けに新規作成．時刻制御（FUNC_TIME）を
+ *  （zcu102_r5_gcc）ターゲット向けに新規作成．時刻制御（FUNC_TIME）を
  *  MPCoreグローバルタイマからTTCベースの高分解能タイマ（ttc_hrt.cの
  *  TTSP支援関数）に変更した．
  */

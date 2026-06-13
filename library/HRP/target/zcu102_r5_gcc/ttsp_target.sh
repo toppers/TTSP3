@@ -10,7 +10,7 @@
 #  る利用条件を参照のこと．
 #
 #  [改変] 2026-06-12: zybo_z7_gcc版をベースに，HRP3のZynqMP Cortex-R5
-#  （zynqmp_r5_gcc）ターゲット向けに新規作成．QEMU起動コマンドを
+#  （zcu102_r5_gcc）ターゲット向けに新規作成．QEMU起動コマンドを
 #  アップストリームQEMU（xlnx-zcu102，R5Fシングルコア）に変更し，
 #  KERNEL_COBJS_TARGETをzynqmp_r5構成に変更した．
 #

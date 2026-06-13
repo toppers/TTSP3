@@ -19,7 +19,7 @@
 | ASP | nucleo_f401re_gcc | 実機（M4） | 1 | true | local | 実CPU例外 | 実機 | Cortex-M4 |
 | HRMP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` `-smp 2` | 2 | true | combination | 実CPU例外 | ❓ | 保護＋マルチコア。a9gtimer。後回し方針 |
 | HRP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ❓ | 保護・単一コア。syssvc が TECS化（`docs/HRP/COVERAGE_STATUS.md`）。API並列ドライバ未対応 |
-| HRP | zynqmp_r5_gcc | QEMU（Cortex-R5） | 1 | true | local | 実CPU例外 | ❓ | 2026-06-12 追加（`fef2f9e`）。`ttsp_target.sh` が `parallel_simulation()` でQEMU実行 |
+| HRP | zcu102_r5_gcc | QEMU（Cortex-R5） | 1 | true | local | 実CPU例外 | ❓ | 2026-06-12 追加（`fef2f9e`）。`ttsp_target.sh` が `parallel_simulation()` でQEMU実行 |
 
 > 実行系の別：**QEMU**＝`USE_QEMU=true`（zybo系/zynqmp）／**native**＝linux_gcc（`./fmp` 直接実行、~30秒）／
 > **実機/別**＝`USE_QEMU=false`（imx8mm）または実ボード（lpc55/nucleo）。
