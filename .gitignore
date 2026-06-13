@@ -26,3 +26,6 @@ execute.log
 .DS_Store
 *.swp
 .vscode/
+
+# Claude Code 等の診断ログ（プロジェクト外）
+/log.txt

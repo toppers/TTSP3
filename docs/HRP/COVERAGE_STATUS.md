@@ -1,8 +1,12 @@
 # HRP3 カバレッジ計測ステータス（TESRY移行後・line 89.4%/branch 81.7%）
 
+> **合否（PASS/FAIL）の現状は `docs/STATUS.md` が正本**（本ファイルはカバレッジ%が主）。
+> 2026-06-13 実測：HRP zybo_z7_gcc は `ci_run.sh HRP` で **API 20/20・PASS=136/0（完全グリーン）**。
+
 > **状態（2026-06-09 更新）：HRP3/HRMP3 アクセス許可仕様移行（TTG CPUState.rb sysstat2 追加
 > ＋ ter_tsk TESRY 44ファイル access2↔access3 入替）後、E_OACV 早期終了が解消。**
-> check_library + API 20分割（19/20 集計）で **line 89.4% (2982/3334) / branch 81.7% (2070/2533)**。
+> check_library + API 20分割で **line 89.4% (2982/3334) / branch 81.7% (2070/2533)**
+> （※カバレッジ計測時の旧「19/20 集計」表記は、2026-06-13 実測で **API 20/20** に更新。STATUS.md 参照）。
 > → 計測結果詳細は [WB_COVERAGE.md](WB_COVERAGE.md)、未到達分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
 > 主要な標準API（task/semaphore/eventflag/dataqueue/pridataq/mutex/mempfix/alarm/cyclic/
 > wait/interrupt）は line 90〜100%。残ギャップは保護ドメイン機能（domain.c/mem_manage.c）。
@@ -63,8 +67,9 @@ TECS celltype を落とす）を確定（後述）。
 → **結果**：`ttb.sh ../hrp3/ HRP` の check_library で exception/interrupt/timer の3種すべてが
 ビルド成功し、QEMU（単一コア）で「All check points passed」。
 
-> 残：API テストの並列ドライバ（ttsp_parallel_api.sh）は ASP/FMP/HRMP 対応。HRP を加える場合は
-> 同様に「-U でテストオブジェクト追加・COBJS 非上書き」を適用する。
+> 並列ドライバ（ttsp_parallel_api.sh）は **HRP も対応済み**（2026-06-09 改変。「-U でテスト
+> オブジェクト追加・COBJS 非上書き」適用済）。2026-06-13 実測で全20分割ビルド・実行（20/20）。
+> 統一ランナー `bash scripts/ci_run.sh HRP` で一括実行可。
 
 ---
 

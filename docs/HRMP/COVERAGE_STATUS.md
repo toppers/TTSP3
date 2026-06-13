@@ -1,5 +1,10 @@
 # HRMP3 カバレッジ計測ステータス（spinlock sysstat1 移行後・line 91.3%/branch 82.1%）
 
+> **合否（PASS/FAIL）の現状は `docs/STATUS.md` が正本**（本ファイルはカバレッジ%が主）。
+> 2026-06-13 実測（非GCOV・`ci_run.sh HRMP`）：check_library 緑・cfg-error OK=156、
+> **API は 14/20**（5群が `chg_spr` 未定義で link失敗＝HRMP3 3.4 にサブ優先度なし／1群NG）。
+> ※本ファイル下記の「3群 overlap」等は GCOV 計装時の別事象。
+
 > **状態（2026-06-09）：spinlock（loc_spn/try_spn/unl_spn）の sysstat1_acvct.acptn2 移行
 > （HRMP spin_lock TESRY 5ファイル×5ケースに CPU_STATE1 access1-4 追加）後、
 > スピンロック E_OACV を解消。check_library + API 20分割で line 91.3% / branch 82.1%
