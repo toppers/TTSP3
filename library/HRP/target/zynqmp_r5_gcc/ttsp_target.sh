@@ -102,7 +102,7 @@ simulation()
 parallel_simulation()
 {
 	${QEMU_UPSTREAM:-$HOME/qemu/qemu-11.0.0/build/qemu-system-aarch64} \
-		-M xlnx-zcu102 -smp 6 -m 2G -nographic \
+		-M xlnx-zcu102 -smp 6 -m 2G -nographic -semihosting \
 		-global xlnx-zynqmp.boot-cpu=rpu-cpu[0] \
 		-global cortex-r5f-arm-cpu.mp-affinity=0 \
 		-device loader,file=hrp,cpu-num=4 \

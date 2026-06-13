@@ -40,9 +40,11 @@
 | ASP | 1373/1379 ≈ 99.6% | `docs/ASP/ALL_COVERAGE.md` | simt スイート込み |
 | FMP | 1550/1597 ≈ 97.1% | `docs/FMP/ALL_COVERAGE.md` | bb=1533/1597 |
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
-| HRP | branch 81.7%（line 89.4%） | `docs/HRP/COVERAGE_STATUS.md` | 19/20集計 |
+| HRP（zybo） | branch 81.7%（line 89.4%） | `docs/HRP/COVERAGE_STATUS.md` | 19/20集計 |
+| HRP（**zynqmp_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | 2026-06-14 実測（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
 > 計測条件は各 `BB_COVERAGE.md`（`-O2`＋インライン抑制＋`-DNDEBUG`）。`scripts/coverage_gcov_<prof>.sh`。
+> R5（zynqmp_r5_gcc）は `scripts/coverage_gcov_hrp_r5.sh [smoke|bb|all]`（upstream QEMU・semihosting）。
 
 ---
 
@@ -85,6 +87,20 @@
   ターゲット能力差**（kernel の `target/zynqmp_r5_gcc/target_user.txt` に「ATT_PMA非サポート」と明記）で，
   **ファイル欠落＝コミット忘れではない**（chip/core/gic/target_kernel_impl/ttc_hrt 等は全てビルド成功）。
   実行には upstream QEMU 11（aarch64）が必要（システムの 8.2.2 では不可）。
+- **注8（HRP zynqmp_r5 gcov カバレッジ）**：2026-06-14 実測。R5（Cortex-R5／PMSAv7 MPU）の
+  ターゲット依存部に gcov 対応を追加（`hrp3/target/zynqmp_r5_gcc` の Makefile.target／
+  target_kernel_impl.c／target_ldscript.trb／target_mem.cfg＋chip 側 `arch/arm_gcc/zynqmp_r5/
+  chip_ldscript.trb` の `GenerateProvide` フック呼出し）して計測可能にした。upstream QEMU
+  （`xlnx-zcu102`/aarch64）を `-semihosting` 起動し，`target_exit` のセミホスティング終了で
+  `.gcda` をホストへ直接書き出す。**line 89.5%／branch 81.2%**（check_library 3/3＋API 18/20）で
+  **zybo（89.4%／81.7%）と同等**。計測対象外の2群＝(a) **group17：ATT_PMA 非サポート**（R5/MPU の
+  能力差。非gcov でも build 不可＝注7と同根）、(b) **group19：gcov 計装による memory objects overlap**
+  （gcov 計装で各保護ドメインのコード/データが約2倍に膨張して保護ドメイン境界が重なる。
+  **zybo HRP/HRMP でも同じ gcov 計装時に group14/17/19 が overlap で脱落する既知事象**＝R5/MPU 固有
+  ではなく gcov×保護ドメインの共通制約。R5 では PMSAv7 の 2のべき乗アラインで更に増幅。DDR 拡大では
+  解消せず）。gcov 時のみ DDR を 16MB→64MB（`#ifdef
+  TOPPERS_ENABLE_GCOV`）に拡大して大きいテストの DDR overflow を回避（非gcov の配置は不変）。
+  実行: `bash scripts/coverage_gcov_hrp_r5.sh bb`（要 upstream QEMU 11 aarch64）。
 - **注6（HRMP zybo 14/20 の内訳）**：本セッション実測。**5群が link 失敗**＝
   `undefined reference to chg_spr`（HRMP3 **3.4 にサブ優先度API `chg_spr` が無い**のに TESRY が
   chg_spr 系を生成。プロファイル×仕様差＝3.4 と 3.7 の差）。残1群は実行時 NG。
