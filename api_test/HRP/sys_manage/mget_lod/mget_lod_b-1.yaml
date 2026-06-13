@@ -1,0 +1,21 @@
+version: "$Id: mget_lod_b-1.yaml 73 2020-03-19 08:19:39Z fujisft-shigihara $"
+ASP_sys_manage_mget_lod_b_1:
+  note: 【NGKI3626】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+      var    :
+        p_load:
+          type: uint_t
+
+  do:
+    id     : TASK1
+    syscall: mget_lod(TDOM_SELF, -1, &p_load)
+    ercd   : E_PAR
+
+  post_condition:
+    TASK1:
+      tskstat: running

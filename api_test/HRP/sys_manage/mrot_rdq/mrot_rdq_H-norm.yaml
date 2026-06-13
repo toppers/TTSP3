@@ -1,0 +1,49 @@
+version: "TTSP3 HRP mrot_rdq H-norm (added 2026-06)"
+#
+#  (H-norm) 非self優先度の回転（正常系）．TASK1(HIGH,running)が MID 優先度の
+#  ready キュー(TASK2,TASK3)を回転させる．TASK1 は MID に居ないため running を
+#  維持（p_runtsk==p_schedtsk で非dispatch）．schedno=TDOM_KERNEL 分岐も到達．
+#  【NGKI2701】rotate_ready_queue + 非dispatch経路．
+#
+HRP_sys_manage_mrot_rdq_H_norm:
+  note: 【NGKI2701】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_HIGH
+      porder : 1
+      domain : KERNEL
+
+    TASK2:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 1
+      domain : KERNEL
+
+    TASK3:
+      type   : TASK
+      tskstat: ready
+      tskpri : TSK_PRI_MID
+      porder : 2
+      domain : KERNEL
+
+  do:
+    id     : TASK1
+    syscall: mrot_rdq(TDOM_KERNEL, TSK_PRI_MID)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      tskstat: running
+      porder : 1
+
+    TASK2:
+      tskstat: ready
+      porder : 2
+
+    TASK3:
+      tskstat: ready
+      porder : 1
