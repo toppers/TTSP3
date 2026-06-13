@@ -2,7 +2,7 @@
 
 > HRP用のWBテスト（方式2）は未作成のため，`all` モード＝`bb` モードと等価。
 > 本ファイルはBBテスト（API auto-code 20分割 + check_library）のみでの計測結果を記録する。
-> → 未到達分岐の分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md) を参照。
+> → 未到達分岐の分析は [BB_UNREACHABLE.md](BB_UNREACHABLE.md) を参照。
 
 ---
 
@@ -90,7 +90,7 @@
   19/19 グループが `All check points passed.` で完走。
 - 残低カバレッジは **HRP固有/保護カーネル機能**に集中（次節）。これは BBテスト（ASP/FMP/HRP
   共通の API auto-code）が保護ドメイン機能を十分に駆動しないことによる test-design 起因で，
-  HRMP3 計測（`docs/HRMP/`）と同じ傾向。未到達の詳細は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
+  HRMP3 計測（`docs/HRMP/`）と同じ傾向。未到達の詳細は [BB_UNREACHABLE.md](BB_UNREACHABLE.md)。
 
 ### 計測上の既知事項
 

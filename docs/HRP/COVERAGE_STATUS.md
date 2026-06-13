@@ -7,7 +7,7 @@
 > ＋ ter_tsk TESRY 44ファイル access2↔access3 入替）後、E_OACV 早期終了が解消。**
 > check_library + API 20分割で **line 89.4% (2982/3334) / branch 81.7% (2070/2533)**
 > （※カバレッジ計測時の旧「19/20 集計」表記は、2026-06-13 実測で **API 20/20** に更新。STATUS.md 参照）。
-> → 計測結果詳細は [WB_COVERAGE.md](WB_COVERAGE.md)、未到達分析は [WB_UNREACHABLE.md](WB_UNREACHABLE.md)。
+> → 計測結果詳細は [BB_COVERAGE.md](BB_COVERAGE.md)、未到達分析は [BB_UNREACHABLE.md](BB_UNREACHABLE.md)。
 > 主要な標準API（task/semaphore/eventflag/dataqueue/pridataq/mutex/mempfix/alarm/cyclic/
 > wait/interrupt）は line 90〜100%。残ギャップは保護ドメイン機能（domain.c/mem_manage.c）。
 >
@@ -169,7 +169,7 @@ ASP/FMP の静的 `zybo_z7.ld` への追記より難度が高い。
    - `arch/gcc/ldscript.trb` に `.gcov_info` 収集と `_heap`/`_heap_limit`、gcov カウンタの
      保護ドメイン配置を追加。
 3. **計測スクリプト整備**（`scripts/coverage_gcov_hrp.sh`、ASP/FMP を雛形）→ 計測 → 本ファイルを
-   `WB_COVERAGE.md` / `WB_UNREACHABLE.md` に置換。
+   `BB_COVERAGE.md` / `BB_UNREACHABLE.md` に置換。
 
 ---
 

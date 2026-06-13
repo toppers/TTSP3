@@ -139,7 +139,7 @@ build_group() { # $1=group番号
 	# 実験用フック（既定オフ）: GCOV_GRANT_SYSSTAT2=1 のとき，TTG生成 out.cfg の SAC_SYS に
 	# システム状態許可ベクタ2(sysstat2)=TACP_SHARED を付与する．HRP では sus_tsk/rsm_tsk/
 	# ter_tsk 等が sysstat2_acvct を要求するが，TTG既定では sysstat2 がカーネルドメインのみで，
-	# ユーザドメインのASP由来テストが E_OACV で早期終了する（docs/HRP/WB_UNREACHABLE.md §1）．
+	# ユーザドメインのASP由来テストが E_OACV で早期終了する（docs/HRP/BB_UNREACHABLE.md §1）．
 	# 単引数 SAC_SYS は sysstat2 を追記，SAC_SYS 無しなら KERNEL_DOMAIN へ全許可で挿入する．
 	if [ "${GCOV_GRANT_SYSSTAT2:-0}" = "1" ]; then
 		if grep -qE 'SAC_SYS\(\{[^}]*\}\);' out.cfg; then

@@ -6,9 +6,9 @@
 > 計測範囲: check_library 3/3 ＋ API auto-code **19/20**（残 1 群 `auto_code_19` は gcov 計装時の memory overlap で build 脱落。下記）
 >
 > **本ファイルは ASP/FMP の [`ALL_COVERAGE.md`](../ASP/ALL_COVERAGE.md) と同条件（インライン抑制）で再計測した HRP 版**。
-> HRP には手書き WBテスト（`*_W-*`）が無いため **`all` モード＝`bb` モード**（[`WB_COVERAGE.md`](WB_COVERAGE.md) と同様）。
+> HRP には手書き WBテスト（`*_W-*`）が無いため **`all` モード＝`bb` モード**（[`BB_COVERAGE.md`](BB_COVERAGE.md) と同様）。
 > - bring-up 経緯・真因・旧条件（インライン抑制なし line 89.4%/branch 81.7%）の記録 → [`COVERAGE_STATUS.md`](COVERAGE_STATUS.md)
-> - 未到達分岐の分析 → [`WB_UNREACHABLE.md`](WB_UNREACHABLE.md)
+> - 未到達分岐の分析 → [`BB_UNREACHABLE.md`](BB_UNREACHABLE.md)
 > - R5（zcu102_r5_gcc / MPU）版カバレッジ → [`COVERAGE_R5.md`](COVERAGE_R5.md)
 > - 合否（PASS/FAIL）の正本 → [`../STATUS.md`](../STATUS.md)
 >

@@ -1,11 +1,11 @@
 # HRP 未到達分析（BBテスト）
 
 > BBテスト（API auto-code 20分割 + check_library）の計測で未到達となったコードの分析。
-> カバレッジ結果は [WB_COVERAGE.md](WB_COVERAGE.md) を参照（line 79.6% / branch 69.8%）。
+> カバレッジ結果は [BB_COVERAGE.md](BB_COVERAGE.md) を参照（line 79.6% / branch 69.8%）。
 >
 > HRP の未到達は，個別の到達困難分岐よりも **テストシーケンスの早期終了（E_OACV）** という
 > 系統的要因が支配的である。本ファイルはまずその系統要因を述べ，次に派生する
-> ファイル別ギャップを整理する（FMP の `WB_UNREACHABLE.md` のような行単位網羅分析は，
+> ファイル別ギャップを整理する（FMP の `BB_UNREACHABLE.md` のような行単位網羅分析は，
 > 系統要因の解消が先決のため後段とする）。
 
 ---
@@ -208,7 +208,7 @@ mempfix / alarm / cyclic / wait）は **line 90〜100%** に達しており，§
 ---
 
 ## 参考
-- カバレッジ結果：[WB_COVERAGE.md](WB_COVERAGE.md)
+- カバレッジ結果：[BB_COVERAGE.md](BB_COVERAGE.md)
 - ASP3：`docs/ASP/`（98.3%）／FMP3：`docs/FMP/`（93.9%）／HRMP3：`docs/HRMP/`（75.4%，同種 E_OACV）
 - gcov 計装手順（保護カーネル）：`docs/HRP3_GCOV.md`
 - bring-up・真因記録：`docs/HRP/COVERAGE_STATUS.md`

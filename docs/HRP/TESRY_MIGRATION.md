@@ -7,7 +7,7 @@
 > **対象読者**：本作業を別セッションで実施する担当（人/エージェント）。本書だけで完結するよう
 > 根拠・コマンド・検証まで記載する。
 >
-> **前提知識**：根本原因の詳細分析は [`WB_UNREACHABLE.md` §1](WB_UNREACHABLE.md)、差分台帳は
+> **前提知識**：根本原因の詳細分析は [`BB_UNREACHABLE.md` §1](BB_UNREACHABLE.md)、差分台帳は
 > `../../DIVERGENCE_MAP.md` A表（「HRP/HRMP：システム状態アクセス許可ベクタの2分割＋強制操作の
 > 許可カテゴリ変更」行）。作業規約は `../../AGENTS.md`（カーネルは編集禁止＝禁則②、改変明記＝禁則③）。
 
@@ -69,7 +69,7 @@ cd <workspace>/ttsp3            # 例: /home/honda/TOPPERS/TTSP3/work/ttsp3
 test -d ../hrp3 && echo OK
 ```
 
-ベースライン値：**line 79.6% (2653/3334) / branch 69.8% (1769/2533)**（`docs/HRP/WB_COVERAGE.md`）。
+ベースライン値：**line 79.6% (2653/3334) / branch 69.8% (1769/2533)**（`docs/HRP/BB_COVERAGE.md`）。
 
 ---
 
@@ -246,7 +246,7 @@ auto_code_16: spinlock 解消後に dis_int_H-a 競合が露出（上記副作�
 
 - `DIVERGENCE_MAP.md` A表の該当行を「**対応済**（段階1+2実装・実測 line ××%/branch ××%）」に更新。
 - `DIVERGENCE_MAP.md` B表（変更履歴）に TTG `CPUState.rb` 改変と ter_tsk TESRY 44件の access 入替を追記。
-- `docs/HRP/WB_COVERAGE.md` / `WB_UNREACHABLE.md` を新しい計測値・残課題で更新。
+- `docs/HRP/BB_COVERAGE.md` / `BB_UNREACHABLE.md` を新しい計測値・残課題で更新。
 - TESRY/TTG は TTSP3 git 管理下なので、改変明記は git コミット＋上記台帳が正本（禁則③）。
 - カーネル（`../hrp3`）は一切編集しない（禁則②）。本移行は TTSP3 側（TTG＋TESRY）のみで完結する。
 
@@ -279,4 +279,4 @@ dis_ter/ena_ter(acptn1) ほか（`hrp3/kernel/*.c` の `CHECK_ACPTN(sysstat2_acv
 - 実験フック：`scripts/ttsp_parallel_api.sh` の `GCOV_GRANT_SYSSTAT2=1`（層1の測定用・既定オフ）。
 - 実測（sysstat2のみ付与）：line 79.6→79.7% / branch 69.8→70.8%（task_term.c が 100%line/93.8%branch へ。
   層2 ter_tsk 未修正のため全体増は小）。
-- 根拠データの再現は `docs/HRP/WB_UNREACHABLE.md §1` の手順・コマンド参照。
+- 根拠データの再現は `docs/HRP/BB_UNREACHABLE.md §1` の手順・コマンド参照。

@@ -12,12 +12,12 @@
 > **進捗（2026-06-08）**：**P0 完了＝ASP に gcov(C1) 計測基盤導入済み**（FMP方式を移植）。
 > 分岐C1ベースライン取得可能。最初の題材として ena_ter を精査した結果は §12（worked example）。
 > **FMP gcov(C1) ベースライン取得済み（2026-06-09）**：93.9%（1575/1677）。-DNDEBUG 適用，
-> coverage_gcov_fmp.sh を bb|all モード対応に整備。分析は docs/FMP/WB_COVERAGE.md・WB_UNREACHABLE.md。
+> coverage_gcov_fmp.sh を bb|all モード対応に整備。分析は docs/FMP/BB_COVERAGE.md・BB_UNREACHABLE.md。
 > **HRMP3/HRP3 アクセス許可仕様移行後（2026-06-09）**：HRMP 91.3%/82.1%、HRP 89.4%/81.7%。
 > TTG CPUState.rb sysstat2 追加 + ter_tsk TESRY（HRP 44件／HRMP 80件）access2↔access3 入替、
 > さらに spinlock TESRY（HRMP 5ファイル×5ケース CPU_STATE1 access 追加）で E_OACV を解消。
 > （移行前: HRMP 75.4%/63.7%、HRP 79.6%/69.8%）。
-> 詳細 docs/HRMP/COVERAGE_STATUS.md・docs/HRP/WB_COVERAGE.md・docs/HRP/TESRY_MIGRATION.md。
+> 詳細 docs/HRMP/COVERAGE_STATUS.md・docs/HRP/BB_COVERAGE.md・docs/HRP/TESRY_MIGRATION.md。
 > → **4プロファイル最新値：ASP 98.3% / FMP 93.9% / HRMP 91.3% / HRP 89.4%**（line）。
 
 ---
@@ -35,7 +35,7 @@
 - 低カバレッジ順（行）：interrupt.c 86.4% ＜ time_event.c 93.9% ＜ task_term.c/mutex.c 94.4%
   ＜ dataqueue.c 96.6% ＜ …（残り未カバーは約39行）。
 - 参考：FMP は gcov で **行96.9%／分岐93.9%**（-DNDEBUG 適用，2026-06-09 計測）。
-  旧参照値（NDEBUG無し）は 行96.4%/分岐81.5%。詳細は docs/FMP/WB_COVERAGE.md。
+  旧参照値（NDEBUG無し）は 行96.4%/分岐81.5%。詳細は docs/FMP/BB_COVERAGE.md。
   **ホワイトボックスの主戦場は「行は通るが片アームしか通らない分岐」**
   （FMP残存102分岐のうち約35分岐がマルチコア遅延ディスパッチ等FMP固有）。
 
@@ -345,13 +345,13 @@ pre_condition:
 - P0：**ASP に gcov(C1) 計測基盤を導入**（FMP資産を移植）→ ASP分岐ベースライン取得。**【完了 2026-06-08】**
        **FMP gcov(C1) ベースライン取得・docs/FMP/ 作成。【完了 2026-06-09】**
        （coverage_gcov_fmp.sh を bb|all モード・NDEBUG 対応に整備，1575/1677=93.9%，
-       docs/FMP/WB_COVERAGE.md・WB_UNREACHABLE.md 102分岐分析）
+       docs/FMP/BB_COVERAGE.md・BB_UNREACHABLE.md 102分岐分析）
 - P0'：**HRMP3/HRP3 gcov(C1) 計測も完了【2026-06-09】**。当初の前提ブロッカー
        （GCOV計装未移植・HRP3 が TTSP3 で未緑）を解消：HRP3 は方式A（APPL/KERNEL_COBJS
        非上書き・configure -U でテスト追加）で bring-up を解決し、保護カーネル向け GCOV計装
        （生成リンカスクリプトへ `.gcov_info` 追加、特権ダンプ、`target_ldscript.trb` 方式で
        `arch/gcc/ldscript.trb` は無変更）を HRMP3→HRP3（単一コア）へ移植。
-       **HRMP3 75.4%／HRP3 79.6%**（line）。詳細 docs/HRMP/・docs/HRP/（COVERAGE_STATUS / WB_COVERAGE / WB_UNREACHABLE）。
+       **HRMP3 75.4%／HRP3 79.6%**（line）。詳細 docs/HRMP/・docs/HRP/（COVERAGE_STATUS / BB_COVERAGE / BB_UNREACHABLE）。
        → **HRP3/HRMP3 アクセス許可仕様移行（2026-06-09）**：TTG CPUState.rb sysstat2 追加
        ＋ ter_tsk TESRY（HRP 44件／HRMP 80件）access2↔access3 入替で E_OACV 早期終了を解消。
        さらに spinlock TESRY（HRMP 5ファイル×5ケース CPU_STATE1 access 追加）で spinlock
@@ -379,7 +379,7 @@ pre_condition:
   CIは閾値で落とすのではなく**分岐C1のトレンド/レポートを提示**（低下の気付き用）。
 - **(Q4) ASP から着手（FMP先行はしない）**。理由：**FMPはタイミング依存のパスが多く**
   内部状態の決定的な構築が難しい（マルチコア遅延ディスパッチパス等，102残存分岐のうち約35分岐が
-  FMP固有のマルチコアパス — docs/FMP/WB_UNREACHABLE.md §1-2 参照）。
+  FMP固有のマルチコアパス — docs/FMP/BB_UNREACHABLE.md §1-2 参照）。
   ASP（単一プロセッサ・タイミング依存が少ない）で方法論を確立し、必要に応じ後段でFMPへ展開。
   FMP gcov(C1) ベースラインは 2026-06-09 取得済み（docs/FMP/）。
 
