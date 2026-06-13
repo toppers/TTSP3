@@ -148,6 +148,22 @@ E_OBJ 早期リターンのみ（＝現状 6/90）。残り 78 分岐は system 
 > → ③twd/scyc タイミングテスト（~36分岐・要調整）。**手書きWB より保守性が高く SOM テストが TESRY 一級市民になる**。
 > （旧案＝手書き WB cfg `wb_test/HRP/domain/` も依然 stretch goal として可。TTG 組み込みが本筋。）
 
+### 次セッションの PoC 着手手順（SYSTEM_CYCLE/TIME_WINDOW 型追加）
+
+**目的**：まず DEF_SCY＋ATT_TWD を生成できる最小 TTG 拡張＋chg_som/get_som 1テストで PoC（system_cyctim!=0 を成立させ
+domain.c の chg_som/get_som 早期 E_OBJ 以降に到達）。M4 同様「小さく作って毎回ビルド検証」。
+
+1. **雛形を読む**：`tools/ttg/common/bin/sys_state/Domain.rb`（166行・型→ACV_DOM 生成）＋ `tools/ttg/ttc/bin/sys_state/Domain.rb`（ttc側）。`Memory.rb`（PHYSICAL_MEMORY→ATT_PMA 生成）も多型の参考。
+2. **型登録**：`tools/ttg/common/bin/CommonModule.rb` の `TSR_OBJ_*`（L830-855 付近）に `TSR_OBJ_SYSTEM_CYCLE`/`TSR_OBJ_TIME_WINDOW`、`TSR_PRM_*` に `SOMID`/`TWDORD`/`TWDLEN`/`SCYTIM` を追加。オブジェクト型リスト（L1337-付近）・属性マップにも登録。
+3. **生成モジュール**：`sys_state/SystemCycle.rb`（→`DEF_SCY({scytim})`）・`TimeWindow.rb`（→`ATT_TWD({domid,somid,twdord,twdlen,<通知>})`）を新規。`set_config(...)` で cfg 文字列を emit（Memory.rb L267 の ATT_PMA emit が手本）。ATT_TWD は保護ドメインの**外**に出すこと（E_RSATR・domain_prep.trb L120）。
+4. **kwalify スキーマ**：`tools/ttg/ttc/bin/kwalify/kwalify.schema.yaml` に新 type と somid/twdord/twdlen/scytim フィールドを追加。
+5. **PoC テスト**：`api_test/HRP/sys_manage/chg_som/`（新規）に、SYSTEM_CYCLE＋TIME_WINDOW を pre_condition で定義し `do: chg_som(somid)` `ercd: E_OK`＋`get_som(&p_somid)` を検証する1本。caller は running 維持（M4 の教訓＝T5_012/013 回避）。
+6. **検証**：`COPTS="-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions" bash scripts/coverage_gcov_hrp.sh bb` で 20/20 build＋緑＋domain.c の chg_som/get_som 分岐到達を per-function で確認。
+7. 通れば twd/scyc のタイミング依存テスト（周期を実チックさせる・alarm/cyclic 雛形）へ拡張（~36分岐）。
+
+**注意**：カーネル(hrp3)編集は不要（TTG＝ttsp3 git 側のみ）。chg_som の somid は ATT_TWD で使った somid 値（整数 or マクロ）。
+DEF_SCY が無いと ATT_TWD は無視される（先に SYSTEM_CYCLE を置く）。
+
 ---
 
 ## Method 5（小ゲイン）：standard API の tail（ASP WB 技法の移植）
