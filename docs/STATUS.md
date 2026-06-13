@@ -19,10 +19,15 @@
 | ASP | **zybo_z7_gcc**（主） | ✅ 20/20 | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh` → `PASS=143 FAIL=0`（scratch 7 含む） |
 | ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。asp3_core 後段の雛形 |
 | ASP | nucleo_f401re_gcc（M4） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M4） |
-| HRP | zybo_z7_gcc | ✅ **20/20** | ❓ 未測定 | ❓ 未測定 | 2026-06-13 実測（API） | `TTSP_MAKE_OPT='' bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj_hrp 20`（並列ドライバ HRP 対応済） |
+| HRP | zybo_z7_gcc | ✅ **20/20** | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh HRP` → `PASS=136 FAIL=0`（完全グリーン） |
 | HRP | zynqmp_r5_gcc（R5） | ❓ 未測定（QEMU可） | ❓ | ❓ | 2026-06-12 追加 | コミット `fef2f9e`。`parallel_simulation()` で QEMU 実行 |
-| HRMP | zybo_z7_gcc | ⚠ **14/20**（注6） | ❓ 未測定 | ⚠ 残（注5） | 2026-06-13 実測（API） | `TTSP_MAKE_OPT='' bash scripts/ttsp_parallel_api.sh ../hrmp3/ HRMP obj_hrmp 20` |
+| HRMP | zybo_z7_gcc | ⚠ **14/20**（注6） | ✅ exc/int/timer | ✅ OK=156（許容 `DEF_INH_c`） | 2026-06-13 実測 | `bash scripts/ci_run.sh HRMP` → `PASS=173 FAIL=6`（FAIL=API注6の既知） |
 
+> **統一ランナー**：4プロファイルとも **`bash scripts/ci_run.sh <ASP|FMP|HRP|HRMP>`**（zybo・QEMU）で実行可。
+> 末尾に正規化 `VERDICT:` 行（STATUS のベースライン比較）を出す。`ci_run.sh`（引数なし=ASP）／`ci_run_fmp.sh`
+> は後方互換で残置。`RESULT` は厳密合否（HRMP の既知 build失敗も FAIL に数える）、`VERDICT` は退行判定
+> （HRMP は API=14/20 でも `OK(baseline)`）。linux_gcc は native のため `ttsp_parallel_api.sh` を直接使う。
+>
 > **基本方針**（`DIVERGENCE_MAP.md`）：**主ターゲットは zybo_z7_gcc（QEMU）**。FMP linux_gcc は副次・
 > 実装不安定扱い。HRMP3/HRP3 対応は後回し。「zybo で緑なら POSIX 固有の残は深追いしない」。
 
