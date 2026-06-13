@@ -116,8 +116,17 @@ build_group() { # $1=group番号
 	local dir="$API_DIR/auto_code_$i"
 	cd "$dir" || return 1
 	# マニフェスト断片からテストケースリストを作成（コメント行除外）
+	# [改変] 2026-06-14: ターゲット非対応テストの除外．EXCLUDE_LIST_ABS（ターゲット依存部の
+	# exclude_tests.txt）がある場合，その各行を部分一致パターンとしてマニフェストから除く
+	# （# コメント・空行はパターンから除外）．例: R5 は ATT_PMA 非対応で sample/hrp_parameter。
 	local list
-	list=$(grep -v '^#' "MANIFEST_AUTO_CODE_$i" | tr '\n' ' ')
+	if [ -n "${EXCLUDE_LIST_ABS:-}" ]; then
+		list=$(grep -v '^#' "MANIFEST_AUTO_CODE_$i" \
+			| grep -vF -f <(grep -vE '^[[:space:]]*(#|$)' "$EXCLUDE_LIST_ABS") \
+			| tr '\n' ' ')
+	else
+		list=$(grep -v '^#' "MANIFEST_AUTO_CODE_$i" | tr '\n' ' ')
+	fi
 	ruby "$TTG_BIN_ABS" $TTG_OPT $list > result_ttg.log 2>&1 || {
 		echo "TTG FAIL: auto_code_$i"; return 1; }
 	# [改変] 2026-06-09: HRMP の GCOV計装ビルドでは libgcov/librdimon を保護ドメインに
@@ -158,10 +167,22 @@ GCOV_ATTACH_LIBS=0
 if { [ "$PROFILE_NAME" = "HRMP" ] || [ "$PROFILE_NAME" = "HRP" ]; } && [[ "$TTSP_MAKE_OPT" == *ENABLE_GCOV=true* ]]; then
 	GCOV_ATTACH_LIBS=1
 fi
+# [改変] 2026-06-14: ターゲット非対応テストの除外リスト（任意）．
+# library/<PROFILE>/target/<TARGET>/exclude_tests.txt があれば，その各行（# コメント・空行除く）
+# を部分一致パターンとしてマニフェストから除外する（build_group で適用）．ターゲットの能力差を
+# 宣言的に表現する仕組み．例: R5(zcu102_r5_gcc) は ATT_PMA 非対応＝sample/hrp_parameter を除外．
+EXCLUDE_LIST_ABS=""
+_excl_file="./library/$PROFILE_NAME/target/$TARGET_NAME/exclude_tests.txt"
+if [ -f "$_excl_file" ]; then
+	EXCLUDE_LIST_ABS="$(realpath "$_excl_file")"
+	echo "exclude list: $_excl_file （除外パターン $(grep -cvE '^[[:space:]]*(#|$)' "$_excl_file") 件）"
+	grep -vE '^[[:space:]]*(#|$)' "$_excl_file" | sed 's/^/  - /'
+fi
+
 export -f build_group
 export API_DIR TTG_BIN_ABS TTG_OPT MAKE_J KERNEL_COBJS_COMMON KERNEL_COBJS_TARGET \
        APPL_COBJS_COMMON APPL_COBJS_TARGET TTSP_MAKE_OPT GCOV_ATTACH_LIBS PROFILE_NAME \
-       GCOV_GRANT_SYSSTAT2
+       GCOV_GRANT_SYSSTAT2 EXCLUDE_LIST_ABS
 
 echo "===== phase 2: parallel TTG+make (P=$PAR_GROUPS, make -j$MAKE_J) ====="
 t0=$(date +%s)

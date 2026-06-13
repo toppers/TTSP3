@@ -20,7 +20,7 @@
 | ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。asp3_core 後段の雛形 |
 | ASP | nucleo_f401re_gcc（M4） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M4） |
 | HRP | zybo_z7_gcc | ✅ **20/20** | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh HRP` → `PASS=136 FAIL=0`（完全グリーン） |
-| HRP | zcu102_r5_gcc（R5） | ⚠ **19/20**（注7） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-13 実測 | `TTSP_TARGET_NAME=zcu102_r5_gcc PAR_GROUPS=4 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`） |
+| HRP | zcu102_r5_gcc（R5） | ✅ **20/20**（注7：ATT_PMA 1件を能力差で除外済） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-14 実測 | `TTSP_TARGET_NAME=zcu102_r5_gcc PAR_GROUPS=6 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`。`exclude_tests.txt` 自動適用） |
 | HRMP | zybo_z7_gcc | ⚠ **14/20**（注6） | ✅ exc/int/timer | ✅ OK=156（許容 `DEF_INH_c`） | 2026-06-13 実測 | `bash scripts/ci_run.sh HRMP` → `PASS=173 FAIL=6`（FAIL=API注6の既知） |
 
 > **統一ランナー**：4プロファイルとも **`bash scripts/ci_run.sh <ASP|FMP|HRP|HRMP>`**（zybo・QEMU）で実行可。
@@ -81,12 +81,15 @@
   動作し **20/20 緑**（QEMU・execute.log 実体確認）。旧 `docs/HRP/COVERAGE_STATUS.md` の「19/20集計／
   並列未対応」は更新前の記述。check_library/cfg-error は未測定。
 - **注5**：HRMP は `DEF_INH_c` ほか（`docs/HRMP/COVERAGE_STATUS.md`／`DIVERGENCE_MAP.md` C）。
-- **注7（HRP zcu102_r5 19/20 の内訳）**：2026-06-13 実測。check_library exc/int/timer 緑、
-  API 19群 すべて QEMU(`xlnx-zcu102`/Cortex-R5)で All check points passed。残1群（ATT_PMA を含む）は
-  `out.cfg: E_NOSPT: ATT_PMA is not supported on this target` で **build 不可**。これは **R5（MPU）の
-  ターゲット能力差**（kernel の `target/zcu102_r5_gcc/target_user.txt` に「ATT_PMA非サポート」と明記）で，
-  **ファイル欠落＝コミット忘れではない**（chip/core/gic/target_kernel_impl/ttc_hrt 等は全てビルド成功）。
-  実行には upstream QEMU 11（aarch64）が必要（システムの 8.2.2 では不可）。
+- **注7（HRP zcu102_r5 20/20＝ATT_PMA 除外後）**：2026-06-14 実測。check_library exc/int/timer 緑、
+  API **20群すべて** QEMU(`xlnx-zcu102`/Cortex-R5)で All check points passed（green 20/20、execute.log 実体確認）。
+  - **能力差テストの除外**：ATT_PMA（物理メモリ領域・TESRY `type: PHYSICAL_MEMORY`）は MPU(PMSAv7) が
+    アドレス変換を持たず原理的に実現できない（`out.cfg: E_NOSPT`。kernel `chip_design.md §「意図的な割切り」4項`／
+    `target_user.txt`「ATT_PMA非サポート」）。HRP で ATT_PMA を生む唯一の元 `api_test/HRP/sample/hrp_parameter.yaml`
+    を、ターゲット依存の除外リスト **`library/HRP/target/zcu102_r5_gcc/exclude_tests.txt`** で TTSP 生成から外す
+    （`scripts/ttsp_parallel_api.sh` が `grep -vF` で適用・除外件数をログ表示。yaml 本体は削除せず zybo には不影響）。
+  - 旧 19/20（除外前）は「残1群が ATT_PMA で build 不可」だったもの。**ファイル欠落＝コミット忘れではなく R5/MPU の
+    能力差**。除外により対象内テストは 20/20 完全グリーン。実行には upstream QEMU 11（aarch64）が必要（8.2.2 不可）。
 - **注8（HRP zcu102_r5 gcov カバレッジ）**：2026-06-14 実測。R5（Cortex-R5／PMSAv7 MPU）の
   ターゲット依存部に gcov 対応を追加（`hrp3/target/zcu102_r5_gcc` の Makefile.target／
   target_kernel_impl.c／target_ldscript.trb／target_mem.cfg＋chip 側 `arch/arm_gcc/zynqmp_r5/
