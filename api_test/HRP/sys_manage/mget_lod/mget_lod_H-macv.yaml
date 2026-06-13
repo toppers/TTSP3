@@ -1,0 +1,27 @@
+version: "TTSP3 HRP mget_lod H-macv (added 2026-06)"
+#
+#  (H-macv) p_load に書込み不可な番地を指定すると E_MACV．【NGKI3637】
+#  CHECK_MACV_WRITE(p_load) の VIOLATE_MACV 真分岐．get_tid_H-a と同パターン
+#  （ユーザドメイン TASK1＋TTSP_MACV_ADDRESS）．CHECK_ACPTN(acptn4) の前に発火．
+#
+HRP_sys_manage_mget_lod_H_macv:
+  note: 【NGKI3637】
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+  do:
+    id     : TASK1
+    syscall: mget_lod(TDOM_SELF, TSK_PRI_MID, (uint_t*)TTSP_MACV_ADDRESS)
+    ercd   : E_MACV
+
+  post_condition:
+    TASK1:
+      tskstat: running
