@@ -65,7 +65,30 @@
 
 ---
 
-## Method 4：sys_manage tail ＋ m系 — ★到達性 検証済／実装は deferred（2026-06-14）
+## Method 4：sys_manage m系 — ★実装済（再実験成功・2026-06-14）sys_manage.c 52.5%→76.7%
+
+**実装結果（堅牢なクローン手法・3 batch）**：sys_manage.c **52.5%→76.7%**（mrot_rdq 0→13/26・mget_lod 0→16/28・
+mget_nth 0→18/30）、HRP 全体 87.1%→**89.4%**。**3 batch とも binaries 20/20・マージ安定・新規テスト全緑**。
+
+- **batch1**（commit 434a07b）：既存緑テスト `get_lod`/`get_nth` の `_H_ex` を **`TDOM_SELF` 付与でクローン**（19件）。
+  `mget_*(TDOM_SELF,...) ≡ get_*(...)` で期待値・状態が同一＝読取専用で caller running 維持＝マージ安定。→ 88.5%
+- **batch2**（commit 0856b4f）：E_PAR（ASP get_*_b-1/b-2 クローン＋post に TASK1 running 明示）＋ mrot_rdq
+  （rot_rdq_H-a クローン＋**非self回転** E_OK）。→ 89.0%
+- **batch3**（commit 13c72c9）：E_MACV（get_tid_H-a パターン＝user ドメイン＋TTSP_MACV_ADDRESS）＋ mrot_rdq E_PAR。→ 89.4%
+
+**前回 PoC 失敗の教訓と対策**：前回は自動生成テストがマージ不安定（T5_012/013）＋runtime 誤りで非収束→revert。
+今回は **①既存の緑テストをクローン（期待値が保証される）②caller を必ず running に保つ（T5_012/013 を構造回避）
+③小さく作って毎 batch ビルド検証** で、安定的に積み上げた。
+
+**残（構造的に困難・未実装）**：mget_lod 12/28・mget_nth 12/30・mrot_rdq 13/26 の未到達＝
+①**E_ID**（無効 DOMID が tmax_domid のcfg全体・マージ依存で確実な無効値を選べない。TTSP に invalid-domid マクロ無し）、
+②**mrot_rdq dispatch 分岐**（self優先度回転＝caller が running→ready の状態変化でマージ脆弱）、
+③**TDOM_KERNEL の値検証**・**非タスク文脈 E_CTX**（handler 起因でアクセス権検査順序が絡む）。
+これらは ROI 低＋マージ安定性リスクのため見送り（必要なら TTG 側の split 改善とセットで）。
+
+**非緑残**：auto_code_3（`ASP_mutex_tloc_mtx`）等は **m系 非起因の既存 flaky**（[`BB_UNREACHABLE.md`](BB_UNREACHABLE.md) §3）。
+
+### （参考）到達性の調査結果
 
 **対象**：sys_manage.c 96。m系（`mrot_rdq` 0/26・`mget_lod` 0/28・`mget_nth` 0/30＝84分岐）＋単一PE系 tail（~12分岐）。
 
