@@ -113,7 +113,7 @@ HRP セマンティクスで検証する必要**（PoC は一旦 revert）。
 
 ---
 
-## Method 1（高コスト・手書きWBのみ）：SOM／時間区画スケジューリング — ★調査確定（2026-06-14）
+## Method 1（中規模・TTG組み込み可能）：SOM／時間区画スケジューリング — ★調査確定（2026-06-14）
 
 **対象**：domain.c 84（最大の単一機能ギャップ）。`chg_som`/`get_som`/`_kernel_twd_*`（time window domain）/
 `_kernel_scyc_*`（system cycle）/`_kernel_twdtimer_*` が**全 0%**。HRP3 3.4 に実在・コンパイル済み
@@ -126,19 +126,27 @@ E_OBJ 早期リターンのみ（＝現状 6/90）。残り 78 分岐は system 
 - 静的API: `ATT_TWD({ ID domid, ID somid, int_t twdord, PRCTIM twdlen, <通知方法> })`（user.txt L1268）。
   DEF_SCY が先に必要（無いと ATT_TWD 無視・NGKI5052）、保護ドメインの**外**に記述（E_RSATR・NGKI5041）。
 
-**判定：到達可能だが TTG 非対応＝手書き WB cfg のみ。**
-- ⛔ **TTG は SOM/タイムウィンドウ非対応**：`tools/ttg/common/bin/sys_state/` は CPUState/Domain/Memory のみで
-  ATT_TWD/DEF_SCY の生成コードが無い。**標準 TESRY→TTG 経路は使えない**。
-- ✅ 唯一の手段＝**手書き WB cfg**（`wb_test/HRP/domain/`）：DEF_SCY＋ATT_TWD で複数 SOM/タイムウィンドウを定義し、
-  `chg_som(TSOM_STP→SOM1→SOM2)`/`get_som`/エラー系（E_CTX/E_ID不正somid/E_OACV）を駆動する out.cfg/out.c を手書き。
-  ＋ coverage ハーネス（`coverage_gcov_hrp.sh` の WB 取り込み・ASP `wb_test/ASP/` に倣う）統合。
-- ttsp3 側のみ（カーネル編集不要）。TTG 拡張（sys_state に TimeWindow 型追加）すれば自動生成も可能だが工数大。
+**判定（2026-06-14 TTG 組み込み再調査）：TTG への組み込みが可能（中規模）。手書きWB限定ではない。**
+- 当初「TTG 非対応＝手書きWBのみ」と判定したが、TTG 内部を精査して**組み込み可能**と再判定。
+- ⭐ **最大の障壁（スケジューラのモデル化）は不要**：`tools/ttg/ttc/bin/test_scenario/TestScenario.rb` は
+  スケジューラを**シミュレートせず**、author 指定状態の**整合性検証のみ**（T5_012/013 等）。よって SOM の
+  時間区画スケジューリングを TTG に実装する必要はなく、author がテストで期待状態を書けばよい。
+- **必要な実装**（`sys_state/Domain.rb`(166行)・`Memory.rb` を雛形に）:
+  ①新オブジェクト型 `type: SYSTEM_CYCLE`（→`DEF_SCY`）＋ `type: TIME_WINDOW`（→`ATT_TWD({domid,somid,twdord,
+  twdlen,通知})`）の sys_state モジュール（common=cfg生成／ttc=シナリオ）＝**中**、②`CommonModule.rb` に
+  `TSR_OBJ_SYSTEM_CYCLE/TIME_WINDOW`＋`TSR_PRM_SOMID/TWDORD/TWDLEN`＋型リスト＝**小**、③`tools/ttg/ttc/bin/
+  kwalify/kwalify.schema.yaml` に新 type/フィールド＝**小**、④`chg_som`/`get_som` は通常 syscall（既存 `do:` で生成可）＝**小**。
+- ttsp3 側のみ（カーネル編集不要）。
 
-**コスト**：**最大**（有効な system-cycle/time-window cfg の設計＋QEMU タイミング依存＋WB ハーネス統合）。
-**ゲイン**：~50〜65 分岐（domain.c 6.7%→~60-75%、全体 +~2.5-3pp）。
+**コスト**：中（数日。新オブジェクト型2つ＋登録＋スキーマ）。**ゲイン**：domain.c 6.7%→最大~83%（~78分岐）。
+**残る難所（TTG でなくテスト設計側）**：
+- `chg_som`/`get_som` の分岐（~42）＝周期を静的定義すれば直接呼出し（STP→SOM1→SOM2＋エラー系）で**容易に到達**。
+- `_kernel_twd_*`/`_kernel_scyc_*`/`twdtimer`（~36）＝周期タイマが実チックしてウィンドウ切替時に動くため、
+  時間を進める **タイミング依存テスト**（alarm/cyclic 同様）が必要＝**やや難**。
 
-> **推奨：M4（m系・標準TESRY・TTG不要・+90分岐）を先に実施し、M1 SOM は stretch goal** として後段
-> （手書き WB か TTG 拡張）。M1 は「最大ゲイン」だが「最高コスト・手書きWB限定・タイミング依存」で ROI は M4 に劣る。
+> **段階案**：①SYSTEM_CYCLE/TIME_WINDOW 型を TTG に追加 → ②chg_som/get_som 静的テスト（~42分岐・容易）
+> → ③twd/scyc タイミングテスト（~36分岐・要調整）。**手書きWB より保守性が高く SOM テストが TESRY 一級市民になる**。
+> （旧案＝手書き WB cfg `wb_test/HRP/domain/` も依然 stretch goal として可。TTG 組み込みが本筋。）
 
 ---
 
