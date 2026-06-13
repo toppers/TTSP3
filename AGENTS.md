@@ -143,8 +143,14 @@ feat/*    ← 機能ブランチ（仕様差分対応・新ターゲット等）
 
 ## 8. 参照ファイル索引
 
+> **AIはまず `docs/STATUS.md`（現状の緑基準・既知残）と `docs/TARGETS.md`（ターゲット能力・非対応）を読む。**
+> 合否判定はそこを参照（再計測しない）。実行は `scripts/ci_run*.sh`／`ttsp_parallel_api.sh` 経由
+> （対話 `ttb.sh` のメニュー駆動は自動化に不向き）。
+
 | やりたいこと | 読むファイル |
 |---|---|
+| **現状の合否基準・既知残（再計測の前にここ）** | **`docs/STATUS.md`** |
+| **ターゲット能力・非対応・実行コマンド** | **`docs/TARGETS.md`** |
 | ワークスペース配置・SVN手順 | `docs/WORKSPACE.md` |
 | SVN→git 移行（一度だけ） | `docs/MIGRATION.md` |
 | 開発の始め方・人間/AI分担 | `START.md` |
