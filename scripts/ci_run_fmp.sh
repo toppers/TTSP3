@@ -120,4 +120,6 @@ fi
 echo "==================================================="
 echo "FMP CI result: PASS=$PASS_CNT  FAIL=$FAIL_CNT"
 echo "==================================================="
+# 正規化 VERDICT（API群を STATUS.md のベースラインと比較）
+[ "$MODE" = "full" ] && bash scripts/verdict.sh FMP zybo_z7_gcc obj_fmp "$DIV_NUM" || true
 exit "$FAIL"

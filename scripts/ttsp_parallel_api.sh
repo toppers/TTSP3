@@ -32,6 +32,9 @@ ARG_PROFILE="${2:?PROFILE (ASP/FMP)}"
 ARG_OBJ="${3:?OBJ_DIR}"
 ARG_DIV="${4:-20}"
 
+# set -u 下で未設定参照（make $TTSP_MAKE_OPT 等）を防ぐため空デフォルトを与える
+TTSP_MAKE_OPT="${TTSP_MAKE_OPT:-}"
+
 # configure.sh とターゲット設定の読込み（ttb.sh と同じ手順）
 # 注意: configure.sh は DIV_NUM= 等を空で定義するため，引数の反映は source の後で行う
 source ./configure.sh

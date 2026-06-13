@@ -121,6 +121,8 @@ fi
 
 echo "===== summary ====="
 echo "PASS=$PASS_CNT FAIL=$FAIL_CNT (mode=$MODE)"
+# 正規化 VERDICT（API群を STATUS.md のベースラインと比較）
+[ "$MODE" = "full" ] && bash scripts/verdict.sh ASP zybo_z7_gcc obj "$DIV_NUM" || true
 if [ "$FAIL" -ne 0 ]; then
 	echo "RESULT: FAILURE"
 else
