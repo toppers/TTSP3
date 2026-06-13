@@ -18,6 +18,20 @@ FMP3 は **git管理版（`exshonda/fmp3`）**で版を固定する（SVN trunk 
 
 TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 
+> **2026-06-13 FMP3 POSIX依存部の上流追従＋退行修正（CI固定版 `223ed7e` には未反映）**：
+> 上流 HRMP3 trunk r1247 の POSIX 公式修正（`arch/posix_gcc` の thread_ctrl／
+> posix_kernel_impl ほか）を fmp3 作業コピーに適用（2026-06-07〜08 の暫定修正を置換え。
+> EXCNO統一は上流未完成のため見送り）。公式が持ち込んだ退行
+> （`terminate_thread` に追加された `pthread_cond_signal` が `ter_tsk_f_4_1_1` を
+> タイミング依存で失敗させる。macOS では出ず Linux のみ＝遅延キャンセルの差）を
+> **根本原因まで特定し，`suspend_thread` に `pthread_testcancel()` を1行追加して修正**
+> （公式の signal は保持）。
+> 検証：**zybo_z7_gcc `ci_run_fmp.sh` PASS=182/0**，**linux_gcc API 13/20**
+> （ベースライン回復・安定）。再現＋修正案＝`../posix/posix_hrmp3_r1246/`。
+> **上流確認**：HRMP3 trunk は **r1249** で同修正（`suspend_thread` に `pthread_testcancel()`）を
+> 適用済みで，本 FMP3 修正は r1249 と関数本体一致＝FMP3 は r1249 追従済み（HRMP3 側追加対応不要）。
+> 詳細は DIVERGENCE_MAP.md E節・fmp3 `target/linux_gcc/issues/`・`../posix/posix_hrmp3_r1246/`。
+
 ## 検証済み環境（2026-06-06 緑確認・タグ v3.2.0-rc1）
 
 - ASP3 3.7.2（上記ZIP） + `zybo_z7_gcc` + QEMU 11.0.0（**要 a9gtimer パッチ** `docs/patches/qemu-11.0.0-a9gtimer-honor-enable.patch`）

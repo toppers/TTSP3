@@ -99,7 +99,7 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 | `chg_spr` L603-608 local dispatch（自タスク降格） | （Phase B 移管） | NGKI3673 の「自タスクが `chg_spr(TSK_SELF,大)` で降格→同PEでディスパッチ」は **BB不可**と実測確定（actor が `dispatch()` でCPUを失い、TTG生成の actor内 post検証に戻れず finish_sync デッドロック）。TTSP3 BB はディスパッチ誘発を「対象=PRC_OTHER・actorは走行継続」で表現する構造のため。WB手書き（wb_test/FMP/task/）へ移管。`SUBPRIO_TEST_PLAN.md §3.1/§4` 記録 | Phase B 予定（2026-06-10） |
 | `api_test/FMP/interrupt/{ras_int,dis_int,ena_int,clr_int,prb_int}/<api>_F-e-1.yaml`（5件） | NEW | **割込み番号バリデーション(VALID_INTNO)異常系のC1ギャップを閉じる**。既存 E_PAR 負テスト(F-b)は `variation: irc_arch: local` タグで zybo(`combination`)では autocode 除外され未実行＝interrupt.c の `VALID_INTNO_*` 偽アームが未到達だった（`BB_UNREACHABLE.md §2` 旧称「chg_ipm複合パス」は誤分類）。各APIに `irc_arch: combination` の E_PAR 負ケースを追加し、入力に **PPI範囲・他PE宛**（`INTNO_OTHER_INH_A`＝MASK16,PRCID≠self）を使用→既存F-cの`INTNO_NOT_SELF_SELF`(SPI MASK=50)が短絡していた clause1 `INTNO_PRCID(intno)==prcid` 偽アームに到達。検証：specified_tesry で5本とも QEMU 緑、**interrupt.c union 27→17未到達（covered 89→99・+10分岐）**、全FMP回帰 PASS=182/FAIL=0。残17は構造的dead(`SGI0<=MASK`常真)・check_intno_cfg複合(L268/L307)・chg_ipm L383(timing)/L392(affinity)。`docs/FMP/BB_UNREACHABLE.md §2` | 済（2026-06-10） |
 | `../fmp3/target/zybo_z7_gcc/target_kernel.h`（**カーネル改変**）＋ `wb_test/FMP/time_event/tepp1_W-a/` ＋ `scripts/coverage_gcov_fmp.sh` | 改変/NEW | **カバレッジ向上 Method B（単一TM-processor変種で time_event.c §5-c 到達）**。fmp3 の `TOPPERS_TEPP_PRC`（既定 0x3）を `#ifndef` ガード化し COPTS で上書き可能に（既定挙動不変）。WB テスト `tepp1_W-a`/`tepp1_W-b` を `-DTOPPERS_TEPP_PRC=0x1`（PRC1のみTEPP）でビルドし、PRC2 タスクの `tslp_tsk`/`wup_tsk`/`dly_tsk`（W-a: L168/L583/L627）と `mig_tsk` 移送（W-b: L546）で非TM-processor 転送4分岐を到達。coverage スクリプトに `wb_extra_copts.txt` フック追加。検証：QEMU 緑（`All check points passed.`）、gcov で §5-c 4分岐到達（残 L522 は cyclic PRC1限定で構造的到達不能）。all 1550/1597=97.1%。**※fmp3 改変につき `UPSTREAM_KERNEL.md` に記録・ライセンス改変明記が条件**。`docs/FMP/{COVERAGE_RAISE_PLAN.md,BB_UNREACHABLE.md §5-c}` | 済（2026-06-10・PoC） |
-| tools/ttg | 改変 | 3.7仕様への生成対応（上記 CPUState.rb 以外の残） | 予定 |
+| tools/ttg | 改変 | 3.7仕様への生成対応（上記 CPUState.rb 以外の残）。**現状トリガされない条件付き将来作業**＝P2新機能テストが既存カバレッジで充足し「新規作成不要」と確定（SPEC37_PLAN P2/P3）したため、zybo×ASP/FMP の緑維持には不要。実際に発生するのは ①ASP3でサブ優先度**拡張**テストを新規作成（要 subprio カーネル変種・判断ゲートG2）、②HRMP3 サブ優先度テスト立ち上げ（後回し）、③`EXINF` が `intptr_t` 以外の型の新ターゲット追加（TTG生成の `intptr_t exinf` 修正）、のいずれかを選んだ時のみ | 予定（条件付き・現状不要） |
 | library/*/target/* | NEW/改変 | asp3_core向けターゲット依存部追加（後段） | 後段 |
 
 ---
@@ -127,16 +127,25 @@ TTSP3は**git-only管理**で、外部追従先（external upstream）は無い�
 
 ---
 
-## E. FMP3 POSIXターゲット（linux_gcc）対応の状況（最終更新 2026-06-08）
+## E. FMP3 POSIXターゲット（linux_gcc）対応の状況（最終更新 2026-06-13）
 
 TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
 **FUNC_TIME="false"**（実時間駆動・時刻停止不可），IRC=グローバル，例外=シグナル（SIGFPE）．
 
-### 全テスト結果（fmp3側修正4件適用後）
+> **2026-06-13 追記（最重要）**：上流 HRMP3 trunk r1247 の POSIX 公式修正を
+> FMP3 に適用したところ linux_gcc API に退行が出たが，**根本原因
+> （`terminate_thread` の `pthread_cond_signal`；macOS では出ず Linux のみの
+> 遅延キャンセル差）を特定し，`suspend_thread` に `pthread_testcancel()` を1行
+> 追加して修正済み**（公式の signal は保持）。
+> 現状は **zybo PASS=182/0・linux_gcc 13/20（ベースライン回復）**。詳細は本節末尾
+> 「### 2026-06-13 上流公式POSIX修正の適用と退行」を参照。下表の「13/20緑」は
+> 退行前ベースライン（＝修正後とも一致）の記録。
+
+### 全テスト結果（fmp3側修正4件適用後・2026-06-08ベースライン）
 
 | 項目 | 結果 |
 |---|---|
-| check_library 例外/割込み | ✅ 2/2 All check points passed（timerはFUNC_TIME=false対象外） |
+| check_library 割込み | ✅ All check points passed（PE1/PE2）。**例外は linux_gcc 未対応＝`library/FMP/check_library/exception/out.cfg` が `TTSP_EXCNO_C` を要求するが linux_gcc の `ttsp_target_test.h` が未定義でビルド不可。当初「例外2/2」は誤記**（zybo は定義あり）。timer は FUNC_TIME=false 対象外 |
 | API TTG生成・cfg・ビルド | ✅ 20/20グループ（TTGにTA_EDGE対応・`int_trigger_atr` 追加で解消） |
 | API 実行 | ✅ **13/20グループ緑（5周連続で安定）**．残7グループは下記の既知差分のみ（各1件） |
 | コンフィグエラーテスト | ✅ TESRY更新後 **POSIX OK=149/160・zybo OK=159/161**（2026-06-08）．残NGは下記の要精査1件＋ターゲット特性のみ |
@@ -197,6 +206,61 @@ TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
   流用した際のプロファイル相互作用．err_code.txt は ASP/FMP 共有（E_PAR は ASP で正当）
   のため期待値差替では修正不可．FMP固有の割込み負テストは `DEF_INH_F-a`〜`F-d` が担う．
   zybo基準方針により**文書化のみ（残置）**．
+
+---
+
+### 2026-06-13 上流公式POSIX修正の適用と退行（重要）
+
+上流 **HRMP3 trunk r1247**（`hrmp3_trunk`，変更履歴 3.4.0→3.5.0「POSIX依存部」
+不具合修正）の POSIX 依存部更新を FMP3（`fmp3/arch/posix_gcc`・
+`fmp3/target/linux_gcc`）に適用した。当方が 2026-06-07〜08 に入れていた暫定修正を，
+上流公式実装に置換える形。
+
+**適用内容**（fmp3 作業コピー。コミットはfmp3側で実施）：
+- `arch/posix_gcc/thread_ctrl.c` … 公式の条件変数（thrcond）ベース dispatch に置換え
+- `arch/posix_gcc/posix_kernel_impl.c` … `LOG_INH_ENTER/LEAVE` 引数修正＋
+  `dispatch_and_migrate` の公式順序化（make_runnable→release_glock→p_runtsk更新）
+- `arch/posix_gcc/thread_ctrl.h`・`posix_kernel_impl.h` … コメント追従
+- `posix_ipi.c`/`posix_timer*.c` の `#if TNUM_PRCID>=N` ガードは適用済みのため不要
+- **EXCNO のシグナル番号統一（target_kernel.h, r1234）は見送り**：上流自身が
+  `target_test.h`・`target_kernel.trb` で旧 PRC 別マクロを参照したままで未完成
+
+**検証結果（linux_gcc・ネイティブ実行。`fmp3_git` r479＝暫定版をベースラインに比較）**：
+
+| 構成 | API オートコード |
+|---|---|
+| 暫定版（ベースライン，`fmp3_git`） | **13/20**（既知残7＝g3,6,11,12,13,15,19） |
+| フル公式（適用直後） | 典型12/20・高負荷並列で9/20（退行） |
+| **修正版（公式＋suspend_threadにpthread_testcancel）＝現状** | **13/20**（ベースライン回復・安定・該当テスト修正） |
+
+- **退行の根本原因を1行に特定**（二分探索＋カーネル計測）：公式 r1247 が
+  `thread_ctrl.c` の `terminate_thread()` に追加した
+  `pthread_cond_signal(&(p_thrcb->thrcond));`。終了対象スレッド
+  （suspend_thread の述語待ち `while(state!=RUN)cond_wait` に居る）を起こし，
+  直後の同一タスク再活性化（`ter_tsk`+actcnt）で THRCB が再利用され
+  state==RUN に戻ると，本来 `pthread_cancel` で消えるはずの旧スレッドが
+  待機を抜けて「復活」→ 二重スレッドがディスパッチャを撹乱 → 再活性化タスクの
+  本体が `p_runtsk` 未更新のまま走り，`ref_tsk` が RUN/RDY を誤判定
+  （g2＝`ASP_task_term_ter_tsk_f_4_1_1` で `rtsk.tskstat==TTS_RDY` 失敗）。
+- **macOS では出ず Linux のみ**：既定の遅延キャンセルで，保留キャンセルは
+  キャンセルポイントでのみ処理される。macOS は `pthread_cond_wait` 復帰時に処理して
+  復活しないが，Linux(glibc) は signal 起床が優先され cond_wait が正常復帰，
+  キャンセルが次のキャンセルポイントまで遅延 → その隙に復活。公式 r1247 は
+  移植性の前提（macOS 挙動）に依存していた。
+- **修正（採用）**：`suspend_thread` の再開待ちを抜けた直後に `pthread_testcancel();`
+  を1行追加（公式の signal は保持）。fmp3 作業コピーに適用済み。別解：terminate_thread の
+  cond_signal 削除でも直る（双方向確認：公式−当該1行→20/20 PASS／暫定+当該1行→11/20 FAIL）。
+  `dispatch_and_migrate` 並べ替え・LOG_INH 修正は安全（保持）。
+
+**検証（修正適用後・2026-06-13）**：
+- linux_gcc：check_library interrupt 緑，**API 13/20（既知残7のみ・g2 修正・5周連続安定）**。
+- 主ターゲット **zybo_z7_gcc（QEMU）：`ci_run_fmp.sh` PASS=182／FAIL=0**（cfg-error OK=159・許容 DEF_INH_c のみ）。
+- 自己完結の再現＋修正案：`../posix/posix_hrmp3_r1246/`（fmp3全ソース2本＋スタンドアロン再現テスト）。
+- **上流確認（2026-06-13）**：HRMP3 trunk は **r1249** で当該不具合を修正済み
+  （`suspend_thread` に `pthread_testcancel()` 追加・`cond_signal` 保持）。本 FMP3 修正は r1249 と
+  **関数本体が一致**＝独立導出した修正が上流公式修正と同一。HRMP3 側の追加対応は不要，FMP3 は r1249 追従済み。
+  退行は r1247〜r1248。調査記録は
+  `fmp3/target/linux_gcc/issues/20260607-2150_*_posix-smp-thread-switch/README.md`「追記2（2026-06-13）」。
 
 ---
 
