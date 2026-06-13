@@ -40,7 +40,7 @@
 | ASP | 1373/1379 ≈ 99.6% | `docs/ASP/ALL_COVERAGE.md` | simt スイート込み |
 | FMP | 1550/1597 ≈ 97.1% | `docs/FMP/ALL_COVERAGE.md` | bb=1533/1597 |
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
-| HRP（zybo） | branch **87.1%**（line 90.7%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。20/20集計（M6でauto_code_19回復）。M2 messagebuf+M3 mem系で +124分岐（着手前82.0%）。残：domain SOM/sys_manage m系 |
+| HRP（zybo） | branch **88.5%**（line 92.6%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。M2+M3+M6+M4(b1) で +159分岐（着手前82.0%）。残：domain SOM／sys_manage の E_PAR/E_MACV 等 |
 | HRP（**zcu102_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | `docs/HRP/COVERAGE_R5.md`（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
 > 計測条件は各 `BB_COVERAGE.md`（`-O2`＋インライン抑制＋`-DNDEBUG`）。`scripts/coverage_gcov_<prof>.sh`。
