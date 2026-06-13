@@ -78,18 +78,32 @@
 
 ---
 
-## Method 1（最大ゲイン・高コスト・要 TTG 調査）：SOM／時間区画スケジューリング
+## Method 1（高コスト・手書きWBのみ）：SOM／時間区画スケジューリング — ★調査確定（2026-06-14）
 
 **対象**：domain.c 84（最大の単一機能ギャップ）。`chg_som`/`get_som`/`_kernel_twd_*`（time window domain）/
-`_kernel_scyc_*`（system cycle）/`_kernel_twdtimer_*` が**全 0%**。HRP3 3.4 に実在（domain.c に SOM 実装あり）するが
-TTSP に該当テストカテゴリが無い。
+`_kernel_scyc_*`（system cycle）/`_kernel_twdtimer_*` が**全 0%**。HRP3 3.4 に実在・コンパイル済み
+（`hrp3/kernel/Makefile.kernel`：chg_som.o/get_som.o/twdsta.o/scycstart.o 等）。
 
-**機構**：`DEF_SOM`（静的・システム動作モード＋タイムウィンドウ定義）＋ `chg_som`/`get_som` を駆動する新規カテゴリ。
-- ⚠ **TTG が SOM オブジェクト（DEF_SOM・タイムウィンドウ）を生成できるか要確認**（`tools/ttg/.../sys_state/` に SOM 型が
-  無い可能性大）。無ければ TTG 拡張 or 手書き WB cfg（`wb_test/HRP/domain/`）。
-- ttsp3 側（TTG 拡張なら tools/ttg 編集）。カーネル編集は不要。
+**到達条件（調査で特定）**：`chg_som`/`get_som` は冒頭で **`CHECK_OBJ(system_cyctim != 0)`**（domain.c L577/L667,
+NGKI5035/5065）。`system_cyctim` は既定 0（`domain.trb:83`）で、**静的に DEF_SCY（システム周期）＋ ATT_TWD
+（タイムウィンドウのドメイン割当）を定義したときのみ非0**になる。現行テストは誰も定義しないため、到達するのは
+E_OBJ 早期リターンのみ（＝現状 6/90）。残り 78 分岐は system cycle 定義が前提。
+- 静的API: `ATT_TWD({ ID domid, ID somid, int_t twdord, PRCTIM twdlen, <通知方法> })`（user.txt L1268）。
+  DEF_SCY が先に必要（無いと ATT_TWD 無視・NGKI5052）、保護ドメインの**外**に記述（E_RSATR・NGKI5041）。
 
-**コスト**：大（新カテゴリ＋TTG 対応調査/拡張）。**ゲイン**：最大（~70 分岐）。
+**判定：到達可能だが TTG 非対応＝手書き WB cfg のみ。**
+- ⛔ **TTG は SOM/タイムウィンドウ非対応**：`tools/ttg/common/bin/sys_state/` は CPUState/Domain/Memory のみで
+  ATT_TWD/DEF_SCY の生成コードが無い。**標準 TESRY→TTG 経路は使えない**。
+- ✅ 唯一の手段＝**手書き WB cfg**（`wb_test/HRP/domain/`）：DEF_SCY＋ATT_TWD で複数 SOM/タイムウィンドウを定義し、
+  `chg_som(TSOM_STP→SOM1→SOM2)`/`get_som`/エラー系（E_CTX/E_ID不正somid/E_OACV）を駆動する out.cfg/out.c を手書き。
+  ＋ coverage ハーネス（`coverage_gcov_hrp.sh` の WB 取り込み・ASP `wb_test/ASP/` に倣う）統合。
+- ttsp3 側のみ（カーネル編集不要）。TTG 拡張（sys_state に TimeWindow 型追加）すれば自動生成も可能だが工数大。
+
+**コスト**：**最大**（有効な system-cycle/time-window cfg の設計＋QEMU タイミング依存＋WB ハーネス統合）。
+**ゲイン**：~50〜65 分岐（domain.c 6.7%→~60-75%、全体 +~2.5-3pp）。
+
+> **推奨：M4（m系・標準TESRY・TTG不要・+90分岐）を先に実施し、M1 SOM は stretch goal** として後段
+> （手書き WB か TTG 拡張）。M1 は「最大ゲイン」だが「最高コスト・手書きWB限定・タイミング依存」で ROI は M4 に劣る。
 
 ---
 
