@@ -114,10 +114,11 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
         ASP/FMP で使った「API テストの Makefile（REF_MK）流用」は、**REF_MK の APPLOBJS が元グループ（auto_code_1）の TECS 生成に固定**されており、
         SIL 用 cfg が必要とするコンポーネント（`svc_ini_mpf`/`svc_ref_mpf`/`svc_ext_ker`・`syslog_print`・`initialize_tecs`・out.o）と
         一致せずリンク不能。**HRP は正規の configure 経由ビルド（SIL 用に APPLOBJS/TECS を生成）が必須**＝下記「正式なランナー」と一体で解決する。
-- [ ] **HRMP への展開**：HRP（保護）＋FMP（マルチプロセッサ）の合成。**道筋は明確**：FMP の out.c（マルチプロセッサ
-      ロジック）を流用し、out.cfg は FMP の per-PE `CLASS(CLS_PRCn){...}` の各ブロックを `KERNEL_DOMAIN` で包み
-      （HRMP の `ttsp_obj_head/tail.cfg` は `CLASS(CLS_ALL_PRC1){ KERNEL_DOMAIN {`＋`} }`＋ATT_MOD）、
-      各 MAIN_TASKn に SAC_TSK・`ttsp_svc.cfg`・out.h ガード・inthdr/isr 無条件宣言を適用。QEMU -smp 2。
+- [x] **HRMP3 3.7 + zybo（-smp 2）**：緑（ttb.sh 経由・両 PE `All check points passed.`）。HRP（保護）＋FMP
+      （マルチプロセッサ）の合成。FMP の out.c（マルチプロセッサロジック）を流用し、out.cfg は FMP の per-PE
+      `CLASS(CLS_PRCn){...}` の各ブロックを **`KERNEL_DOMAIN` で包み**、各 MAIN_TASKn に **SAC_TSK**、末尾に
+      **ttsp_obj_tail.cfg 相当の ATT_MOD**（テストオブジェクトのドメイン割当）、`ttsp_svc.cfg`、out.h ガード、
+      inthdr/isr 無条件宣言を適用。HRMP 固有：top-level の `ATT_INI(ttsp_test_lib_init)` を KERNEL_DOMAIN で包む。
 - [x] **正式なランナー（ttb.sh SIL 再有効化）**：ttb.sh option 2 の `Not support in TTSP3` を解除し
       `source ./scripts/sil_test.sh` を復活。**ASP/FMP は ttb.sh 経由で緑を確認**（非対話駆動：`printf '2\n1\nq\n' | bash ttb.sh <OS_PATH> <PROFILE> <OBJ_DIR>` → `<OBJ_DIR>/sil_test/<asp|fmp>` を QEMU 実行。ASP=-smp 1／FMP=-smp 2）。
       sil_test.sh の configure 呼び出し（`-U $TEST_LIB_FILE`）が APPLOBJS を正しく生成する＝§3 の REF_MK 手動手順より正式。
