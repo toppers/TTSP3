@@ -146,9 +146,11 @@ feat/*    ← 機能ブランチ（仕様差分対応・新ターゲット等）
 > **AIはまず `docs/STATUS.md`（現状の緑基準・既知残）と `docs/TARGETS.md`（ターゲット能力・非対応）を読む。**
 > 合否判定はそこを参照（再計測しない）。実行は `scripts/ci_run*.sh`／`ttsp_parallel_api.sh` 経由
 > （対話 `ttb.sh` のメニュー駆動は自動化に不向き）。
+> **「やりたいこと→正確なコマンド列」の操作手引きは `docs/RUNBOOK.md`**（計測・テスト追加・simt・落とし穴集）。
 
 | やりたいこと | 読むファイル |
 |---|---|
+| **操作手順（タスク→コマンド・落とし穴集）** | **`docs/RUNBOOK.md`** |
 | **現状の合否基準・既知残（再計測の前にここ）** | **`docs/STATUS.md`** |
 | **ターゲット能力・非対応・実行コマンド** | **`docs/TARGETS.md`** |
 | 用語（TTG/TESRY/check_library/bb-all/residual/VERDICT 等） | `docs/GLOSSARY.md` |

@@ -5,6 +5,7 @@ TOPPERS第3世代カーネル（ASP3/FMP3/HRP3/HRMP3）のAPI/SIL適合性テス
 
 ## まず読む
 - `AGENTS.md` — 規約・手順の正本（AIツール共通）
+- `docs/RUNBOOK.md` — **AI実行ランブック（やりたいこと→正確なコマンド・落とし穴集）**。計測/テスト追加/simt
 - `START.md` — 開発の始め方と人間/AI分担
 - `docs/WORKSPACE.md` — **カーネル(asp3/fmp3/hrp3/hrmp3)は兄弟ディレクトリのSVN**。配置と取得手順
 - `docs/MIGRATION.md` — **SVN→GitHub(git) 移行（一度だけ）**。以後TTSP3はgit-only
