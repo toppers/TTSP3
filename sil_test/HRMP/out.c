@@ -330,6 +330,21 @@ void sil_user_task(intptr_t exinf) {
 
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL access  : OK");
 
+	/* ============================================================
+	 * 【ユーザドメイン SIL 異常系・明示テスト 2026-06-14】
+	 * 保護される操作が期待どおり拒否されることを明示的に確認する．
+	 * ・サービスコール系：get_tim → E_OACV（時刻管理サービスのアクセス保護）
+	 * ・fault 系（sil_dly_nse/SIL_LOC_SPN/不正アドレス sil_*_mem/sil_get_pid 不正値）は CPU 例外/特権で
+	 *   in-flow 復帰できないため発行しない（docs/SIL_TEST.md §2c に実測知見として記録）．
+	 * ============================================================ */
+	{
+		SYSTIM abntim;
+		ER abnercd;
+		abnercd = get_tim(&abntim);
+		check_ercd(abnercd, E_OACV);
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: get_tim -> E_OACV : OK");
+	}
+
 	wup_tsk(MAIN_TASK1);
 	ext_tsk();
 }

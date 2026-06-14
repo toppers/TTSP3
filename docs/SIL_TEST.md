@@ -123,15 +123,23 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 `ATT_SEC(".ttg_stack_section…", …)`（無いと ttg_ustack が discard され未解決）。
 
 **実測知見（ユーザドメインからの SIL 発行・HRP/HRMP zybo）：**
-| SIL/操作 | ユーザドメインからの結果 |
-|---|---|
-| `sil_reb/wrb/reh/…_mem`（自タスクスタック対象） | **OK**（アクセス権のある領域なら発行可） |
-| `SIL_LOC_INT`/`SIL_UNL_INT` | **OK** |
-| `sns_ker` | **OK**（タスク文脈で false） |
-| `sil_dly_nse` | **Prefetch Abort（permission fault）**＝実装がカーネル専用テキスト＝DOM1 に実行権なし（保護の正しい挙動） |
-| `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort（permission fault）**＝共有スピンロックは特権（test_of_sns_ker の ter_flg=true でスキップ） |
-| `sil_get_pid` | **不正値を返す**（MPIDR 読みが特権）＝`ttsp_mp_check_point` がユーザドメインから使えない（check は main 側で記録） |
-| `get_tim`（SIL でなくサービス） | **E_OACV**（時刻管理サービスのアクセス保護） |
+| SIL/操作 | ユーザドメインからの結果 | 正常系/異常系テスト |
+|---|---|---|
+| `sil_reb/wrb/reh/…_mem`（自タスクスタック対象） | **OK**（アクセス権のある領域なら発行可） | 正常系（check_of_sil_mem） |
+| `SIL_LOC_INT`/`SIL_UNL_INT` | **OK** | 正常系（test_of_sns_ker 内） |
+| `sns_ker` | **OK**（タスク文脈で false） | 正常系 |
+| `get_tim`（SIL でなくサービス） | **E_OACV**（時刻管理サービスのアクセス保護） | **異常系・明示テスト（check_ercd(…, E_OACV)）** |
+| `sil_dly_nse` | **Prefetch Abort（permission fault）**＝実装がカーネル専用テキスト＝DOM1 に実行権なし | 異常系（fault・知見記録） |
+| `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort（permission fault）**＝共有スピンロックは特権 | 異常系（fault・知見記録） |
+| `sil_get_pid` | **不正値を返す**（MPIDR 読みが特権） | 異常系（`ttsp_mp_check_point` 不可・知見記録） |
+
+### 異常系テストの扱い
+- **明示的にテスト（CP に組込み）**：`get_tim → E_OACV` を `check_ercd(ercd, E_OACV)` で検証（サービスコールの
+  アクセス保護が働くことを確認）。HRP api の保護テスト標準（E_OACV・138例）と同方式。
+- **fault 系（sil_dly_nse / SIL_LOC_SPN / 不正アドレス sil_*_mem / sil_get_pid 不正値）**：CPU 例外（Prefetch/Data
+  Abort）または特権レジスタ読みで、`ttsp_cpuexc_hook` が UNDEF 専用（空）のため **in-flow での捕捉・復帰ができない**。
+  そのため明示 CP には組み込まず、上表の実測知見として記録（保護が働く＝fault することは確認済み）。
+  ※ 将来：DABORT/PABORT を DEF_EXC で捕捉し p_excinf の PC を進める復帰機構を作れば fault 系も CP 化可能（target 依存）。
 
 ## 4. 残作業（ロードマップ）
 

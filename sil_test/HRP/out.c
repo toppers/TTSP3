@@ -234,8 +234,27 @@ void sil_user_task(intptr_t exinf) {
 	 *   （実装がカーネル専用テキストにあり DOM1 に実行権が無い＝HRP 保護の正しい挙動）．本タスクでは発行しない．
 	 * - get_tim 等のサービスコール：ユーザドメインから E_OACV（保護）．SIL ではないため対象外． */
 
-	ttsp_check_point(24);
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL access  : OK");
+
+	/* ============================================================
+	 * 【ユーザドメイン SIL 異常系・明示テスト 2026-06-14】
+	 * ユーザドメインから「保護される操作」が期待どおり拒否されることを明示的に確認する．
+	 * ・サービスコール系（エラーコードで捕捉可）：get_tim → E_OACV（時刻管理サービスのアクセス保護）
+	 * ・fault 系（sil_dly_nse=Prefetch Abort / SIL_LOC_SPN=Data Abort / 不正アドレス sil_*_mem=Data Abort）は
+	 *   CPU 例外になり in-flow 復帰できない（ttsp_cpuexc_hook が UNDEF 専用・空）ため、本タスクでは発行しない．
+	 *   それらが保護される（fault する）ことは docs/SIL_TEST.md §2c に実測知見として記録．
+	 * ============================================================ */
+	{
+		SYSTIM abntim;
+		ER abnercd;
+		/* 時刻管理サービス get_tim：ユーザドメインからは E_OACV（アクセス保護） */
+		abnercd = get_tim(&abntim);
+		check_ercd(abnercd, E_OACV);
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: get_tim -> E_OACV : OK");
+	}
+
+	ttsp_check_point(24);
+	syslog_0(LOG_NOTICE, "USER DOMAIN SIL (normal+abnormal): OK");
 
 	/* main_task を起こして本タスクを終了 */
 	wup_tsk(MAIN_TASK);
