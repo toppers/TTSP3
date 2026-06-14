@@ -131,7 +131,15 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
   - 知見：時間進行を **SVC（タスク稼働中）でやると窓切替が twd_switch を経ない**が、**dly_tsk（アイドル）だと
     custom_idle 経由で twd_switch が発火**する。(b) 窓切替テストは **dly_tsk 型**が本命。`ttsp_simt_advance(N)` は
     scyc/overrun 等の明示制御に有用（W-a）。
-- **残（小）**：`set_dspflg` 0/4（dis_dsp 中の窓切替）、twd_switch/scyc_switch の残 branch（複数窓・SOM切替・dispatch）。
+- ✅ **`set_dspflg` 1/4→3/4（dis_dsp 中の保留切替・2026-06-14）**：`twd_som_W-d.yaml`＝周期稼働中に `dis_dsp()`→窓内に
+  収まる `ttsp_simt_advance`→`ena_dsp()` で `set_dspflg` の **pending 両偽（if-F＋elseif-F）経路**を点灯（chg_som_H-g が
+  pending_scycswitch=true の if-T を既達）。domain.c **65.6→67.8%(61/90)**。
+  - **残 1/4＝`else if(pending_twdswitch)` TRUE（構造的に困難）**：これは**ウィンドウ切替割込みが dspflg 偽で twd_switch の
+    else を通り pending_twdswitch=true** になる必要があるが、(1) SVC(`ttsp_simt_advance`)経由の advance は dis_dsp 中でも
+    窓切替割込みを twd_switch へ届けない（W-c で twd_switch 0/16 を確認）、(2) idle(`dly_tsk`)advance は dspflg 真．
+    ＝TTSP の advance 機構では決定論的に producible でない．アラーム/周期通知ハンドラ内で dis_dsp＋窓切替を起こす等の
+    別構成が要る（今後）。
+- **残（小）**：twd_switch/scyc_switch の残 branch（複数窓・SOM 切替・dispatch）、set_dspflg の elseif-T（上記）。
 
 #### 残：Phase 2 続き — 次セッション
 1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・

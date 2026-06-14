@@ -1,0 +1,61 @@
+version: "PoC段階④(b): set_dspflg の保留切替なし経路（pending 両偽）"
+HRP_sys_manage_twd_som_W_d:
+  note: "【NGKI5037】周期稼働中(TA_INISOM)にディスパッチ禁止(dis_dsp)→窓内に収まる量だけ ttsp_simt_advance(窓切替を起こさない)→ena_dsp．set_dspflg が呼ばれるが pending_scycswitch も pending_twdswitch も偽＝if/else if とも不成立の経路を通る．simt 専用．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    SCY1:
+      type  : SYSTEM_CYCLE
+      scytim: 1000
+
+    SOM1:
+      type  : SYSTEM_OPERATION_MODE
+      somatr: TA_INISOM
+
+    TWD1:
+      type  : TIME_WINDOW
+      domid : DOM1
+      somid : SOM1
+      twdord: 1
+      twdlen: 500
+
+  do_0:
+    id     : TASK1
+    syscall: dis_dsp()
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+  # 窓内(< 500)に収まる量＝窓切替を起こさない＝pending 立たない
+  do_1:
+    id     : TASK1
+    syscall: ttsp_simt_advance(100)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+  # ena_dsp＝set_dspflg（pending 両偽の経路）
+  do_2:
+    id     : TASK1
+    syscall: ena_dsp()
+    ercd   : E_OK
+
+  post_condition_2:
+    TASK1:
+      tskstat: running
