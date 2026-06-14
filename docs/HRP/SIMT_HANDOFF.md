@@ -134,11 +134,16 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
 - ✅ **`set_dspflg` 1/4→3/4（dis_dsp 中の保留切替・2026-06-14）**：`twd_som_W-d.yaml`＝周期稼働中に `dis_dsp()`→窓内に
   収まる `ttsp_simt_advance`→`ena_dsp()` で `set_dspflg` の **pending 両偽（if-F＋elseif-F）経路**を点灯（chg_som_H-g が
   pending_scycswitch=true の if-T を既達）。domain.c **65.6→67.8%(61/90)**。
-  - **残 1/4＝`else if(pending_twdswitch)` TRUE（構造的に困難）**：これは**ウィンドウ切替割込みが dspflg 偽で twd_switch の
-    else を通り pending_twdswitch=true** になる必要があるが、(1) SVC(`ttsp_simt_advance`)経由の advance は dis_dsp 中でも
-    窓切替割込みを twd_switch へ届けない（W-c で twd_switch 0/16 を確認）、(2) idle(`dly_tsk`)advance は dspflg 真．
-    ＝TTSP の advance 機構では決定論的に producible でない．アラーム/周期通知ハンドラ内で dis_dsp＋窓切替を起こす等の
-    別構成が要る（今後）。
+  - **残 1/4＝`else if(pending_twdswitch)` TRUE＝構造的に到達不能（2026-06-14 調査確定）**：
+    pending_twdswitch=true は **ウィンドウ切替割込みが dspflg 偽のときに twd_switch の else を通る**必要があるが：
+    - SVC(`ttsp_simt_advance`)経由の advance は dis_dsp 中でも窓切替割込みを twd_switch へ届けない（W-c で twd_switch 0/16）。
+    - idle(`dly_tsk`)advance は dspflg 真（W-b で if 側 13/16）。`dis_dsp` はタスク文脈専用（ハンドラでは E_CTX）。
+    - **アラーム発火＋窓切替の同時刻**も試したが、(a) TTG が T5_005/013（caller の活性/ercd 検査）で弾く、(b) simt の
+      `target_custom_idle` は**次イベントを1つずつ発火しハンドラ完了後に次へ進む**ため、ハンドラ実行(dspflg偽)中に
+      別の窓切替割込みを重ねられない＝**同時刻イベントの dspflg 偽コインシデンスが作れない**。
+    - **決定的事実：カーネル自身の `hrp3/test/simt_twd1` でも set_dspflg は 0/4**（twd_switch 13/16 は到達するが pending 系は未到達）。
+      ＝upstream の SOM テストでも未カバーの corner case。本 TTSP テスト群は **3/4** で **upstream(0/4)を上回る**。
+    → **set_dspflg elseif-T は到達不能として文書化**（実機 or 多重割込みネスト等の別アーキ前提が要る）。
 - **残（小）**：twd_switch/scyc_switch の残 branch（複数窓・SOM 切替・dispatch）、set_dspflg の elseif-T（上記）。
 
 #### 残：Phase 2 続き — 次セッション
