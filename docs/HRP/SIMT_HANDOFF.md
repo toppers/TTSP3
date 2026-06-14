@@ -119,10 +119,15 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
   TA_INISOM＋窓(twdlen 500/scytim 1000)＋`ttsp_simt_advance(N)` で境界跨ぎ。simt ターゲットで**ビルド緑・gcov 取得**し、
   **`_kernel_scyc_switch` 0→1/2・`scyc_start` 3/4・`twdtimer_*`・`twd_start` 5/10 を TTSP フレームワーク経由で点灯**を確認。
   ＝**ttsp_simt_advance 機構が end-to-end で動作**（TESRY→simt→QEMU→gcov）。
-- **残（refinement）＝`twd_switch`**：本テストでは 0/16。原因＝時間進行を SVC（タスク稼働中）で行うため窓切替割込みの
-  解決経路が `simt_twd1`（タスク slp_tsk＝アイドル稼働中に窓切替）と異なる。`twd_switch` を点灯するには
-  **①(b)テストで advance 後にタスクを slp_tsk させ idle 文脈で窓切替させる、or ②`simt_twd1` 型テストを TTSP 化**する。
-  Phase 1 で simt_twd1 自体は twd_switch 5/10 を達成済＝simt 上で到達可能は確定。
+- ✅ **`twd_switch` 点灯（dly_tsk＝idle 文脈・2026-06-14）**：`twd_som_W-b.yaml`＝`ttsp_simt_advance` の代わりに
+  カーネルドメインタスクが **`dly_tsk(N)` で休止→システムがアイドル→`target_custom_idle` がシミュレーション時刻を
+  次イベントへ進める**ため、窓境界(500)でウィンドウ切替割込みが **idle 文脈(dspflg真)で発火**＝`_kernel_twd_switch`
+  **0→13/16 line・3/6 branch**、`twd_start` 5→7/10、`scyc_switch` 1/2、domain.c **31→38.9% branch**。
+  ＝**TTSP フレームワーク経由で (b) の本丸 twd_switch を点灯**（simt＋dly_tsk）。
+  - 知見：時間進行を **SVC（タスク稼働中）でやると窓切替が twd_switch を経ない**が、**dly_tsk（アイドル）だと
+    custom_idle 経由で twd_switch が発火**する。(b) 窓切替テストは **dly_tsk 型**が本命。`ttsp_simt_advance(N)` は
+    scyc/overrun 等の明示制御に有用（W-a）。
+- **残（小）**：`set_dspflg` 0/4（dis_dsp 中の窓切替）、twd_switch/scyc_switch の残 branch（複数窓・SOM切替・dispatch）。
 
 #### 残：Phase 2 続き — 次セッション
 1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・

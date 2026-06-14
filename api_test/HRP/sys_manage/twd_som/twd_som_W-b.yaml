@@ -1,0 +1,69 @@
+version: "PoC段階④(b): simt＋dly_tsk(idle文脈)でウィンドウ切替（twd_switch）"
+HRP_sys_manage_twd_som_W_b:
+  note: "【NGKI5037】TA_INISOM で SOM1 を周期稼働起動し，カーネルドメインのタスクが dly_tsk で休止＝システムがアイドルになり target_custom_idle がシミュレーション時刻を次イベントまで進める．窓境界(500)でウィンドウ切替割込みがアイドル文脈(dspflg真)で発火＝_kernel_twd_switch が点灯．周期境界(1000)で _kernel_scyc_switch．simt 専用．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_somid:
+          type: ID
+      # domain 省略 = カーネルドメイン（全ウィンドウで実行可）
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    SCY1:
+      type  : SYSTEM_CYCLE
+      scytim: 1000
+
+    SOM1:
+      type  : SYSTEM_OPERATION_MODE
+      somatr: TA_INISOM
+
+    TWD1:
+      type  : TIME_WINDOW
+      domid : DOM1
+      somid : SOM1
+      twdord: 1
+      twdlen: 500
+
+  # 休止＝アイドル化．窓境界(500)を跨いで起床(700)＝idle文脈で twd_switch
+  do_0:
+    id     : TASK1
+    syscall: dly_tsk(700)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+  # さらに休止．周期境界(1000)を跨いで起床(1100)＝scyc_switch
+  do_1:
+    id     : TASK1
+    syscall: dly_tsk(400)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+  # 稼働継続を確認
+  do_2:
+    id     : TASK1
+    syscall: get_som(&p_somid)
+    ercd   : E_OK
+
+  post_condition_2:
+    TASK1:
+      tskstat: running
+      var:
+        p_somid:
+          value: SOM1
