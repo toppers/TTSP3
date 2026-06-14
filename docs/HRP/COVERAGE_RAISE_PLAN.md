@@ -255,10 +255,20 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 >   ウィンドウ切替割込み／オーバラン WDG の QEMU エミュレーションが期待通り動かず停止すると見られる。
 >   （これは「DEF_SCY 下で停止モードのユーザドメイン time event が発火しない」現象と同根の、QEMU での
 >   時間区画ランタイム非機能。plan 既述の「HRP simt 未整備」とも整合。）
-> - **結論**：(b)（twd_switch/scyc_switch/twdtimer_stop/dispatch/窓稼働中の E_OACV・E_MACV）は
->   **実機 HRP か HRP 用 simt（シミュレーションタイマ）ターゲットが要る**。zybo+QEMU CI では**到達不能として文書化**。
->   試作した TA_INISOM+dly_tsk テスト（get_som_H-f）は revert 済み。
->   → domain.c の現実的な上限は **(a) 完了時点の 48/90（53.3%）**。残り 42 分岐の大半が (b)＝この基盤制約に依存。
+> - **`hrp3/test` 調査（2026-06-14・ユーザ提案）＝解決の道筋は simt**：
+>   - カーネル自身の**実機タイマ版** SOM テスト（`test_tprot1`〜5・`test_twdnfy1/2`）は監視用 CYCLIC＋`slp_tsk` で駆動するが、
+>     **同型のカーネルドメイン CYCLIC 心拍を付けた TTSP テストでも同じくハング**（checkpoint 3 で停止）＝
+>     test_tprot1 を zybo+QEMU で動かしても同様にハングすると判断（実機タイマ前提）。
+>   - カーネルは**シミュレーションタイマ版** `hrp3/test/simt_twd1.{c,cfg,h}` を別に持つ。これは**同じ DEF_SCY/CRE_SOM/ATT_TWD**
+>     構成を、テストが `DO(simtim_advance(N))` で**時間を決定論的に進める**（例：499→10→1 と窓境界直前まで刻む）方式で検証する。
+>     ＝SOM タイミングは**実機タイマ emulation でなく simt で試験する**のがカーネル流儀。
+>   - カーネル側 simt 基盤は存在（`hrp3/target/simtimer_ct11mpcore_gcc`・`simtimer_macos_xcode`）が、**TTSP には HRP simt
+>     ターゲットが無い**（＝plan 既述「HRP simt 未整備」）。
+> - **結論／(b) の道筋**：(b)（twd_switch/scyc_switch/twdtimer_stop/dispatch/窓稼働中の E_OACV・E_MACV）は
+>   **zybo+QEMU の実機タイマ路線では到達不能**。前進には **TTSP に HRP simt ターゲットを整備**し、`simtim_advance(N)` を
+>   TESRY の `do` ステップ語彙に追加する（`simt_twd1.c` が雛形）中規模インフラ作業が要る。それまで (b) は**到達不能として文書化**。
+>   試作（TA_INISOM+dly_tsk の get_som_H-f／CYCLIC 心拍版）は revert 済み。
+>   → domain.c の現実的な上限は **(a) 完了時点の 48/90（53.3%）**。残り 42 分岐の大半が (b)＝simt 整備が前提。
 
 現状（batch1+2+3 後）chg_som 18/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
