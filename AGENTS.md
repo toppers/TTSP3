@@ -151,6 +151,8 @@ feat/*    ← 機能ブランチ（仕様差分対応・新ターゲット等）
 | やりたいこと | 読むファイル |
 |---|---|
 | **操作手順（タスク→コマンド・落とし穴集）** | **`docs/RUNBOOK.md`** |
+| SILテストの第3世代対応（1.1.3比較・ASP移植・手順） | `docs/SIL_TEST.md` |
+| ターゲット依存部(library/)配置の設計検討（案C探索パス） | `docs/TARGET_LIBRARY_PLACEMENT.md` |
 | **現状の合否基準・既知残（再計測の前にここ）** | **`docs/STATUS.md`** |
 | **ターゲット能力・非対応・実行コマンド** | **`docs/TARGETS.md`** |
 | 用語（TTG/TESRY/check_library/bb-all/residual/VERDICT 等） | `docs/GLOSSARY.md` |
