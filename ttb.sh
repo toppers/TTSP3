@@ -207,8 +207,8 @@ echo -n " $INPUT_NO "
 			 source ./scripts/api_test.sh
 			 ;;
 			2)
-			 #source ./scripts/sil_test.sh
-			 echo "Not support in TTSP3"
+			 # [改変] 2026-06-14: SILテストを第3世代カーネル向けに再有効化（docs/SIL_TEST.md）．
+			 source ./scripts/sil_test.sh
 			 ;;
 			c)
 			 source ./scripts/check_library.sh

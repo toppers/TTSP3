@@ -105,10 +105,27 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 
 - [x] **ASP3 3.7.2 + zybo**：緑（§2）
 - [x] **FMP3 3.7 + zybo（-smp 2）**：緑（§2b）
-- [ ] **HRP/HRMP への展開**：1.1.3 に SIL ソース無し＝**新規作成**。保護ドメイン考慮（SIL アクセス対象メモリの
-      ドメイン許可・ユーザドメインからの sns_ker/SIL_LOC_INT）。HRP=単一コア保護、HRMP=保護＋マルチプロセッサ（FMP+HRP 合成）。
-- [ ] **正式なランナー**：`scripts/sil_run.sh`（REF_MK 依存を解消し configure からビルド）または `scripts/sil_test.sh` を
-      3.7 対応に更新し ttb.sh メニュー（option 2）の `Not support in TTSP3` を解除。CI 統合。
+- [~] **HRP への展開（着手・ビルド統合で保留）**：1.1.3 に SIL ソース無し＝**新規作成**。`sil_test/HRP/{out.c,out.h,out.cfg}`
+      を ASP から派生・authoring 済み：
+      - cfg を `KERNEL_DOMAIN { ... }` で包み（初版はカーネルドメイン実行＝保護違反回避）、`ttsp_svc.cfg` 追加、`SAC_TSK(MAIN_TASK, SHARED)`。
+      - out.h に**インクルードガード**追加（HRP の cfg 生成経路で out.h が多重展開され enum 再宣言になるため）。
+      - `inthdr`/`isr` の extern 宣言を**無条件化**（HRP の `kernel_cfg.c`＝割込みベクタ表は TTSP_INTNO_B 未定義の文脈で out.h を取り込むため）。
+      - ⛔ **ビルド未達（本質的課題）**：HRP は**方式A（COBJS 非上書き・TECS コンポーネント化 syssvc・拡張SVC）**。
+        ASP/FMP で使った「API テストの Makefile（REF_MK）流用」は、**REF_MK の APPLOBJS が元グループ（auto_code_1）の TECS 生成に固定**されており、
+        SIL 用 cfg が必要とするコンポーネント（`svc_ini_mpf`/`svc_ref_mpf`/`svc_ext_ker`・`syslog_print`・`initialize_tecs`・out.o）と
+        一致せずリンク不能。**HRP は正規の configure 経由ビルド（SIL 用に APPLOBJS/TECS を生成）が必須**＝下記「正式なランナー」と一体で解決する。
+- [ ] **HRMP への展開**：HRP（保護）＋FMP（マルチプロセッサ）の合成。HRP と同じ方式A ビルド統合課題＋ -smp 2。HRP 解決後に着手。
+- [x] **正式なランナー（ttb.sh SIL 再有効化）**：ttb.sh option 2 の `Not support in TTSP3` を解除し
+      `source ./scripts/sil_test.sh` を復活。**ASP/FMP は ttb.sh 経由で緑を確認**（非対話駆動：`printf '2\n1\nq\n' | bash ttb.sh <OS_PATH> <PROFILE> <OBJ_DIR>` → `<OBJ_DIR>/sil_test/<asp|fmp>` を QEMU 実行。ASP=-smp 1／FMP=-smp 2）。
+      sil_test.sh の configure 呼び出し（`-U $TEST_LIB_FILE`）が APPLOBJS を正しく生成する＝§3 の REF_MK 手動手順より正式。
+- [ ] **CI 統合 / 実行の自動化**：ttb.sh 駆動＋QEMU 実行＋合否集計を 1 スクリプト化（check_library のランナー相当）。
+- [~] **HRP のビルド統合（extsvc/TECS・調査継続）**：ttb.sh/configure 経由でも HRP は最終リンクで失敗。
+      **精密診断**：`kernel_cfg.o`（ttsp_svc.cfg の拡張SVC表）が `svc_*_mbf`/`svc_*_mpf`/`ttsp_svc_nest_error`・
+      ハンドラ（`almhdr`/`main_task` 等）を参照するが解決できない（計135 未解決）。SIL の `ttsp_test_lib.o` は
+      これら svc_* を**定義している**のにリンクに含まれない一方、**api の `ttsp_test_lib.o` は svc_* を定義せず緑**＝
+      **api は拡張SVC を別機構（extsvc TECS 生成）で解決**しており、SIL ビルドはその機構を再現できていない。
+      ＝HRP の方式A 拡張SVC/TECS 統合の追加調査が必要（TOPPERS-HRP 内部依存）。sil_test/HRP/ の authoring（KERNEL_DOMAIN
+      包み・include ガード・inthdr/isr 無条件宣言）は完了済み。
 - [ ] **DIVERGENCE_MAP 連携**：本移植の 3.4→3.7 差分（タスク例外廃止・通知書式・RELTIM µs・i_begin_int 廃止・
       FMP の systim モード廃止・クラス命名変更）を A 表に記録。
 - [ ] **TTG 生成化（任意・将来）**：現状は生成済み out.* の手保守。SIL TESRY/生成ルールを TTG に持たせるかは要検討。
