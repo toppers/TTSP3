@@ -12,3 +12,6 @@
 # DEF_SCY は1個限定）で別途計測し、gcda を union 集計する。
 sys_manage/chg_som
 sys_manage/get_som
+
+# --- simt 専用（ttsp_simt_advance）テスト：通常bb・SOM隔離群から除外 ---
+sys_manage/twd_som

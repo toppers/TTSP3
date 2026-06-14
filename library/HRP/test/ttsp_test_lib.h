@@ -199,6 +199,8 @@
 #define SVC_FN_INI_MPF				(TTSP_FN_BASE + 118)
 #define SVC_FN_REF_MPF				(TTSP_FN_BASE + 119)
 #define SVC_FN_EXT_KER				(TTSP_FN_BASE + 120)
+/* 【改変】タイマドライバシミュレータ(simt)で時刻を任意量進める拡張SVC */
+#define TTSP_FN_SIMT_ADVANCE		(TTSP_FN_BASE + 121)
 
 /*
  *  メモリ保護向けの抽象化マクロ

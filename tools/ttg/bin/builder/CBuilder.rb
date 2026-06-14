@@ -380,6 +380,7 @@ ATT_MOD("libc.a");
 #define ttsp_cpuexc_raise(excno) cal_svc(TTSP_FN_CPUEXC_RAISE, (excno), 0, 0, 0, 0)
 #define ttsp_int_raise(intno) cal_svc(TTSP_FN_INT_RAISE, (intno), 0, 0, 0, 0)
 #define ttsp_value_sync(proc_id, var_name, target_var, target_val) cal_svc(TTSP_FN_VALUE_SYNC, (intptr_t)(proc_id), (intptr_t)(var_name), (intptr_t)(target_var), (intptr_t)(target_val), 0)
+#define ttsp_simt_advance(time) cal_svc(TTSP_FN_SIMT_ADVANCE, (intptr_t)(time), 0, 0, 0, 0)
 
         EOS
 

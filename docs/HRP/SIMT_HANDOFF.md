@@ -110,8 +110,19 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
 - ✅ **パイプライン検証**：`TTSP_TARGET_NAME=simtimer_zybo_z7_gcc OBJ_DIR=obj_hrp_simt bash scripts/coverage_gcov_hrp.sh smoke`
   で **check_library exception/interrupt が「All check points passed」**（gcov 計装・QEMU xilinx-zynq-a9）。
   ＝**TTSP build→simt カーネル→QEMU→gcov の統合パイプラインが動作**。
-- **残（重要）＝精密 advance**：`ttsp_target_gain_tick` は 1 ステップ刻みのため、SOM 窓（twdlen 大）跨ぎには
-  **`simtim_advance(N)` を任意 N で呼ぶ do ステップが必要**（zybo の per-1us gain は窓スケールに不適）。下記参照。
+- ✅ **`ttsp_simt_advance(N)` を TESRY do 語彙に追加**（精密 advance）：拡張SVC で `simtim_advance(N)` を呼ぶ．
+  - `library/HRP/test/ttsp_test_lib.h`：`TTSP_FN_SIMT_ADVANCE (TTSP_FN_BASE + 121)`。
+  - `tools/ttg/bin/builder/CBuilder.rb`：`#define ttsp_simt_advance(time) cal_svc(TTSP_FN_SIMT_ADVANCE,...)`（HRP 用 SVC 化ブロック）。
+  - **ハンドラ・DEF_SVC は simt ターゲットのみ**（`ttsp_target_test.c`＝`svc_ttsp_simt_advance`／`ttsp_target.cfg`＝`DEF_SVC`／`ttsp_target_test.h`＝宣言）。
+    非simt の `ttsp_target.cfg` は空なので他ターゲットに影響なし。
+- ✅ **(b) テスト `api_test/HRP/sys_manage/twd_som/twd_som_W-a.yaml`**（`exclude_tests.txt` で通常bb除外）：
+  TA_INISOM＋窓(twdlen 500/scytim 1000)＋`ttsp_simt_advance(N)` で境界跨ぎ。simt ターゲットで**ビルド緑・gcov 取得**し、
+  **`_kernel_scyc_switch` 0→1/2・`scyc_start` 3/4・`twdtimer_*`・`twd_start` 5/10 を TTSP フレームワーク経由で点灯**を確認。
+  ＝**ttsp_simt_advance 機構が end-to-end で動作**（TESRY→simt→QEMU→gcov）。
+- **残（refinement）＝`twd_switch`**：本テストでは 0/16。原因＝時間進行を SVC（タスク稼働中）で行うため窓切替割込みの
+  解決経路が `simt_twd1`（タスク slp_tsk＝アイドル稼働中に窓切替）と異なる。`twd_switch` を点灯するには
+  **①(b)テストで advance 後にタスクを slp_tsk させ idle 文脈で窓切替させる、or ②`simt_twd1` 型テストを TTSP 化**する。
+  Phase 1 で simt_twd1 自体は twd_switch 5/10 を達成済＝simt 上で到達可能は確定。
 
 #### 残：Phase 2 続き — 次セッション
 1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・

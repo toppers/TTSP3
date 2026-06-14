@@ -212,6 +212,12 @@ extern void ttsp_target_start_tick(void);
 extern void ttsp_target_gain_tick(void);
 
 /*
+ *  シミュレーション時刻を任意量進める拡張SVC（simt 専用）
+ */
+extern ER_UINT svc_ttsp_simt_advance(intptr_t par1, intptr_t par2, intptr_t par3,
+											intptr_t par4, intptr_t par5, ID cdmid);
+
+/*
  *  割込みの発生
  */
 extern void ttsp_int_raise(INTNO intno);

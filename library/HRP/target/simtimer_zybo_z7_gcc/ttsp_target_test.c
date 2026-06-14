@@ -93,6 +93,20 @@ ttsp_target_gain_tick(void)
 }
 
 /*
+ *  シミュレーション時刻を任意量だけ進める拡張SVC（時間区画スケジューリングの
+ *  テスト用）．TESRY の do で `ttsp_simt_advance(N)` として呼び出すと，par1=N
+ *  だけシミュレーション時刻が進み，途中の高分解能タイマ／タイムウィンドウ／
+ *  オーバランタイマ割込みが発生する（simt_twd1.c の simtim_advance(N) と同等）．
+ */
+ER_UINT
+svc_ttsp_simt_advance(intptr_t par1, intptr_t par2, intptr_t par3,
+											intptr_t par4, intptr_t par5, ID cdmid)
+{
+	simtim_advance((uint_t) par1);
+	return(E_OK);
+}
+
+/*
  *  割込みの発生
  */
 void
