@@ -298,7 +298,7 @@ void main_task(intptr_t exinf) {
 		check_ercd(ercd, E_OK);
 		/* CP は main_task（カーネルドメイン）側で記録する：ユーザドメインからは
 		 * ttsp_mp_check_point が内部で呼ぶ sil_get_pid が不正値を返すため使えない． */
-		ttsp_mp_check_point(prcid, 24);
+		ttsp_mp_check_point(prcid, 25);
 	}
 
 	/* SILスピンロック状態でext_kerを発行できることの確認 */
@@ -332,10 +332,12 @@ void sil_user_task(intptr_t exinf) {
 
 	/* ============================================================
 	 * 【ユーザドメイン SIL 異常系・明示テスト 2026-06-14】
-	 * 保護される操作が期待どおり拒否されることを明示的に確認する．
-	 * ・サービスコール系：get_tim → E_OACV（時刻管理サービスのアクセス保護）
-	 * ・fault 系（sil_dly_nse/SIL_LOC_SPN/不正アドレス sil_*_mem/sil_get_pid 不正値）は CPU 例外/特権で
-	 *   in-flow 復帰できないため発行しない（docs/SIL_TEST.md §2c に実測知見として記録）．
+	 * 保護される操作が期待どおり拒否されることを明示的に確認する：
+	 * ・サービスコール保護：get_tim → E_OACV（check_ercd で捕捉）
+	 * ・メモリアクセス違反：不正アドレス sil_reb_mem → Data Abort（DEF_EXC で捕捉＋pc-=4 復帰・CP23）
+	 * ・特権コード呼出し：sil_dly_nse → Prefetch Abort（DEF_EXC で捕捉＋pc=lr_usr 復帰・CP24）
+	 * ・SIL_LOC_SPN（Data Abort・マクロ複数命令で中間復帰が脆弱）と sil_get_pid（MPIDR をユーザモードで
+	 *   読むと fault せず不正値を返す＝fault でない）は CP 化せず docs/SIL_TEST.md §2c に知見記録．
 	 * ============================================================ */
 	{
 		SYSTIM abntim;
@@ -351,8 +353,24 @@ void sil_user_task(intptr_t exinf) {
 	(void) sil_reb_mem((void *) 0xd0000000U);
 	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
 
+	/* 【異常系・fault・明示CP化】sil_dly_nse はユーザドメインから呼ぶと実装（カーネル専用テキスト）の
+	 * フェッチで Prefetch Abort になる＝SIL の特権コード呼出し保護を明示確認．
+	 * DEF_EXC(EXCNO_MACV_INST_PRC1) の sil_pabort_handler が捕捉して CP24 を記録し、pc=lr_usr で復帰する． */
+	sil_dly_nse(SIL_DLY_TIME);
+	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() -> PABORT caught & recovered : OK");
+
 	wup_tsk(MAIN_TASK1);
 	ext_tsk();
+}
+
+/* ユーザモードの lr（バンクレジスタ）を取得する（PABORT 復帰用）． */
+static uint32_t sil_get_lr_usr(void) {
+	uint32_t lr;
+	Asm("sub sp, sp, #4		\n"
+	"	stm sp, {lr}^		\n"
+	"	ldmfd sp!, {%0}		\n"
+	: "=r"(lr));
+	return(lr);
 }
 
 /*
@@ -361,6 +379,14 @@ void sil_user_task(intptr_t exinf) {
 void sil_dabort_handler(void *p_excinf) {
 	ttsp_mp_check_point(1, 23);
 	((T_EXCINF *) p_excinf)->pc -= 4U;
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメインからの sil_dly_nse 呼出し（プリフェッチアボート）
+ * を捕捉する CPU 例外ハンドラ（PE1）．CP24 を記録し、p_excinf の PC を呼出し直後（ユーザモード lr）へ進めて復帰する． */
+void sil_pabort_handler(void *p_excinf) {
+	ttsp_mp_check_point(1, 24);
+	((T_EXCINF *) p_excinf)->pc = sil_get_lr_usr();
 }
 
 /* 【TTSP3向け改変 2026-06-14】texhdr（タスク例外処理ルーチン）は第3世代カーネルに

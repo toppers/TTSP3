@@ -203,7 +203,7 @@ void main_task(intptr_t exinf) {
 	check_ercd(ercd, E_OK);
 	ercd = slp_tsk();
 	check_ercd(ercd, E_OK);
-	ttsp_check_point(26);
+	ttsp_check_point(27);
 
 
 	/* 全割込みロック状態でext_kerを発行できることの確認 */
@@ -228,21 +228,18 @@ void sil_user_task(intptr_t exinf) {
 	test_of_sns_ker(sns_ker());
 
 	/* 【ユーザドメインでの SIL 挙動・実測知見 2026-06-14】
-	 * - sil_*_mem（メモリ空間アクセス・自タスクスタック対象）：OK（ユーザドメインから発行可）
-	 * - SIL_LOC_INT/SIL_UNL_INT/sns_ker：OK（test_of_sns_ker 内で発行・確認）
-	 * - sil_dly_nse：ユーザドメインからは **Prefetch Abort（permission fault）** になる
-	 *   （実装がカーネル専用テキストにあり DOM1 に実行権が無い＝HRP 保護の正しい挙動）．本タスクでは発行しない．
-	 * - get_tim 等のサービスコール：ユーザドメインから E_OACV（保護）．SIL ではないため対象外． */
+	 * - sil_*_mem（自タスクスタック対象）/ SIL_LOC_INT/SIL_UNL_INT / sns_ker：OK（ユーザドメインから発行可）
+	 * - 保護される操作は下記の異常系で明示テストする． */
 
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL access  : OK");
 
 	/* ============================================================
 	 * 【ユーザドメイン SIL 異常系・明示テスト 2026-06-14】
-	 * ユーザドメインから「保護される操作」が期待どおり拒否されることを明示的に確認する．
-	 * ・サービスコール系（エラーコードで捕捉可）：get_tim → E_OACV（時刻管理サービスのアクセス保護）
-	 * ・fault 系（sil_dly_nse=Prefetch Abort / SIL_LOC_SPN=Data Abort / 不正アドレス sil_*_mem=Data Abort）は
-	 *   CPU 例外になり in-flow 復帰できない（ttsp_cpuexc_hook が UNDEF 専用・空）ため、本タスクでは発行しない．
-	 *   それらが保護される（fault する）ことは docs/SIL_TEST.md §2c に実測知見として記録．
+	 * ユーザドメインから「保護される操作」が期待どおり拒否されることを明示的に確認する：
+	 * ・サービスコール保護：get_tim → E_OACV（check_ercd で捕捉）
+	 * ・メモリアクセス違反：不正アドレス sil_reb_mem → Data Abort（DEF_EXC で捕捉＋pc-=4 復帰）
+	 * ・特権コード呼出し：sil_dly_nse → Prefetch Abort（DEF_EXC で捕捉＋pc=lr_usr 復帰）
+	 * いずれも明示チェックポイント化（CP24/25 はハンドラ側で記録）．
 	 * ============================================================ */
 	{
 		SYSTIM abntim;
@@ -259,12 +256,29 @@ void sil_user_task(intptr_t exinf) {
 	(void) sil_reb_mem((void *) 0xd0000000U);
 	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
 
-	ttsp_check_point(25);
+	/* 【異常系・fault・明示CP化】sil_dly_nse はユーザドメインから呼ぶと実装（カーネル専用テキスト）の
+	 * フェッチで Prefetch Abort になる＝SIL の特権コード呼出し保護を明示確認．
+	 * DEF_EXC(EXCNO_PABORT) の sil_pabort_handler が捕捉して CP25 を記録し、pc を呼出し直後（lr_usr）へ
+	 * 進めて復帰する（PREPARE_RETURN_CPUEXC_PABORT_USR 相当）． */
+	sil_dly_nse(SIL_DLY_TIME);
+	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() -> PABORT caught & recovered : OK");
+
+	ttsp_check_point(26);
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL (normal+abnormal): OK");
 
 	/* main_task を起こして本タスクを終了 */
 	wup_tsk(MAIN_TASK);
 	ext_tsk();
+}
+
+/* ユーザモードの lr（バンクレジスタ）を取得する（PABORT 復帰用）． */
+static uint32_t sil_get_lr_usr(void) {
+	uint32_t lr;
+	Asm("sub sp, sp, #4		\n"
+	"	stm sp, {lr}^		\n"
+	"	ldmfd sp!, {%0}		\n"
+	: "=r"(lr));
+	return(lr);
 }
 
 /*
@@ -274,6 +288,15 @@ void sil_user_task(intptr_t exinf) {
 void sil_dabort_handler(void *p_excinf) {
 	ttsp_check_point(24);
 	((T_EXCINF *) p_excinf)->pc -= 4U;
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメインからの sil_dly_nse 呼出し（プリフェッチアボート）
+ * を捕捉する CPU 例外ハンドラ．CP25 を記録し、p_excinf の PC を呼出し直後（ユーザモード lr）へ進めて
+ * 復帰する（PREPARE_RETURN_CPUEXC_PABORT_USR 相当）． */
+void sil_pabort_handler(void *p_excinf) {
+	ttsp_check_point(25);
+	((T_EXCINF *) p_excinf)->pc = sil_get_lr_usr();
 }
 
 /*

@@ -129,20 +129,27 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 | `SIL_LOC_INT`/`SIL_UNL_INT` | **OK** | 正常系（test_of_sns_ker 内） |
 | `sns_ker` | **OK**（タスク文脈で false） | 正常系 |
 | `get_tim`（SIL でなくサービス） | **E_OACV**（時刻管理サービスのアクセス保護） | **異常系・明示テスト（check_ercd(…, E_OACV)）** |
-| 不正アドレス `sil_*_mem`（0xd0000000） | **Data Abort（メモリアクセス違反）** | **異常系・明示テスト（DEF_EXC で捕捉＋pc 前進復帰・CP 化）** |
-| `sil_dly_nse` | **Prefetch Abort（permission fault）**＝実装がカーネル専用テキスト＝DOM1 に実行権なし | 異常系（fault・知見記録） |
-| `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort（permission fault）**＝共有スピンロックは特権 | 異常系（fault・知見記録） |
-| `sil_get_pid` | **不正値を返す**（MPIDR 読みが特権） | 異常系（`ttsp_mp_check_point` 不可・知見記録） |
+| 不正アドレス `sil_reb_mem`（0xd0000000） | **Data Abort（メモリアクセス違反）** | **異常系・明示CP化（DEF_EXC で捕捉＋pc-=4 復帰）** |
+| `sil_dly_nse` | **Prefetch Abort**＝実装がカーネル専用テキスト＝DOM1 に実行権なし | **異常系・明示CP化（DEF_EXC で捕捉＋pc=lr_usr 復帰）** |
+| `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort**＝共有スピンロックは特権 | 異常系（fault・知見記録※） |
+| `sil_get_pid`（MPIDR を MRC で読む） | **不正値を返す（fault しない）**＝ユーザモードの CP15 読みが UNPREDICTABLE | 異常系（fault でない・知見記録） |
 
 ### 異常系テストの扱い（明示 CP 化）
 - **サービスコール保護（E_OACV）**：`get_tim → E_OACV` を `check_ercd(ercd, E_OACV)` で検証（HRP api の保護テスト標準・138例と同方式）。
-- **メモリアクセス違反（Data Abort）の明示 CP 化**：不正アドレス `0xd0000000` への `sil_reb_mem` をユーザドメインから発行 →
-  Data Abort。**`DEF_EXC(EXCNO_DABORT)`（HRMP は per-PE 値 `0x10000|EXCNO_DABORT`）の `sil_dabort_handler` が捕捉**し、
-  チェックポイントを記録 → `((T_EXCINF*)p_excinf)->pc -= 4`（fault した load 命令をスキップ＝`PREPARE_RETURN_CPUEXC_DABORT` 相当）
-  で復帰。これにより「SIL メモリアクセスの保護違反」を**明示的なチェックポイント**として検証できる（HRP/HRMP とも緑）。
-- **残りの fault 系（sil_dly_nse=Prefetch Abort / SIL_LOC_SPN=Data Abort / sil_get_pid 不正値）**：同じ DEF_EXC＋PC 復帰
-  機構で CP 化可能だが、命令列が複数命令にまたがり PC 前進量が単純でない（sil_dly_nse はループ・SIL_LOC_SPN はマクロ）ため、
-  代表として不正アドレス sil_*_mem（単一 load）を明示 CP 化し、他は上表の実測知見として記録。
+- **メモリアクセス違反（Data Abort）**：不正アドレス `0xd0000000` への `sil_reb_mem` → Data Abort。
+  `DEF_EXC(EXCNO_DABORT)`（HRMP は per-PE 値 `0x10000|EXCNO_DABORT`=EXCNO_MACV_DATA_PRC1）の `sil_dabort_handler` が捕捉し、
+  CP 記録 → `pc -= 4`（fault した load をスキップ＝`PREPARE_RETURN_CPUEXC_DABORT` 相当）で復帰。
+- **特権コード呼出し（Prefetch Abort）**：`sil_dly_nse`（カーネル専用テキストの関数）呼出し → Prefetch Abort。
+  `DEF_EXC(EXCNO_PABORT)`（HRMP は `0x10000|EXCNO_PABORT`=EXCNO_MACV_INST_PRC1）の `sil_pabort_handler` が捕捉し、
+  CP 記録 → `pc = lr_usr`（呼出し直後＝`PREPARE_RETURN_CPUEXC_PABORT_USR` 相当）で復帰。
+  → HRP/HRMP とも上記 DABORT/PABORT を**明示チェックポイント**化（緑）。
+- **CP 化しない 2 種（知見記録のみ）**：
+  - `SIL_LOC_SPN`（HRMP）：Data Abort だが**マクロ複数命令**（割込みロック＋スピンロック取得）で、単純な pc 前進では
+    割込みロックが残るなど中間状態の復帰が脆弱なため CP 化しない。
+  - `sil_get_pid`：MPIDR を `MRC p15` で読むが、ユーザモードの CP15 読みは UNPREDICTABLE で**fault せず不正値**を返す
+    （実測 75/20 等）。CPU 例外でないため捕捉できず、値も非決定的なため CP 化しない。
+  - cfg.rb には `EXCNO_DABORT`/`EXCNO_PABORT` を渡す（core_test.h の `EXCNO_MACV_*` は cfg 未到達）。HRMP の DEF_EXC は
+    per-PE エンコード（`0x10000|EXCNO_*`）を要求。PABORT 復帰の `lr_usr` 取得は `stm sp,{lr}^` の小ヘルパ（out.c）で実装。
 
 ## 4. 残作業（ロードマップ）
 
