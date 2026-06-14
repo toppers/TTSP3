@@ -1,0 +1,69 @@
+version: "PoC段階④(b): 周期稼働中→停止予約→境界で scyc_start の停止分岐（p_cursom == NULL）"
+HRP_sys_manage_twd_som_W_f:
+  note: "【NGKI5038】TA_INISOM で SOM1 を周期稼働起動し，稼働中に chg_som(TSOM_STP) で次のシステム周期での停止を予約（p_nxtsom=NULL）．その後 ttsp_simt_advance でシステム周期境界(1000)を跨ぐと scyc_switch→scyc_start が p_cursom=p_nxtsom=NULL となり，周期停止分岐（p_twdsched/p_idlesched=schedcb_kernel・p_runtwd=NULL・twdtimer_enable=false）を通る＝domain.c の scyc_start 停止分岐（既存テストでは未到達）を点灯．simt 専用．呼出しタスクはカーネルドメイン．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_somid:
+          type: ID
+      # domain 省略 = カーネルドメイン（全ウィンドウで実行可・chg_som 可）
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    SCY1:
+      type  : SYSTEM_CYCLE
+      scytim: 1000
+
+    SOM1:
+      type  : SYSTEM_OPERATION_MODE
+      somatr: TA_INISOM
+
+    TWD1:
+      type  : TIME_WINDOW
+      domid : DOM1
+      somid : SOM1
+      twdord: 1
+      twdlen: 500
+
+  # 稼働中（窓内）に次周期での停止を予約（p_nxtsom=NULL）
+  do_0:
+    id     : TASK1
+    syscall: chg_som(TSOM_STP)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+
+  # システム周期境界(1000)を跨ぐ＝scyc_switch→scyc_start で周期停止
+  do_1:
+    id     : TASK1
+    syscall: ttsp_simt_advance(1100)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+
+  # 停止したことを確認（get_som が TSOM_STP を返す）
+  do_2:
+    id     : TASK1
+    syscall: get_som(&p_somid)
+    ercd   : E_OK
+
+  post_condition_2:
+    TASK1:
+      tskstat: running
+      var:
+        p_somid:
+          value: TSOM_STP

@@ -1,0 +1,72 @@
+version: "PoC段階④(b): 通知付きタイムウィンドウ（twd_start の nfyhdr != NULL 経路）"
+HRP_sys_manage_twd_som_W_e:
+  note: "【NGKI5097】TIME_WINDOW に通知方法（TNFY_SIGSEM）を指定する．周期停止状態から chg_som(SOM1) で SOM1 を開始すると，最初のタイムウィンドウ(DOM1)開始時に twd_start が通知ハンドラ（nfyhdr != NULL）を CPUロック解除状態で呼び出し，SEM1 をシグナルする＝domain.c の twd_start 通知呼出し分岐（p_runtwd->nfyhdr != NULL）を点灯．通知方法省略の既存テスト（W-a/W-b）では未到達だった経路．受動オブジェクト（セマフォ）を通知先にし，TASK2（番兵ボディ）は起動しない．呼出しタスクはカーネルドメイン．simt 専用．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_somid:
+          type: ID
+      # domain 省略 = カーネルドメイン（全ウィンドウで実行可・chg_som 可）
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      domain : DOM1   # DOM1 窓の占有ドメイン用（番兵ボディは起動しない）
+
+    DOM1:
+      type: DOMAIN
+
+    SEM1:
+      type   : SEMAPHORE
+      domain : NONE          # 共有オブジェクト（DOM1 の通知ハンドラと KERNEL の検証の双方からアクセス）
+      access1: TACP_SHARED
+      access2: TACP_SHARED
+      access3: TACP_SHARED
+      access4: TACP_SHARED
+      isemcnt: 0
+      maxsem : 1
+
+    SCY1:
+      type  : SYSTEM_CYCLE
+      scytim: 1000
+
+    SOM1:
+      type  : SYSTEM_OPERATION_MODE
+      somatr: TA_NULL
+
+    TWD1:
+      type  : TIME_WINDOW
+      domid : DOM1
+      somid : SOM1
+      twdord: 1
+      twdlen: 500
+      notify: "{ TNFY_SIGSEM, SEM1 }"
+
+  # 周期停止→SOM1 開始（dspflg 真）＝scyc_start→twd_start で通知ハンドラ発火
+  do_0:
+    id     : TASK1
+    syscall: chg_som(SOM1)
+    ercd   : E_OK
+
+  post_condition_0:
+    TASK1:
+      tskstat: running
+    SEM1:
+      semcnt: 1   # 通知ハンドラ（twd_start の nfyhdr）が SEM1 をシグナル済み
+
+  # 稼働継続を確認
+  do_1:
+    id     : TASK1
+    syscall: get_som(&p_somid)
+    ercd   : E_OK
+
+  post_condition_1:
+    TASK1:
+      tskstat: running
+      var:
+        p_somid:
+          value: SOM1

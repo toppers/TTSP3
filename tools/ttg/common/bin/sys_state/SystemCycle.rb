@@ -193,6 +193,7 @@ module CommonModule
       @hState[TSR_PRM_SOMID]  = nil  # 割り当てるシステム動作モード
       @hState[TSR_PRM_TWDORD] = nil  # システム周期内での順序
       @hState[TSR_PRM_TWDLEN] = nil  # タイムウィンドウの長さ
+      @hState[TSR_PRM_NOTIFY] = nil  # 通知方法の指定（省略可）
 
       pre_attribute_check(hObjectInfo, aPath + [@sObjectID], bIsPre)
       store_object_info(hObjectInfo)
@@ -219,8 +220,11 @@ module CommonModule
       check_class(IMCodeElement, cElement) # エレメント
 
       # タイムウィンドウを登録する静的API(保護ドメインの外に記述)
-      # ［NGKI5041］．通知方法の指定は省略［NGKI5097］．
-      cElement.set_config("#{API_ATT_TWD}({#{@hState[TSR_PRM_DOMID]}, #{@hState[TSR_PRM_SOMID]}, #{@hState[TSR_PRM_TWDORD]}, #{@hState[TSR_PRM_TWDLEN]}});", IMC_NO_CLASS, IMC_NO_DOMAIN) # [IMCodeElement]タイムウィンドウを登録する静的API
+      # ［NGKI5041］．通知方法の指定（第5要素）は省略可［NGKI5097］．
+      # notify を指定した場合は通知ハンドラ等が登録され，twd_start の通知
+      # 呼出し経路（domain.c の nfyhdr != NULL 分岐）を駆動できる．
+      sNotify = @hState[TSR_PRM_NOTIFY].nil?() ? "" : ", #{@hState[TSR_PRM_NOTIFY]}"
+      cElement.set_config("#{API_ATT_TWD}({#{@hState[TSR_PRM_DOMID]}, #{@hState[TSR_PRM_SOMID]}, #{@hState[TSR_PRM_TWDORD]}, #{@hState[TSR_PRM_TWDLEN]}#{sNotify}});", IMC_NO_CLASS, IMC_NO_DOMAIN) # [IMCodeElement]タイムウィンドウを登録する静的API
     end
   end
 end

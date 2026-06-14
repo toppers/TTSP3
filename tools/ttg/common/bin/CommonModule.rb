@@ -1081,6 +1081,7 @@ module CommonModule
   TSR_PRM_SOMID   = "somid"
   TSR_PRM_TWDORD  = "twdord"
   TSR_PRM_TWDLEN  = "twdlen"
+  TSR_PRM_NOTIFY  = "notify"   # 通知方法の指定（ATT_TWD 第5要素・省略可）［NGKI5097］
 
   # do配下のマクロ定義
   TSR_PRM_ID      = "id"
@@ -2236,7 +2237,8 @@ module CommonModule
       TSR_PRM_DOMID  => [true, true],
       TSR_PRM_SOMID  => [true, true],
       TSR_PRM_TWDORD => [true, true],
-      TSR_PRM_TWDLEN => [true, true]
+      TSR_PRM_TWDLEN => [true, true],
+      TSR_PRM_NOTIFY => [false, true]
     }
   }
 

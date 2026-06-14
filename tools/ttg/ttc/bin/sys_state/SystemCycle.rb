@@ -228,6 +228,10 @@ module CommonModule
                 check_attribute_unsigned(sAtr, val, @aPath)
               end
 
+            # 通知方法の指定（ATT_TWD 第5要素・文字列でそのまま埋め込む）
+            when TSR_PRM_NOTIFY
+              check_attribute_type(sAtr, val, String, false, @aPath)
+
             else
               abort(ERR_MSG % [__FILE__, __LINE__])
             end
