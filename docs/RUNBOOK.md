@@ -44,7 +44,7 @@
 | **ASP** | `bash scripts/coverage_gcov_asp.sh all` | `python3 scripts/ttsp_gcov_report.py --filter /asp3/kernel/ obj_asp_gcov/check_library/* obj_asp_gcov/api_test/auto_code_*` |
 | **FMP** | `bash scripts/coverage_gcov_fmp.sh all` | `python3 scripts/ttsp_gcov_report.py --filter /fmp3/kernel/ obj_fmp_gcov/check_library/* obj_fmp_gcov/api_test/auto_code_*` |
 | **HRP (zybo)** | `COPTS="-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions" bash scripts/coverage_gcov_hrp.sh bb` | `python3 scripts/ttsp_gcov_report.py --filter /hrp3/kernel/ obj_hrp_gcov/check_library/* obj_hrp_gcov/api_test/auto_code_*` |
-| **HRMP** | `bash scripts/coverage_gcov_hrmp.sh bb` | `python3 scripts/ttsp_gcov_report.py --filter /hrmp3/kernel/ obj_hrmp_gcov/check_library/* obj_hrmp_gcov/api_test/auto_code_*` |
+| **HRMP** | `COPTS="-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions" bash scripts/coverage_gcov_hrmp.sh bb` | `python3 scripts/ttsp_gcov_report.py --filter /hrmp3/kernel/ obj_hrmp_gcov/check_library/* obj_hrmp_gcov/api_test/auto_code_*` |
 | **HRP R5（MPU）** | `bash scripts/coverage_gcov_hrp_r5.sh bb` ※要 upstream QEMU aarch64・`xlnx-zcu102` | （ランナーが末尾に union を出力） |
 | **HRP simt（SOM/時間系）** | `bash scripts/coverage_gcov_hrp_simt.sh` | （ランナーが末尾に union を出力。手動は §5 参照） |
 
@@ -75,7 +75,7 @@ GCOV=arm-none-eabi-gcov python3 scripts/ttsp_gcov_report.py --filter /hrp3/kerne
 ```bash
 # <OS_PATH> <PROFILE> <OBJ_DIR> [DIV_NUM]
 ./scripts/ttsp_parallel_api.sh ../asp3/ ASP obj_asp 20
-./scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj_hrp 20   # HRP/HRMP は -smp 1
+./scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj_hrp 20   # HRP は -smp 1（FMP/HRMP は -smp 2）
 # 環境変数: PAR_GROUPS（並列群・既定10）, MAKE_J（群内make・既定4）
 ```
 
@@ -111,7 +111,8 @@ cat obj_<prof>_gcov/api_test/auto_code_<N>/MANIFEST_AUTO_CODE_<N>
 3. **小さく作って毎回ビルド検証**：1〜数本追加するたびに該当プロファイルの coverage ランナー（または §5 の単体ビルド）で緑を確認。大量追加→まとめて検証は非収束になりやすい。
 4. **TTG の整合性検査（マージ脆弱）**：`T5_012`/`T5_013` は「`do` に ercd 指定があれば後続 post で caller が running、無ければ running でない」を**マージ後の系列**で検査する。
    状態変化を伴うテスト（回転で caller running→ready 等）は分割の度に弾かれる。**堅牢策**：既存の緑テストをクローンし syscall を最小変更（例：HRP m系は `TDOM_SELF` を足すだけ）＋全 ercd テストの post に caller `tskstat: running` を明示。
-5. **cfg-error テスト**：`scripts/ttsp_parallel_cfgerr.sh` 系で静的API(TESRY)のエラー検出を確認。
+5. **cfg-error テスト**：静的API(TESRY)が期待どおりコンフィグエラーを出すかを確認。
+   `./scripts/ttsp_parallel_cfgerr.sh <OS_PATH> <PROFILE> <OBJ_DIR>`（各dir で make→期待エラーコードを grep）。
 
 ---
 
@@ -166,7 +167,7 @@ tail -3 "$dir/execute.log"
 ### 計測・集計
 - **union 新旧混在で分母が変動** → フル再ビルドで authoritative 値を取る（§2 鉄則）。
 - **COPTS インライン抑制を揃えないと 3 プロファイル比較不能**（分母が wait.h 等で水増し）。
-- **HRP/HRMP は `-smp 1`**（単一コア）。FMP/HRMP の SMP テストは `-smp 2`。
+- **QEMU の `-smp` はプロファイルで異なる**：**HRP のみ `-smp 1`**（単一コア保護）。**ASP も単一コア**。**FMP・HRMP は `-smp 2`**（マルチコア。HRMP は "HR+**MP**"＝マルチプロセッサ保護）。coverage_gcov_*.sh が自動で正しい値を渡す。
 - **auto_code_14/17/19 は gcov 計装時のみビルド不成立**（`memory objects overlap`＝gcov固有）。zybo は M6（`.gcov_info` 専用リージョン・SVN r1336）で 19 を回復済。非計装では正常。
 
 ### HRP/HRMP 保護仕様
