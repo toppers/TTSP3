@@ -40,11 +40,13 @@
 | ASP | 1373/1379 ≈ 99.6% | `docs/ASP/ALL_COVERAGE.md` | simt スイート込み |
 | FMP | 1550/1597 ≈ 97.1% | `docs/FMP/ALL_COVERAGE.md` | bb=1533/1597 |
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
-| HRP（zybo） | branch **90.8%**（line 96.3%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。M2/M3/M4/M6＋M1(SOM隔離群) で +214分岐（着手前82.0%）。残：twd/scyc のタイミング系・既存flaky |
+| HRP（zybo） | branch **90.8%**（line 96.3%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。M2/M3/M4/M6＋M1(SOM隔離群) で +214分岐（着手前82.0%）。SOM の時間区画(twd/scyc)は simt 行で計測（下記） |
+| HRP（**simt**／SOM 時間区画） | **domain.c branch 67.8%**（59→61/90・line 90.4%） | `docs/HRP/SIMT_HANDOFF.md`（注9） | simtimer_zybo_z7_gcc。SOM テスト12本(chg_som/get_som/twd_som)。domain.c **6.7→(a)53.3→(b)67.8%**。実機タイマでハング不能だった twd_switch/scyc_switch 等を simt で計測 |
 | HRP（**zcu102_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | `docs/HRP/COVERAGE_R5.md`（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
 > 計測条件は各 `BB_COVERAGE.md`（`-O2`＋インライン抑制＋`-DNDEBUG`）。`scripts/coverage_gcov_<prof>.sh`。
 > R5（zcu102_r5_gcc）は `scripts/coverage_gcov_hrp_r5.sh [smoke|bb|all]`（upstream QEMU・semihosting）。
+> SOM／時間区画（simt）は `scripts/coverage_gcov_hrp_simt.sh`（simtimer_zybo_z7_gcc・QEMU xilinx-zynq-a9）。
 
 ---
 
@@ -104,6 +106,16 @@
   解消せず）。gcov 時のみ DDR を 16MB→64MB（`#ifdef
   TOPPERS_ENABLE_GCOV`）に拡大して大きいテストの DDR overflow を回避（非gcov の配置は不変）。
   実行: `bash scripts/coverage_gcov_hrp_r5.sh bb`（要 upstream QEMU 11 aarch64）。
+- **注9（HRP SOM／時間区画 simt カバレッジ）**：2026-06-14 実測。SOM（システム動作モード＝時間区画
+  スケジューリング）の `domain.c` は，実機タイマ（zybo_z7_gcc）では**周期稼働中アイドルがハングして
+  到達不能**（gcov 無関係・周期切替割込み/WDG の QEMU 非機能）．そこでカーネルのタイマドライバ
+  シミュレータ（`hrp3/arch/simtimer`）を使う**新ターゲット `hrp3/target/simtimer_zybo_z7_gcc`**（zybo を
+  流用しタイマだけ simt 化・SVN）＋**TTSP 側 `library/HRP/target/simtimer_zybo_z7_gcc`** を整備し，
+  TESRY do 語彙に `ttsp_simt_advance(N)`（拡張SVC）を追加，`dly_tsk`（idle 文脈）で窓切替を駆動する
+  (b) テストを追加した．`scripts/coverage_gcov_hrp_simt.sh` で SOM テスト12本を 1テスト1バイナリ
+  build→QEMU(xilinx-zynq-a9)→gcov union＝**domain.c line 90.4%(169/187)・branch 67.8%(61/90)・全12本緑**．
+  `domain.c` は **6.7%→(a)error/state 53.3%→(b)simt 67.8%**．残＝構造的に到達不能な数 branch
+  （`set_dspflg` の elseif-T＝upstream `simt_twd1` も 0/4・複数窓/SOM切替/dispatch）．詳細 `docs/HRP/SIMT_HANDOFF.md`．
 - **注6（HRMP zybo 14/20 の内訳）**：本セッション実測。**5群が link 失敗**＝
   `undefined reference to chg_spr`（HRMP3 **3.4 にサブ優先度API `chg_spr` が無い**のに TESRY が
   chg_spr 系を生成。プロファイル×仕様差＝3.4 と 3.7 の差）。残1群は実行時 NG。
