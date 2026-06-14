@@ -1,0 +1,14 @@
+# library/HRP/target/zybo_z7_gcc/exclude_tests.txt
+#
+# 通常 bb（API auto-code 20分割）から除外するテスト。
+# 形式: 1行1パターン（MANIFEST_AUTO_CODE の yaml パスに対する部分一致・固定文字列）。
+#       先頭 # のコメント行・空行は無視。scripts/ttsp_parallel_api.sh が grep -vF で除外。
+#
+# --- SOM（システム動作モード／時間区画スケジューリング）テスト ---
+# DEF_SCY（システム周期）はプログラム全域に効き、停止モードではユーザドメインの
+# time event（alarm/cyclic 等）が発火しない。SOM テストを alarm/cyclic 等と同一
+# バイナリにマージすると後者がハングするため、通常 bb から除外する。
+# SOM のカバレッジは coverage_gcov_hrp.sh の「SOM 隔離ビルド群」（1テスト1バイナリ・
+# DEF_SCY は1個限定）で別途計測し、gcda を union 集計する。
+sys_manage/chg_som
+sys_manage/get_som

@@ -112,5 +112,47 @@ if [ "$MODE" = "all" ]; then
 	fi
 fi
 
+# ===== SOM（システム動作モード／時間区画）隔離ビルド群 =====
+# DEF_SCY（システム周期）はシステム単一かつプログラム全域に効き、停止モードでは
+# ユーザドメインの time event（alarm/cyclic）が発火しない。SOM テストは alarm/cyclic 等と
+# 同居できず（後者がハング）、SOM 同士も DEF_SCY 単一のためマージ不可。よって
+# **1テスト1バイナリ**で個別に TTG 生成→ビルド→QEMU 実行し、gcda を union 集計する。
+# 通常 bb からは library/HRP/target/<TARGET>/exclude_tests.txt で除外済み。
+if [ "$MODE" = "bb" ] || [ "$MODE" = "all" ]; then
+	SOM_YAMLS=$(find api_test/HRP/sys_manage/chg_som api_test/HRP/sys_manage/get_som \
+		-name '*.yaml' 2>/dev/null | sort)
+	REF_MK="$OBJ_DIR/api_test/auto_code_1/Makefile"
+	if [ -n "$SOM_YAMLS" ] && [ -f "$REF_MK" ]; then
+		echo "===== build & run: SOM tests (isolated, 1 test/binary) ====="
+		source ./configure.sh
+		source "./library/HRP/target/${TARGET_NAME}/ttsp_target.sh"
+		TTG_ABS=$(realpath "$TTG_BIN")
+		SOM_TTG_OPT="-h --out_file_name out --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION"
+		for som_yaml in $SOM_YAMLS; do
+			som_name=$(basename "$som_yaml" .yaml)
+			som_abs=$(realpath "$som_yaml")
+			som_dir="$OBJ_DIR/api_test/som_${som_name}"
+			mkdir -p "$som_dir/objs"
+			cp "$REF_MK" "$som_dir/Makefile"
+			# TTG 生成 → out.cfg に libgcov/librdimon を ATT_MOD（保護カーネルの gcov
+			# リンクで /DISCARD/ されるのを防ぐ。build_group と同じ処理）→ make
+			( cd "$som_dir" \
+				&& ruby "$TTG_ABS" $SOM_TTG_OPT "$som_abs" > result_ttg.log 2>&1 \
+				&& { grep -q 'libgcov.a' out.cfg || \
+					printf 'ATT_MOD("libgcov.a");\nATT_MOD("librdimon.a");\n' >> out.cfg; } \
+				&& make ENABLE_GCOV=true -j4 > result_make.log 2>&1 )
+			if [ -f "$som_dir/hrp" ]; then
+				run_qemu "$som_dir"
+				last=$(tr -d '\r' < "$som_dir/execute.log" | tail -1)
+				echo "run som/$som_name: $last"
+				dirs="$dirs $som_dir"
+			else
+				echo "BUILD FAIL: som/$som_name"
+				tail -8 "$som_dir/result_ttg.log" "$som_dir/result_make.log" 2>/dev/null
+			fi
+		done
+	fi
+fi
+
 echo ""
 python3 scripts/ttsp_gcov_report.py --filter /hrp3/kernel/ $dirs
