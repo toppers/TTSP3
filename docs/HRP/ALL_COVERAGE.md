@@ -64,9 +64,9 @@
 | task_refer.c | 81/89 91.0% | 43 | 47 | 91.5% ◀ |
 | task_sync.c | 174/176 98.9% | 136 | 140 | 97.1% ◀ |
 | task_term.c | 97/97 100% | 76 | 80 | 95.0% ◀ |
-| time_event.c | 138/165 83.6% | 54 | 78 | 69.2% ◀ |
+| time_event.c | 138/165 83.6% | 54 | 78 | 69.2% ◀ *(simt: 86.2%(69/80)＝tmevtb/64bit境界)* |
 | time_event.h | 2/2 100% | — | — | （分岐なし） |
-| time_manage.c | 59/60 98.3% | 36 | 40 | 90.0% ◀ |
+| time_manage.c | 59/60 98.3% | 36 | 40 | 90.0% ◀ *(bb で到達。simt 単独は 65%)* |
 | wait.c | 68/68 100% | 10 | 10 | **100%** |
 | wait.h | 36/36 100% | 12 | 12 | **100%** |
 | **TOTAL** | **3215/3338 96.3%** | **2205** | **2429** | **90.8%** |
@@ -76,6 +76,16 @@
 > ※ domain.c は M1（SOM 隔離ビルド群）で 6.7%→44.4%、sys_manage は M4（m系）で 52.5%→76.7% に到達。残は
 >   twd/scyc のタイミング系（周期実チック要）・E_ID/dispatch（マージ脆弱）・既存 flaky（mutex/ter_tsk）。
 >   いずれも HRP 固有機能。詳細は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md)。
+>
+> ※ **時間系（time_event.c / time_manage.c / domain.c）の simt 到達分**（上表は zybo 実機タイマ bb の値）：
+>   実機タイマ（zybo_z7_gcc）では周期稼働中アイドル・窓切替・多段ヒープがハングして到達不能な分岐を、
+>   タイマドライバシミュレータ target `simtimer_zybo_z7_gcc` で別計測する（`scripts/coverage_gcov_hrp_simt.sh`・
+>   M1 SOM テスト＋カーネル付属 `simt_systim1〜4(+_64hrt)`）。simt 到達値：
+>   - **time_event.c：86.2%（69/80 branch・line 95.9%）** ← bb 69.2% から simt で +17pt（`_kernel_tmevtb_*`／64bit 境界）
+>   - **time_manage.c：65.0%（26/40）** … bb（90.0%）の方が高い（標準 time API テストで到達）ため simt 加算なし
+>   - **domain.c：67.8%（61/90・line 90.4%）** ← SOM の twd_switch/scyc_switch（bb 44.4% から simt で +23pt）
+>   - 副次：alarm.c/cyclic.c も systim で点灯。残＝`_kernel_tmevtb_enqueue` 6分岐（多段ヒープ）等。
+>   simt の詳細・統合は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md) M5⑤・[`SIMT_HANDOFF.md`](SIMT_HANDOFF.md)・[`../STATUS.md`](../STATUS.md) 注9。
 
 ### 3 プロファイル比較（C1, インライン抑制・同条件）
 
