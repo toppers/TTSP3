@@ -102,7 +102,11 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
   qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio -nographic -smp 1 -kernel hrp
   ```
 
-#### Phase 2（TTSP 統合）— 一部着手（2026-06-14）
+#### Phase 2（TTSP 統合）— ✅ 完了（2026-06-14）：**domain.c branch 6.7%→65.6%**
+> **専用ランナー `scripts/coverage_gcov_hrp_simt.sh` で SOM テスト全11本（chg_som/get_som/twd_som）を simt ターゲットで
+> ビルド→QEMU→gcov union 集計し，domain.c を (a)＋(b) で一括計測：line 89.8%(168/187)・branch 65.6%(59/90)。
+> 全11本緑。**（a)53.3%→(b)込み 65.6%へ＝simt の twd_som(twd_switch/scyc_switch) が +12pt 押上げ。****
+
 - ✅ **TTSP target `library/HRP/target/simtimer_zybo_z7_gcc/` 作成**（zybo の4ファイルを複製・改変）：
   - `ttsp_target.sh`：`KERNEL_COBJS_TARGET` を `mpcore_timer.o`→`target_timer.o sim_timer.o` に変更、`CONFIG_OPT` に `-DHRT_CONFIG1` 付与。
     **`-DSIMTIM_TEST` は付けない**（カーネルの simt テスト専用＝hook_hrt_* を要求するため。TTSP テストは未定義でリンク不能）。

@@ -278,6 +278,10 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 >   **QEMU `xilinx-zynq-a9` で緑＋gcov 計装で .gcda 79個取得＋集計成功**。**(b) の核心分岐が点灯**：twd_switch 0→5/10、
 >   scyc_switch 0→1/2、twdtimer_stop 0→2/2（実機タイマでハング＝到達不能だった分岐）。**simt が (b) を解錠することを実証**。
 >   残は Phase 2（TTSP 統合：TTSP target＋simtim_advance を TESRY do へ＋ランナー＋(b)テスト）。詳細 SIMT_HANDOFF.md Phase1。
+> - **✅ Phase 2（TTSP 統合）完了（2026-06-14）＝domain.c branch 6.7%→65.6%**：TTSP target＋`ttsp_simt_advance(N)` を TESRY do 語彙へ
+>   ＋`dly_tsk`(idle 文脈)で `twd_switch` 点灯＋専用ランナー `scripts/coverage_gcov_hrp_simt.sh`。SOM テスト全11本
+>   （chg_som/get_som/twd_som）を simt ターゲットでビルド/QEMU/gcov union＝**domain.c line 89.8%(168/187)・branch 65.6%(59/90)**。
+>   **(a)53.3%→(b)込み 65.6%（+12pt）**＝実機タイマでハング不能だった twd_switch/scyc_switch 等を simt で計測達成。詳細 SIMT_HANDOFF.md。
 
 現状（batch1+2+3 後）chg_som 18/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
