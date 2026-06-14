@@ -131,6 +131,11 @@ jobs:
         run: |
           bash ${{ matrix.run_script }}
 
+      - name: Run TTSP3 SIL tests (${{ matrix.profile }}) on QEMU
+        working-directory: ttsp3
+        run: |
+          bash scripts/ci_run_sil.sh ${{ matrix.profile }}
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4

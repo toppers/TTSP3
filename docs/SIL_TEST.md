@@ -53,7 +53,17 @@ SIL マクロ本体は ASP3 3.7.2 `include/sil.h` に全て存在し名称変更
 
 ---
 
-## 3. ビルド & 実行（検証済みレシピ・ASP/zybo）
+## 3. ビルド & 実行
+
+### 正式ランナー（推奨）：`scripts/ci_run_sil.sh`
+```bash
+bash scripts/ci_run_sil.sh            # ASP/FMP/HRP/HRMP を順に build→QEMU→合否集計
+bash scripts/ci_run_sil.sh HRP        # 個別プロファイル
+```
+内部で ttb.sh の SILメニュー（`2`→`1`）を非対話駆動し、`<obj>/sil_test/<kn>` を QEMU 実行（ASP/HRP=-smp 1、FMP/HRMP=-smp 2）、
+`All check points passed.` を根拠に合否を集計（全緑で exit 0）。`.github/workflows/ci.yml` の ASP/FMP matrix にも統合済み。
+
+### 手動レシピ（REF_MK 流用・参考・ASP/zybo）
 
 `scripts/sil_test.sh` は TTG 生成ではなく `sil_test/<PROFILE>/*` を build dir にコピーしてビルドする方式
 （ただし ttb.sh メニューでは TTSP3 で無効化されている）。下記は API テストの Makefile（REF_MK）を流用した
@@ -122,7 +132,10 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 - [x] **正式なランナー（ttb.sh SIL 再有効化）**：ttb.sh option 2 の `Not support in TTSP3` を解除し
       `source ./scripts/sil_test.sh` を復活。**ASP/FMP は ttb.sh 経由で緑を確認**（非対話駆動：`printf '2\n1\nq\n' | bash ttb.sh <OS_PATH> <PROFILE> <OBJ_DIR>` → `<OBJ_DIR>/sil_test/<asp|fmp>` を QEMU 実行。ASP=-smp 1／FMP=-smp 2）。
       sil_test.sh の configure 呼び出し（`-U $TEST_LIB_FILE`）が APPLOBJS を正しく生成する＝§3 の REF_MK 手動手順より正式。
-- [ ] **CI 統合 / 実行の自動化**：ttb.sh 駆動＋QEMU 実行＋合否集計を 1 スクリプト化（check_library のランナー相当）。
+- [x] **CI 統合 / 実行の自動化**：`scripts/ci_run_sil.sh`（ttb.sh SILメニュー駆動＋QEMU＋合否集計）。
+      引数なしで ASP/FMP/HRP/HRMP を順に実行（兄弟カーネル/QEMU 非対応は SKIP）。`.github/workflows/ci.yml` の
+      ASP/FMP matrix に「Run TTSP3 SIL tests」ステップを追加（HRP/HRMP は CI でカーネル未取得のため当面ローカル）。
+      ローカル全緑実測：`bash scripts/ci_run_sil.sh` → PASS=4 FAIL=0。
 - [x] **HRP3 3.7 + zybo**：緑（ttb.sh 経由・`All check points passed.`）。**根本原因の解明**：
       当初リンクで 135 未解決（`svc_*_mbf`/`svc_*_mpf`/`ttsp_svc_nest_error`・`almhdr`/`main_task` 等）。
       調査の結論＝extsvc 解決機構そのものではなく、**HRP はリンカスクリプト（cfg2_out.ld）を
