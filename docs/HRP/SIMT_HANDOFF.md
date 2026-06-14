@@ -144,7 +144,16 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
     - **決定的事実：カーネル自身の `hrp3/test/simt_twd1` でも set_dspflg は 0/4**（twd_switch 13/16 は到達するが pending 系は未到達）。
       ＝upstream の SOM テストでも未カバーの corner case。本 TTSP テスト群は **3/4** で **upstream(0/4)を上回る**。
     → **set_dspflg elseif-T は到達不能として文書化**（実機 or 多重割込みネスト等の別アーキ前提が要る）。
-- **残（小）**：twd_switch/scyc_switch の残 branch（複数窓・SOM 切替・dispatch）、set_dspflg の elseif-T（上記）。
+- ✅ **`twd_start` 通知ハンドラ分岐 7/10→8/10（2026-06-14）**：`twd_som_W-e.yaml`＝TIME_WINDOW に `notify: "{ TNFY_SIGSEM, SEM1 }"`
+  を付与（TTG 拡張：`SystemCycle.rb` TimeWindow に `notify` 属性＝ATT_TWD 第5要素を生成）。周期停止→`chg_som(SOM1)` で
+  最初の窓開始時に twd_start が **通知ハンドラ（nfyhdr != NULL）を CPUロック解除状態で呼出し**SEM1 をシグナル＝
+  `p_runtwd->nfyhdr != NULL` 分岐を点灯。通知先は**受動オブジェクト（共有セマフォ）**にして二次タスク（番兵ボディ）を起動しない。
+- ✅ **`scyc_start` 周期停止分岐 3/4→4/4（2026-06-14）**：`twd_som_W-f.yaml`＝TA_INISOM 周期稼働中に `chg_som(TSOM_STP)` で
+  次周期停止を予約（p_nxtsom=NULL）→`ttsp_simt_advance(1100)` で周期境界を跨ぐと scyc_switch→scyc_start が
+  **p_cursom=p_nxtsom=NULL** となり周期停止分岐（p_twdsched/p_idlesched=schedcb_kernel）を点灯。**scyc_start 100%**。
+  → domain.c **67.8→70.0%(63/90)・line 94.1%(176/187)**。
+- **残（小）**：twd_switch/scyc_switch の残 branch（複数窓・SOM 切替・dispatch）、set_dspflg の elseif-T（上記）、
+  get_som の CHECK_MACV_WRITE 内部分岐（不正ポインタ整列/領域/書込許可の特定 E_MACV 変種要）。
 
 #### 残：Phase 2 続き — 次セッション
 1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・

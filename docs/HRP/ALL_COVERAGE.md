@@ -83,7 +83,10 @@
 >   M1 SOM テスト＋カーネル付属 `simt_systim1〜4(+_64hrt)`）。simt 到達値：
 >   - **time_event.c：86.2%（69/80 branch・line 95.9%）** ← bb 69.2% から simt で +17pt（`_kernel_tmevtb_*`／64bit 境界）
 >   - **time_manage.c：65.0%（26/40）** … bb（90.0%）の方が高い（標準 time API テストで到達）ため simt 加算なし
->   - **domain.c：67.8%（61/90・line 90.4%）** ← SOM の twd_switch/scyc_switch（bb 44.4% から simt で +23pt）
+>   - **domain.c：70.0%（63/90・line 94.1%）** ← SOM の twd_switch/scyc_switch＋通知付き窓・周期停止（bb 44.4% から simt で +26pt）
+>     - 通知付きタイムウィンドウ（`twd_som_W-e`＝ATT_TWD に TNFY_SIGSEM 付与）で twd_start の通知ハンドラ呼出し分岐（nfyhdr != NULL）が点灯し twd_start **8/10**。
+>     - 周期稼働中 chg_som(TSOM_STP)＋境界跨ぎ advance（`twd_som_W-f`）で scyc_start の周期停止分岐が点灯し scyc_start **4/4**。
+>     - TTG 拡張：TIME_WINDOW 型に `notify:` 属性を追加（ATT_TWD 第5要素を生成・[`SystemCycle.rb`]・省略時は従来どおり通知なし）。
 >   - 副次：alarm.c/cyclic.c も systim で点灯。残＝`_kernel_tmevtb_enqueue` 6分岐（多段ヒープ）等。
 >   simt の詳細・統合は [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md) M5⑤・[`SIMT_HANDOFF.md`](SIMT_HANDOFF.md)・[`../STATUS.md`](../STATUS.md) 注9。
 

@@ -41,7 +41,7 @@
 | FMP | 1550/1597 ≈ 97.1% | `docs/FMP/ALL_COVERAGE.md` | bb=1533/1597 |
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
 | HRP（zybo） | branch **90.8%**（line 96.3%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。M2/M3/M4/M6＋M1(SOM隔離群) で +214分岐（着手前82.0%）。SOM の時間区画(twd/scyc)は simt 行で計測（下記） |
-| HRP（**simt**／SOM 時間区画） | **domain.c branch 67.8%**（59→61/90・line 90.4%） | `docs/HRP/SIMT_HANDOFF.md`（注9） | simtimer_zybo_z7_gcc。SOM テスト12本(chg_som/get_som/twd_som)。domain.c **6.7→(a)53.3→(b)67.8%**。実機タイマでハング不能だった twd_switch/scyc_switch 等を simt で計測 |
+| HRP（**simt**／SOM 時間区画） | **domain.c branch 70.0%**（61→63/90・line 94.1%） | `docs/HRP/SIMT_HANDOFF.md`（注9） | simtimer_zybo_z7_gcc。SOM テスト14本(chg_som/get_som/twd_som)。domain.c **6.7→(a)53.3→(b)67.8→70.0%**。実機タイマでハング不能だった twd_switch/scyc_switch 等を simt で計測。通知付き窓(W-e)・周期停止(W-f)で twd_start 8/10・scyc_start 4/4 |
 | HRP（**simt**／M5 時間系） | **time_manage.c branch 65.0%**（line 100%）／**time_event.c branch 86.2%**（line 95.9%） | `docs/HRP/COVERAGE_RAISE_PLAN.md` M5⑤ | 同ランナーに統合。カーネル付属 simt_systim1〜4(+_64hrt) 7本。bb（実機タイマ）では time_manage.c 10%→65%。alarm.c/cyclic.c も副次点灯 |
 | HRP（**zcu102_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | `docs/HRP/COVERAGE_R5.md`（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
@@ -114,9 +114,11 @@
   流用しタイマだけ simt 化・SVN）＋**TTSP 側 `library/HRP/target/simtimer_zybo_z7_gcc`** を整備し，
   TESRY do 語彙に `ttsp_simt_advance(N)`（拡張SVC）を追加，`dly_tsk`（idle 文脈）で窓切替を駆動する
   (b) テストを追加した．`scripts/coverage_gcov_hrp_simt.sh` で SOM テスト12本を 1テスト1バイナリ
-  build→QEMU(xilinx-zynq-a9)→gcov union＝**domain.c line 90.4%(169/187)・branch 67.8%(61/90)・全12本緑**．
-  `domain.c` は **6.7%→(a)error/state 53.3%→(b)simt 67.8%**．残＝構造的に到達不能な数 branch
-  （`set_dspflg` の elseif-T＝upstream `simt_twd1` も 0/4・複数窓/SOM切替/dispatch）．詳細 `docs/HRP/SIMT_HANDOFF.md`．
+  build→QEMU(xilinx-zynq-a9)→gcov union＝**domain.c line 94.1%(176/187)・branch 70.0%(63/90)・全14本緑**．
+  `domain.c` は **6.7%→(a)error/state 53.3%→(b)simt 67.8%→通知付き窓/周期停止 70.0%**（W-e=ATT_TWD に
+  TNFY_SIGSEM で twd_start の通知ハンドラ分岐＝8/10、W-f=周期稼働中 chg_som(TSOM_STP)＋境界跨ぎで scyc_start の
+  周期停止分岐＝4/4）．残＝構造的に到達不能な数 branch
+  （`set_dspflg` の elseif-T＝upstream `simt_twd1` も 0/4・複数窓/SOM切替/dispatch・get_som の CHECK_MACV 内部）．詳細 `docs/HRP/SIMT_HANDOFF.md`．
   **同ランナーに M5（時間系 tail）も統合済**：カーネル付属 `simt_systim1〜4(+_64hrt)` 7本を
   `configure.rb` で gcov ビルド→同 union に取込（全本緑・計19ターゲット）．**time_manage.c 100%line/65.0%branch・
   time_event.c 95.9%line/86.2%branch**（実機タイマ bb では time_manage.c 10%）．副次で alarm.c/cyclic.c も点灯．

@@ -205,16 +205,20 @@ M1〜M6 の拡充と **simt ターゲット（`simtimer_zybo_z7_gcc`・`scripts/
 ここでは **simt でも到達できなかった残分岐**を関数単位で分類する（区分＝① bb 側で到達済・simt 非寄与／
 ② より深いシナリオ要・到達可能性あり／③ 構造的に到達不能と確定）。
 
-### domain.c（simt 61/90・残 29 分岐）
+### domain.c（simt 63/90・残 27 分岐）
+
+> 2026-06-14 追加（通知付き窓・周期停止）：`twd_som_W-e`（ATT_TWD に TNFY_SIGSEM）で twd_start の通知ハンドラ呼出し分岐、
+> `twd_som_W-f`（周期稼働中 chg_som(TSOM_STP)＋境界跨ぎ）で scyc_start の周期停止分岐を点灯。**61/90→63/90（+2 分岐・line 169→176）**。
 
 | 関数 | simt 分岐 | 残 | 区分 | 残分岐の内容 |
 |---|---|---|---|---|
 | `_kernel_chg_som` | 18/24 | 6 | ② | 複数 SOM 切替・SOM 稼働状態の組合せ（単一 SOM 中心に駆動） |
-| `_kernel_twd_start` | 7/10 | 3 | ② | 複数ウィンドウ／TA_INISOM 以外の起動経路 |
+| `_kernel_get_som` | 8/18 | 10 | ② | `CHECK_MACV_WRITE`（p_somid 不正ポインタの整列／領域／書込許可）内部分岐＝特定の E_MACV 変種要 |
+| `_kernel_twd_start` | **8/10** | 2 | ② | アイドル窓（実行すべき窓なし）の別経路。通知分岐は点灯済（W-e） |
 | `_kernel_twd_switch` | 3/6 | 3 | ② | 連続ウィンドウ境界・SOM 切替を跨ぐ窓遷移 |
 | `_kernel_twdtimer_control` | 4/8 | 4 | ② | オーバラン／停止と再開の複合タイミング |
-| `_kernel_scyc_start` | 3/4 | 1 | ② | 周期開始の別経路 |
-| `_kernel_scyc_switch` | 1/2 | 1 | ② | 周期境界での SOM 切替同時刻 |
+| `_kernel_scyc_start` | **4/4** | 0 | — | 周期停止分岐を点灯（W-f）。**100%** |
+| `_kernel_scyc_switch` | 1/2 | 1 | ② | 周期境界での SOM 切替同時刻（dspflg 偽での scyc 切替） |
 | `_kernel_set_dspflg` | 3/4 | 1 | **③** | elseif-T（`pending_twdswitch`）＝dspflg 偽での窓切替コインシデンス。**カーネル自身の `simt_twd1` も 0/4**＝upstream 未カバーの corner case（本群は 3/4 で上回る）。詳細 [`SIMT_HANDOFF.md`](SIMT_HANDOFF.md) |
 
 > ②は複数窓・SOM 切替・dispatch の同時刻シナリオで、simt の `target_custom_idle` が次イベントを
