@@ -84,13 +84,33 @@ tail -3 "$dir/execute.log"   # → "All check points passed."
 
 ---
 
+## 2b. FMP3 3.7 + zybo_z7_gcc への展開（実装済み・緑）
+
+`sil_test/FMP/{out.c,out.h,out.cfg}`。**マルチプロセッサ SIL テスト**（`CLASS(CLS_PRCn)` で PE 別オブジェクト・
+`ttsp_barrier_sync`・`ttsp_mp_check_point`・spinlock `SIL_LOC_INT_SPN`・`sil_get_pid`）を FMP3/zybo（**-smp 2**）で
+**両 PE とも `All check points passed.`**（CP1-26 + barrier 8 phase）を確認。
+
+ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i_begin_int・include）に加え、**FMP 固有**：
+
+| 改変 | 旧（1.1.3） | 新（FMP3 3.7） | 理由 |
+|---|---|---|---|
+| クラス ID | `TCL_1_ONLY`/`TCL_2_ONLY`/… | `CLS_PRC1`/`CLS_PRC2`/…（TTSP3 FMP target 定義） | クラス命名が 3rd gen で変更 |
+| システム時刻モード | `#ifdef TOPPERS_SYSTIM_LOCAL`/`GLOBAL` 分岐で ALM/CYC 生成 | **両マクロとも廃止**＝per-class で無条件生成（`CLASS(TCL_SYSTIM_PRC)` ブロックも削除） | FMP3 は LOCAL/GLOBAL systim 区別を持たない |
+| ISR 文脈の無効化 | `#ifdef TTSP_INTNO_C` | `prc_info[].intno_c = TTSP_INVALID_INTNO`（実行時ガード `if(intno_c!=TTSP_INVALID_INTNO)` でスキップ） | ATT_ISR 非対応（out.c は #ifdef を gcc が解釈するので C 側ガードで可） |
+
+> ※ ビルドは ASP と同型（REF_MK 流用＋`KERNEL_COBJS`/`APPL_COBJS` 指定）。FMP は `KERNEL_COBJS` に `spin_lock.o` を含め、
+> QEMU は **-smp 2**。
+
 ## 4. 残作業（ロードマップ）
 
+- [x] **ASP3 3.7.2 + zybo**：緑（§2）
+- [x] **FMP3 3.7 + zybo（-smp 2）**：緑（§2b）
+- [ ] **HRP/HRMP への展開**：1.1.3 に SIL ソース無し＝**新規作成**。保護ドメイン考慮（SIL アクセス対象メモリの
+      ドメイン許可・ユーザドメインからの sns_ker/SIL_LOC_INT）。HRP=単一コア保護、HRMP=保護＋マルチプロセッサ（FMP+HRP 合成）。
 - [ ] **正式なランナー**：`scripts/sil_run.sh`（REF_MK 依存を解消し configure からビルド）または `scripts/sil_test.sh` を
       3.7 対応に更新し ttb.sh メニュー（option 2）の `Not support in TTSP3` を解除。CI 統合。
-- [ ] **FMP/HRP/HRMP への展開**：FMP は `-smp 2`、HRP/HRMP は保護ドメイン考慮。1.1.3 `sil_test/FMP/` を雛形に同様の
-      3rd gen 改変（通知書式・RELTIM µs・割込み括り・ATT_ISR）を適用。
-- [ ] **DIVERGENCE_MAP 連携**：本移植の 3.4→3.7 差分（タスク例外廃止・通知書式・RELTIM µs・i_begin_int 廃止）を A 表に記録。
+- [ ] **DIVERGENCE_MAP 連携**：本移植の 3.4→3.7 差分（タスク例外廃止・通知書式・RELTIM µs・i_begin_int 廃止・
+      FMP の systim モード廃止・クラス命名変更）を A 表に記録。
 - [ ] **TTG 生成化（任意・将来）**：現状は生成済み out.* の手保守。SIL TESRY/生成ルールを TTG に持たせるかは要検討。
 
 ---
