@@ -1,0 +1,47 @@
+version: "PoC: SOM/時間区画スケジューリングのテスト生成(HRP3 3.4 get_som)"
+HRP_sys_manage_get_som_H_a:
+  note: "【NGKI5060】【NGKI5065】【NGKI5066】DEF_SCY 等を静的に定義した状態で get_som を呼び出す．システム周期停止モードで起動する(somatr に TA_INISOM 指定なし)ため現在のシステム動作モードは TSOM_STP を返す(E_OK)．呼出しタスクはカーネルドメインで実行し sysstat1 の既定値で許可される．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+      var    :
+        p_somid:
+          type: ID
+      # domain 省略 = カーネルドメイン(DOM_TASK=KERNEL)．sysstat1 既定で get_som を許可
+
+    TASK2:
+      type   : TASK
+      tskstat: dormant
+      domain : DOM1
+
+    DOM1:
+      type: DOMAIN
+
+    SCY1:
+      type  : SYSTEM_CYCLE
+      scytim: 20 * 50000U
+
+    SOM1:
+      type  : SYSTEM_OPERATION_MODE
+      somatr: TA_NULL
+
+    TWD1:
+      type  : TIME_WINDOW
+      domid : DOM1
+      somid : SOM1
+      twdord: 1
+      twdlen: 5 * 50000U
+
+  do:
+    id     : TASK1
+    syscall: get_som(&p_somid)
+    ercd   : E_OK
+
+  post_condition:
+    TASK1:
+      var:
+        p_somid:
+          value: TSOM_STP

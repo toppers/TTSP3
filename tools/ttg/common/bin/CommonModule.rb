@@ -397,6 +397,9 @@ module CommonModule
   API_ATT_PMA = "ATT_PMA"
   API_ACV_DOM = "ACV_DOM"
   API_ENA_SPR = "ENA_SPR"
+  API_DEF_SCY = "DEF_SCY"
+  API_CRE_SOM = "CRE_SOM"
+  API_ATT_TWD = "ATT_TWD"
 
   # SILのマクロ定義
   SIL_PRE_LOC = "SIL_PRE_LOC"
@@ -854,6 +857,9 @@ module CommonModule
   TSR_OBJ_MEMORY_MODULE   = "MEMORY_MODULE"
   TSR_OBJ_MEMORY_AREA     = "MEMORY_AREA"
   TSR_OBJ_PHYSICAL_MEMORY = "PHYSICAL_MEMORY"
+  TSR_OBJ_SYSTEM_CYCLE          = "SYSTEM_CYCLE"            # システム周期(DEF_SCY)
+  TSR_OBJ_SYSTEM_OPERATION_MODE = "SYSTEM_OPERATION_MODE"  # システム動作モード(CRE_SOM)
+  TSR_OBJ_TIME_WINDOW           = "TIME_WINDOW"            # タイムウィンドウ(ATT_TWD)
 
   # テストシナリオバージョン情報
   TSR_LBL_VERSION = "version"
@@ -1062,6 +1068,19 @@ module CommonModule
   # PHYSICAL_MEMORY
   TSR_PRM_PMAATR  = "pmaatr"
   TSR_PRM_PADDR   = "paddr"
+
+  # SYSTEM_CYCLE (DEF_SCY)
+  TSR_PRM_SCYTIM  = "scytim"
+
+  # SYSTEM_OPERATION_MODE (CRE_SOM)
+  TSR_PRM_SOMATR  = "somatr"
+  TSR_PRM_NXTSOM  = "nxtsom"
+
+  # TIME_WINDOW (ATT_TWD)
+  TSR_PRM_DOMID   = "domid"
+  TSR_PRM_SOMID   = "somid"
+  TSR_PRM_TWDORD  = "twdord"
+  TSR_PRM_TWDLEN  = "twdlen"
 
   # do配下のマクロ定義
   TSR_PRM_ID      = "id"
@@ -2205,6 +2224,19 @@ module CommonModule
       TSR_PRM_ACCESS2 => [false, true],
       TSR_PRM_ACCESS3 => [false, true],
       TSR_PRM_ACCESS4 => [false, true]
+    },
+    TSR_OBJ_SYSTEM_CYCLE => {
+      TSR_PRM_SCYTIM => [true, true]
+    },
+    TSR_OBJ_SYSTEM_OPERATION_MODE => {
+      TSR_PRM_SOMATR => [false, true],
+      TSR_PRM_NXTSOM => [false, true]
+    },
+    TSR_OBJ_TIME_WINDOW => {
+      TSR_PRM_DOMID  => [true, true],
+      TSR_PRM_SOMID  => [true, true],
+      TSR_PRM_TWDORD => [true, true],
+      TSR_PRM_TWDLEN => [true, true]
     }
   }
 
@@ -2260,7 +2292,10 @@ module CommonModule
     TSR_OBJ_MEMORY_SECTION => GRP_DEF_OBJECT_HRP[TSR_OBJ_MEMORY_SECTION].merge({TSR_PRM_CLASS => [false, true]}),
     TSR_OBJ_MEMORY_MODULE => GRP_DEF_OBJECT_HRP[TSR_OBJ_MEMORY_MODULE].merge({TSR_PRM_CLASS => [false, true]}),
     TSR_OBJ_MEMORY_AREA => GRP_DEF_OBJECT_HRP[TSR_OBJ_MEMORY_AREA].merge({TSR_PRM_CLASS => [false, true]}),
-    TSR_OBJ_PHYSICAL_MEMORY => GRP_DEF_OBJECT_HRP[TSR_OBJ_PHYSICAL_MEMORY].merge({TSR_PRM_CLASS => [false, true]})
+    TSR_OBJ_PHYSICAL_MEMORY => GRP_DEF_OBJECT_HRP[TSR_OBJ_PHYSICAL_MEMORY].merge({TSR_PRM_CLASS => [false, true]}),
+    TSR_OBJ_SYSTEM_CYCLE => GRP_DEF_OBJECT_HRP[TSR_OBJ_SYSTEM_CYCLE],
+    TSR_OBJ_SYSTEM_OPERATION_MODE => GRP_DEF_OBJECT_HRP[TSR_OBJ_SYSTEM_OPERATION_MODE],
+    TSR_OBJ_TIME_WINDOW => GRP_DEF_OBJECT_HRP[TSR_OBJ_TIME_WINDOW]
   }
 
   # ドメインを定義できるオブジェクト（HRMP）

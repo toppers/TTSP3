@@ -65,6 +65,7 @@ require "common/bin/sc_object/MessageBuf.rb"
 require "common/bin/sys_state/CPUState.rb"
 require "common/bin/sys_state/Domain.rb"
 require "common/bin/sys_state/Memory.rb"
+require "common/bin/sys_state/SystemCycle.rb"
 require "common/bin/IMCodeElement.rb"
 require "ttc/bin/test_scenario/Condition.rb"
 require "ttj/bin/test_scenario/Condition.rb"
@@ -201,6 +202,12 @@ module CommonModule
               cNewObject = MemoryArea.new(sObjectID, hObjectInfo, aPath, bIsPre)
             when TSR_OBJ_PHYSICAL_MEMORY
               cNewObject = PhysicalMemory.new(sObjectID, hObjectInfo, aPath, bIsPre)
+            when TSR_OBJ_SYSTEM_CYCLE
+              cNewObject = SystemCycle.new(sObjectID, hObjectInfo, aPath, bIsPre)
+            when TSR_OBJ_SYSTEM_OPERATION_MODE
+              cNewObject = SystemOperationMode.new(sObjectID, hObjectInfo, aPath, bIsPre)
+            when TSR_OBJ_TIME_WINDOW
+              cNewObject = TimeWindow.new(sObjectID, hObjectInfo, aPath, bIsPre)
             else
               abort(ERR_MSG % [__FILE__, __LINE__])
             end
@@ -632,7 +639,8 @@ module CommonModule
 
         # 状態を参照できない処理単位の場合，何もしない
         when TSR_OBJ_EXCEPTION, TSR_OBJ_INIRTN, TSR_OBJ_TERRTN, TSR_OBJ_OVERRUN, TSR_OBJ_SVC,
-             TSR_OBJ_MEMORY_REGION, TSR_OBJ_MEMORY_SECTION, TSR_OBJ_MEMORY_MODULE, TSR_OBJ_MEMORY_AREA, TSR_OBJ_PHYSICAL_MEMORY
+             TSR_OBJ_MEMORY_REGION, TSR_OBJ_MEMORY_SECTION, TSR_OBJ_MEMORY_MODULE, TSR_OBJ_MEMORY_AREA, TSR_OBJ_PHYSICAL_MEMORY,
+             TSR_OBJ_SYSTEM_CYCLE, TSR_OBJ_SYSTEM_OPERATION_MODE, TSR_OBJ_TIME_WINDOW
 
         else
           cObjectInfo.gc_obj_ref(cElement, hProcUnitInfo, check_activate_context(), bCpuLock)

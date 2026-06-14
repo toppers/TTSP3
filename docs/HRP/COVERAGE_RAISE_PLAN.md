@@ -113,7 +113,15 @@ HRP セマンティクスで検証する必要**（PoC は一旦 revert）。
 
 ---
 
-## Method 1（中規模・TTG組み込み可能）：SOM／時間区画スケジューリング — ★調査確定（2026-06-14）
+## Method 1（中規模・TTG組み込み可能）：SOM／時間区画スケジューリング — ★PoC実装・検証完了（2026-06-14）
+
+> **PoC 結果サマリ（2026-06-14）**：TTG 拡張＋chg_som/get_som テストを実装し**単体で緑**を確認。
+> domain.c **branch 6.7%(6/90)→~41%(37/90 union)**（chg_som 0→13/24・get_som 0→6/18＋scyc/twd 機構が点灯）。
+> bb 全体は **20/20 binaries build OK**（既存テストのビルド回帰なし）。
+> ⚠ **重大な統合制約を発見**：`DEF_SCY` は**プログラム全域**に効き、ユーザドメインのタイムイベント（alarm/cyclic）を
+> ウィンドウ駆動のヒープへ移すため、**停止モードでは発火しない**。結果 **SOM テストを既存の
+> ユーザドメイン alarm/cyclic テストと同一バイナリにマージすると後者がハング**する（auto_code_2/11 で実証）。
+> よって**段階③以降は SOM テスト専用の隔離ビルド群**が必要（下記「PoC 実施結果」参照）。詳細は本節末尾。
 
 **対象**：domain.c 84（最大の単一機能ギャップ）。`chg_som`/`get_som`/`_kernel_twd_*`（time window domain）/
 `_kernel_scyc_*`（system cycle）/`_kernel_twdtimer_*` が**全 0%**。HRP3 3.4 に実在・コンパイル済み
@@ -148,21 +156,63 @@ E_OBJ 早期リターンのみ（＝現状 6/90）。残り 78 分岐は system 
 > → ③twd/scyc タイミングテスト（~36分岐・要調整）。**手書きWB より保守性が高く SOM テストが TESRY 一級市民になる**。
 > （旧案＝手書き WB cfg `wb_test/HRP/domain/` も依然 stretch goal として可。TTG 組み込みが本筋。）
 
-### 次セッションの PoC 着手手順（SYSTEM_CYCLE/TIME_WINDOW 型追加）
+### PoC 実施結果（2026-06-14・実装＋検証完了）
 
-**目的**：まず DEF_SCY＋ATT_TWD を生成できる最小 TTG 拡張＋chg_som/get_som 1テストで PoC（system_cyctim!=0 を成立させ
-domain.c の chg_som/get_som 早期 E_OBJ 以降に到達）。M4 同様「小さく作って毎回ビルド検証」。
+**実装（ttsp3 git 側のみ・カーネル編集なし）**：
+- **新オブジェクト型 3 種**（手順は 2 種としていたが、`ATT_TWD` の `somid` が `CRE_SOM` 生成の SOM を参照し、
+  `chg_som(somid)` も有効 SOM を要するため `SYSTEM_OPERATION_MODE` を追加）：
+  - `SYSTEM_CYCLE`（`scytim`）→ `DEF_SCY({scytim});`
+  - `SYSTEM_OPERATION_MODE`（`somatr`/`nxtsom`）→ `CRE_SOM(somid, {somatr[, nxtsom]});`
+  - `TIME_WINDOW`（`domid`/`somid`/`twdord`/`twdlen`）→ `ATT_TWD({domid, somid, twdord, twdlen});`
+  いずれも保護ドメインの**外**へ emit（`IMC_NO_DOMAIN`）。
+- `tools/ttg/common/bin/CommonModule.rb`：`TSR_OBJ_*`／`TSR_PRM_SCYTIM/SOMATR/NXTSOM/DOMID/SOMID/TWDORD/TWDLEN`／
+  API マクロ `DEF_SCY/CRE_SOM/ATT_TWD`／`GRP_DEF_OBJECT_HRP`（＋HRMP）に登録。
+- 新規 `tools/ttg/{common,ttc}/bin/sys_state/SystemCycle.rb`（Memory.rb を雛形に 3 クラス）。
+- `tools/ttg/common/bin/test_scenario/Condition.rb`：ファクトリ登録＋`require`＋参照不可リストに追加。
+- **kwalify スキーマ編集は不要だった**（手順④は誤り）：`kwalify.schema.yaml` は Kwalify ライブラリの**メタスキーマ**で
+  あり、TESRY のオブジェクト型ゲートは Ruby の `GRP_DEF_OBJECT_HRP` が担う（`PreCondition.rb:74-88` で `.keys()` を参照）。
+- テスト：`api_test/HRP/sys_manage/chg_som/chg_som_H-a.yaml`（停止→SOM1→停止の 2 段 `do`・各 E_OK）、
+  `get_som/get_som_H-a.yaml`（停止モードで `get_som`→`TSOM_STP`）。呼出しタスクは**カーネルドメイン**（`domain:` 省略）で
+  実行し `sysstat1` 既定値（`TACP_KERNEL`）で許可（`SAC_SYS` 不要）。
 
-1. **雛形を読む**：`tools/ttg/common/bin/sys_state/Domain.rb`（166行・型→ACV_DOM 生成）＋ `tools/ttg/ttc/bin/sys_state/Domain.rb`（ttc側）。`Memory.rb`（PHYSICAL_MEMORY→ATT_PMA 生成）も多型の参考。
-2. **型登録**：`tools/ttg/common/bin/CommonModule.rb` の `TSR_OBJ_*`（L830-855 付近）に `TSR_OBJ_SYSTEM_CYCLE`/`TSR_OBJ_TIME_WINDOW`、`TSR_PRM_*` に `SOMID`/`TWDORD`/`TWDLEN`/`SCYTIM` を追加。オブジェクト型リスト（L1337-付近）・属性マップにも登録。
-3. **生成モジュール**：`sys_state/SystemCycle.rb`（→`DEF_SCY({scytim})`）・`TimeWindow.rb`（→`ATT_TWD({domid,somid,twdord,twdlen,<通知>})`）を新規。`set_config(...)` で cfg 文字列を emit（Memory.rb L267 の ATT_PMA emit が手本）。ATT_TWD は保護ドメインの**外**に出すこと（E_RSATR・domain_prep.trb L120）。
-4. **kwalify スキーマ**：`tools/ttg/ttc/bin/kwalify/kwalify.schema.yaml` に新 type と somid/twdord/twdlen/scytim フィールドを追加。
-5. **PoC テスト**：`api_test/HRP/sys_manage/chg_som/`（新規）に、SYSTEM_CYCLE＋TIME_WINDOW を pre_condition で定義し `do: chg_som(somid)` `ercd: E_OK`＋`get_som(&p_somid)` を検証する1本。caller は running 維持（M4 の教訓＝T5_012/013 回避）。
-6. **検証**：`COPTS="-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions" bash scripts/coverage_gcov_hrp.sh bb` で 20/20 build＋緑＋domain.c の chg_som/get_som 分岐到達を per-function で確認。
-7. 通れば twd/scyc のタイミング依存テスト（周期を実チックさせる・alarm/cyclic 雛形）へ拡張（~36分岐）。
+**検証結果**：
+- **bb 20/20 binaries build OK**（161s）。私の変更による**ビルド回帰なし**。
+- **単体（隔離）実行で両テスト緑**：chg_som-only / get_som-only いずれも `All check points passed`。
+- **カバレッジ（domain.c・per-function gcov）**：
+  | 関数 | baseline | chg_som単体 | get_som単体 |
+  |---|---|---|---|
+  | `_kernel_chg_som` | 0/24 | **13/24 (94% line)** | 0/24 |
+  | `_kernel_get_som` | 0/18 | 0/18 | **6/18 (100% line)** |
+  | `_kernel_scyc_start` | 0/4 | 2/4 | – |
+  | `_kernel_twd_start` | 0/10 | 5/10 | – |
+  | `_kernel_twdtimer_start/control` | 0 | 1/2・3/8 | – |
+  | domain.c 全体 branch | **6/90 (6.7%)** | 31/90 | 12/90 |
+  - 2 テスト union ≈ **37/90 (41.1%) branch / 112/187 (59.9%) line**。chg_som が周期開始経路
+    （`scyc_start`/`twd_start`/`twdtimer`）まで点灯させた点が大きい。
 
-**注意**：カーネル(hrp3)編集は不要（TTG＝ttsp3 git 側のみ）。chg_som の somid は ATT_TWD で使った somid 値（整数 or マクロ）。
-DEF_SCY が無いと ATT_TWD は無視される（先に SYSTEM_CYCLE を置く）。
+**⚠ 発見した統合制約（段階③以降の設計に必須）**：
+1. **`DEF_SCY` はプログラム全域**：定義すると**全ユーザドメイン**のタイムイベントが
+   `tmevt_heap_kernel`（HRT 割込み `signal_time()` が処理）から**ドメイン別/idle ヒープ**へ移る。これらは
+   タイムウィンドウ駆動（`twd_start`/`scyc_start`）でしか処理されず、**停止モードでは発火しない**
+   （`time_event.c:signal_time` は kernel ヒープのみ・`domain.c:twd_start` が idle/per-dom ヒープ処理）。
+   → 既存の**ユーザドメイン alarm/cyclic テストと同一バイナリにマージすると当該テストが永久待ち→ハング**
+   （bb の auto_code_2＝get_som と auto_code_11＝chg_som がともに alarm テストで停止、他 18 群は緑＝実証）。
+2. **`chg_som` のモード切替は周期境界まで遅延**：`chg_som(somid)` は `p_nxtsom` を設定するだけで `p_cursom` は
+   次のシステム周期境界まで変わらない（停止→初回のみ即 `scyc_start`）。よって `chg_som(TSOM_STP)` 直後でも
+   `get_som` は旧 SOM を返す。**chg_som と get_som を同一バイナリに同居させると get_som の期待値が崩れる**
+   （TTG はテストをキー昇順で実行＝chg_som が先）。
+
+**→ 段階③（bb 統合）の必須対応**：`DEF_SCY` を含むテストを**専用の隔離ビルド群**（共有 20分割から除外し
+SOM 専用 auto_code を別建て）にする。ビルド基盤側の小改修（`scripts/ttsp_parallel_api.sh` の manifest 分配 or
+`exclude_tests.txt` 併用で SOM 専用群を生成）が要る。隔離群内でも chg_som と get_som は別バイナリ/別群にするか、
+get_som を chg_som より前に実行する構成にする。**TTG 拡張・テスト記述自体は完成しており、残りは配置（隔離）のみ**。
+
+**次の拡張（段階③詳細・~36分岐）**：未到達は `_kernel_get_som`/`_kernel_chg_som` のエラー系分岐
+（`E_CTX`/`E_OBJ`/`E_ID`/`E_OACV`/`E_MACV`＝負テスト）と `scyc_switch`/`twd_switch`/`set_dspflg`/`twdtimer_stop`
+（周期タイマを実チックさせ**ウィンドウ切替を起こすタイミング依存テスト**＝alarm/cyclic 雛形）。
+これらは上記「隔離ビルド群」前提で追加する。
+
+**注意**：カーネル(hrp3)編集は不要（TTG＝ttsp3 git 側のみ）。`DEF_SCY` が無いと `ATT_TWD`/`CRE_SOM` は無視される。
 
 ---
 
