@@ -288,11 +288,50 @@ void main_task(intptr_t exinf) {
 
 	ttsp_barrier_sync(7, TNUM_PRCID);
 
+	/* 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメイン(DOM1)からの SIL アクセステスト（マスタPEのみ）．
+	 * SIL_USER_TASK(CLS_ALL_PRC1/DOM1) を起動し、その完了を待つ（CP23/24 は SIL_USER_TASK 側）． */
+	if (TOPPERS_MASTER_PRCID == prcid) {
+		syslog_0(LOG_NOTICE, "=== test start from USER DOMAIN (DOM1) ===");
+		ercd = act_tsk(SIL_USER_TASK);
+		check_ercd(ercd, E_OK);
+		ercd = slp_tsk();	/* SIL_USER_TASK の完了（wup_tsk）を待つ */
+		check_ercd(ercd, E_OK);
+		/* CP は main_task（カーネルドメイン）側で記録する：ユーザドメインからは
+		 * ttsp_mp_check_point が内部で呼ぶ sil_get_pid が不正値を返すため使えない． */
+		ttsp_mp_check_point(prcid, 23);
+	}
+
 	/* SILスピンロック状態でext_kerを発行できることの確認 */
 	if (TOPPERS_MASTER_PRCID == prcid) {
 		SIL_LOC_SPN();
 		ext_ker();
 	}
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメイン(DOM1)で実行され、SIL 関数を発行する．
+ * 自タスクスタック上の変数へのメモリ空間アクセス（check_of_sil_mem）・SIL_LOC_INT・sns_ker は
+ * ユーザドメインから発行しても許可される（HRP §2c と同じ挙動。sil_dly_nse/get_tim は保護される）．
+ */
+void sil_user_task(intptr_t exinf) {
+	/* ※ ユーザドメインからは ttsp_mp_check_point（内部で sil_get_pid を呼ぶ）が使えないため、
+	 *    本タスクでは check_point を打たず、SIL 関数内の check_assert で正当性を検証する．
+	 *    進捗の check_point は main_task（カーネルドメイン）側で記録する． */
+
+	/* メモリ空間アクセス関数（自タスクスタック上の変数＝DOM1 がアクセス権を持つ領域） */
+	check_of_sil_mem();
+	syslog_0(LOG_NOTICE, "USER DOMAIN: sil_*_mem() : OK");
+
+	/* sns_ker＋SIL_LOC_INT/SIL_UNL_INT（ユーザドメインから発行可）．
+	 * 第3引数 ter_flg=true で SIL_LOC_SPN（SILスピンロック）部分をスキップする：
+	 * SIL_LOC_SPN は共有スピンロックを操作するためユーザドメインからは permission fault になる
+	 * （HRMP のユーザドメイン SIL 挙動の知見。spinlock は保護対象）． */
+	test_of_sns_ker(1, sns_ker(), true);
+
+	syslog_0(LOG_NOTICE, "USER DOMAIN SIL access  : OK");
+
+	wup_tsk(MAIN_TASK1);
+	ext_tsk();
 }
 
 /* 【TTSP3向け改変 2026-06-14】texhdr（タスク例外処理ルーチン）は第3世代カーネルに

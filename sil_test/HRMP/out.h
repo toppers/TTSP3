@@ -45,6 +45,12 @@
 #ifndef TTSP_SIL_OUT_H
 #define TTSP_SIL_OUT_H
 
+/* 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメインからの SIL アクセステスト用に
+ * per-PE ユーザ/システムスタック（ttg_ustack_prc1/ttg_sstack_prc1 等）を有効化． */
+#define TTSP_STACK_SHARE_HRP
+#define TTG_STACK_NUM   2
+#define TTG_DOMAIN_NUM  2
+
 #include "ttsp_target_test.h"
 
 /*
@@ -73,6 +79,8 @@ typedef enum e_test_type {
 } E_TEST_TYPE;
 
 extern void main_task(intptr_t exinf);
+/* 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメイン(DOM1)からの SIL アクセステストタスク． */
+extern void sil_user_task(intptr_t exinf);
 /* 【TTSP3向け改変 2026-06-14】texhdr 削除（第3世代にタスク例外なし） */
 extern void almhdr(intptr_t exinf);
 extern void cychdr(intptr_t exinf);
