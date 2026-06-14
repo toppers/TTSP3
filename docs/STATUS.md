@@ -42,6 +42,7 @@
 | HRMP | branch 82.1%（line 91.3%） | `docs/HRMP/COVERAGE_STATUS.md` | check_library+API20分割 |
 | HRP（zybo） | branch **90.8%**（line 96.3%） | `docs/HRP/ALL_COVERAGE.md` | ASP/FMP 同条件。M2/M3/M4/M6＋M1(SOM隔離群) で +214分岐（着手前82.0%）。SOM の時間区画(twd/scyc)は simt 行で計測（下記） |
 | HRP（**simt**／SOM 時間区画） | **domain.c branch 67.8%**（59→61/90・line 90.4%） | `docs/HRP/SIMT_HANDOFF.md`（注9） | simtimer_zybo_z7_gcc。SOM テスト12本(chg_som/get_som/twd_som)。domain.c **6.7→(a)53.3→(b)67.8%**。実機タイマでハング不能だった twd_switch/scyc_switch 等を simt で計測 |
+| HRP（**simt**／M5 時間系） | **time_manage.c branch 65.0%**（line 100%）／**time_event.c branch 86.2%**（line 95.9%） | `docs/HRP/COVERAGE_RAISE_PLAN.md` M5⑤ | 同ランナーに統合。カーネル付属 simt_systim1〜4(+_64hrt) 7本。bb（実機タイマ）では time_manage.c 10%→65%。alarm.c/cyclic.c も副次点灯 |
 | HRP（**zcu102_r5**／R5・QEMU） | branch 81.2%（line 89.5%） | `docs/HRP/COVERAGE_R5.md`（注8） | check_library 3/3＋API 18/20。upstream QEMU |
 
 > 計測条件は各 `BB_COVERAGE.md`（`-O2`＋インライン抑制＋`-DNDEBUG`）。`scripts/coverage_gcov_<prof>.sh`。
@@ -116,6 +117,10 @@
   build→QEMU(xilinx-zynq-a9)→gcov union＝**domain.c line 90.4%(169/187)・branch 67.8%(61/90)・全12本緑**．
   `domain.c` は **6.7%→(a)error/state 53.3%→(b)simt 67.8%**．残＝構造的に到達不能な数 branch
   （`set_dspflg` の elseif-T＝upstream `simt_twd1` も 0/4・複数窓/SOM切替/dispatch）．詳細 `docs/HRP/SIMT_HANDOFF.md`．
+  **同ランナーに M5（時間系 tail）も統合済**：カーネル付属 `simt_systim1〜4(+_64hrt)` 7本を
+  `configure.rb` で gcov ビルド→同 union に取込（全本緑・計19ターゲット）．**time_manage.c 100%line/65.0%branch・
+  time_event.c 95.9%line/86.2%branch**（実機タイマ bb では time_manage.c 10%）．副次で alarm.c/cyclic.c も点灯．
+  HRT_CONFIG 対応＝systim1/2/3→CONFIG1・*_64hrt→CONFIG3・systim4→CONFIG2．詳細 `docs/HRP/COVERAGE_RAISE_PLAN.md` M5⑤．
 - **注6（HRMP zybo 14/20 の内訳）**：本セッション実測。**5群が link 失敗**＝
   `undefined reference to chg_spr`（HRMP3 **3.4 にサブ優先度API `chg_spr` が無い**のに TESRY が
   chg_spr 系を生成。プロファイル×仕様差＝3.4 と 3.7 の差）。残1群は実行時 NG。

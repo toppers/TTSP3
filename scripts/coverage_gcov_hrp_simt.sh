@@ -1,12 +1,17 @@
 #!/bin/bash
 #
-#  TTSP3 HRP simt（タイマドライバシミュレータ）ターゲット用 SOM カバレッジランナー
+#  TTSP3 HRP simt（タイマドライバシミュレータ）ターゲット用 時間系カバレッジランナー
 #
-#  zybo+simt（カーネル target = simtimer_zybo_z7_gcc）で，時間区画スケジューリング
-#  （SOM）のテストを 1 テスト 1 バイナリでビルド→QEMU 実行→gcov 集計する．
-#  実機タイマ（zybo_z7_gcc）では周期稼働中アイドルがハングして到達不能だった
-#  (b)（_kernel_twd_switch / _kernel_scyc_switch / _kernel_twdtimer_* 等）を，
+#  zybo+simt（カーネル target = simtimer_zybo_z7_gcc）で，実機タイマ（zybo_z7_gcc）
+#  では周期稼働中アイドルがハングして到達不能な「時間に依存する」カーネルコードを，
 #  simt（simtim_advance／dly_tsk による決定論的時刻制御）で計測する．
+#  対象は 2 系統を一括 union 集計する：
+#    M1（SOM／時間区画スケジューリング = domain.c）
+#       — TTSP テスト sys_manage/{chg_som,get_som,twd_som} を 1 テスト 1 バイナリで
+#         ビルド（_kernel_twd_switch / _kernel_scyc_switch / _kernel_twdtimer_* 等）．
+#    M5（標準 API tail の時間系 = time_manage.c / time_event.c）
+#       — カーネル付属テスト simt_systim1〜4(+_64hrt) を simt でビルド/実行
+#         （get_tim/set_tim/adj_tim/tmevtb_enqueue 等．alarm.c/cyclic.c も副次的に点灯）．
 #
 #  使い方:
 #    ./scripts/coverage_gcov_hrp_simt.sh
@@ -58,6 +63,26 @@ run_qemu() { # $1=dir
 	( cd "$1" && rm -f objs/*.gcda && timeout "$QEMU_TIMEOUT" qemu-system-arm \
 		-M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio \
 		-nographic -smp 1 -kernel hrp < /dev/null > execute.log 2>&1 )
+}
+
+# kernel simt_systim 系は「All check points passed」後もカーネルが
+# アイドル継続するため，マーカ検出で QEMU を早期終了して時間を節約する．
+# （gcov dump はテスト完走時に flush 済み．）
+run_qemu_marker() { # $1=dir
+	( cd "$1" && rm -f objs/*.gcda
+	  qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M \
+		-serial null -serial mon:stdio -nographic -smp 1 -kernel hrp \
+		< /dev/null > execute.log 2>&1 &
+	  qpid=$!
+	  for _i in $(seq 1 "$QEMU_TIMEOUT"); do
+		if grep -q 'All check points passed\|Check point .* failed\|Assertion' execute.log 2>/dev/null; then
+			break
+		fi
+		kill -0 "$qpid" 2>/dev/null || break
+		sleep 1
+	  done
+	  sleep 1   # gcda flush を待つ
+	  kill -TERM "$qpid" 2>/dev/null; wait "$qpid" 2>/dev/null )
 }
 
 #
@@ -118,6 +143,62 @@ for som_yaml in $SOM_YAMLS; do
 	else
 		echo "BUILD FAIL: som/$som_name"
 		tail -8 "$som_dir/result_ttg.log" "$som_dir/result_make.log" 2>/dev/null
+	fi
+done
+
+#
+#  2b) カーネル付属 simt_systim 系（M5 time 系底上げ）を simt でビルド/実行
+#
+#  time_manage.c / time_event.c は実時間 zybo+QEMU ではハングして到達不能だが，
+#  simt なら simt_systim1〜4(+_64hrt) で大幅に底上げできる（COVERAGE_RAISE_PLAN.md
+#  Method 5 ⑤）．これらはカーネル付属テスト（TTG/TESRY 経由ではない）のため，
+#  カーネル configure.rb で 1 テスト 1 バイナリでビルドする．
+#
+#  HRT_CONFIG 対応：simt_systim1/2/3→CONFIG1，*_64hrt→CONFIG3，simt_systim4→CONFIG2．
+#
+echo "===== build & run: kernel simt_systim tests (M5 time, simt) ====="
+# 注意：realpath で symlink を解決しない．SOM 群（ttb.sh 経由 ../hrp3）の gcno が
+# .../work/hrp3/kernel/... を記録するため，systim 群も同じ未解決パスに揃えて
+# union のフィルタ（/hrp3/kernel/）と共有カーネルファイルの突合を一致させる．
+KSRC="$(cd .. && pwd -L)/hrp3"
+INLINE_OPT="-fno-inline -fno-inline-functions-called-once -fno-inline-small-functions -DNDEBUG"
+
+systim_hrtcfg() { # $1=test名 → HRT_CONFIG マクロ
+	case "$1" in
+		*_64hrt)     echo "-DHRT_CONFIG3" ;;
+		simt_systim4) echo "-DHRT_CONFIG2" ;;
+		*)           echo "-DHRT_CONFIG1" ;;
+	esac
+}
+
+for systim in simt_systim1 simt_systim2 simt_systim3 \
+			  simt_systim1_64hrt simt_systim2_64hrt simt_systim3_64hrt \
+			  simt_systim4; do
+	test -f "$KSRC/test/${systim}.c" || { echo "SKIP $systim (no source)"; continue; }
+	sdir="$OBJ_DIR/systim/${systim}"
+	rm -rf "$sdir"; mkdir -p "$sdir"
+	hrtcfg=$(systim_hrtcfg "$systim")
+	(
+		cd "$sdir"
+		# テスト cfg を取り込み gcov ライブラリを追加した cfg
+		printf 'INCLUDE("%s/test/%s.cfg");\nKERNEL_DOMAIN { ATT_MOD("libgcov.a"); ATT_MOD("librdimon.a"); }\n' \
+			"$KSRC" "$systim" > gcov.cfg
+		cp "$KSRC/test/test_pf.cdl" "${systim}.cdl"
+		ruby "$KSRC/configure.rb" -T simtimer_zybo_z7_gcc -t \
+			-a "$KSRC/test" -A "$systim" \
+			-c "$(pwd)/gcov.cfg" -C "${systim}.cdl" -D "$KSRC" \
+			-o "$hrtcfg -DSIMTIM_TEST $INLINE_OPT" > configure.log 2>&1
+		# configure.rb は APPLNAME.o を APPL_COBJS に入れないため注入
+		sed -i "s|^\tAPPL_CXXOBJS := \$|\tAPPL_CXXOBJS := ${systim}.o|; s|^\tAPPL_COBJS := \$|\tAPPL_COBJS := ${systim}.o|" Makefile
+		make ENABLE_GCOV=true -j4 > build.log 2>&1
+	)
+	if [ -f "$sdir/hrp" ]; then
+		run_qemu_marker "$sdir"
+		echo "run systim/$systim ($hrtcfg): $(tr -d '\r' < "$sdir/execute.log" | grep -E 'All check points passed|failed|Assertion' | tail -1)"
+		dirs="$dirs $sdir"
+	else
+		echo "BUILD FAIL: systim/$systim ($hrtcfg)"
+		tail -6 "$sdir/configure.log" "$sdir/build.log" 2>/dev/null
 	fi
 done
 

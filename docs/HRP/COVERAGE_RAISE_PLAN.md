@@ -304,10 +304,33 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 - **exception.c** xsns_dpn 7/10 → ASP の `wb_test/ASP/exception/xsns_dpn_W-b`（custom idle で `p_runtsk==NULL` 到達）を
   `wb_test/HRP/` へ移植 → +3。
 - **time_event.c / time_manage.c** の 64bit 境界・ヒープ多段（`tmevtb_enqueue`/`tmevt_proc_top` 等）→ ASP は simt
-  （simulation timer）で到達。**HRP simt は未整備**のため一部のみ（WB の custom idle で届く範囲）。残は到達不能文書化。
+  （simulation timer）で到達。**HRP simt が M1 で整備済**（`simtimer_zybo_z7_gcc`）になったため到達可能になった。
 - standard API（task/sem/flg/dtq/pdq/mtx/mpf/alm/cyc）の各 tail（~75 分岐の一部）→ 既存カテゴリへ境界/エラー変種追加。
 
 **コスト**：小〜中。**ゲイン**：小（~15〜30 分岐、構造的到達不能が多い）。
+
+### ⑤ simt 調査結果（2026-06、time系は simt で大幅底上げ可能と判明）
+
+M1 で整備した `simtimer_zybo_z7_gcc`（kernel target ＋ TTSP target）上で、カーネル付属の
+`test/simt_systim1〜4`（＋ `_64hrt` 変種、計7本）を GCOV 計測で実行した（全本緑）。union 結果：
+
+| ファイル | bb（実時間 zybo） | simt_systim union | 備考 |
+|---|---|---|---|
+| **time_manage.c** | 23.3% line / 10.0% branch | **100% line / 65.0% branch（26/40）** | get_tim/set_tim/adj_tim/get_utm |
+| **time_event.c** | 79.4% line / 58.8% branch | **87.0% line / 75.0% branch（60/80）** | 多くの関数が 100% に |
+
+- フラグ対応：`simt_systim1/2/3` → `-DHRT_CONFIG1`、`*_64hrt` → `-DHRT_CONFIG3`、`simt_systim4` → `-DHRT_CONFIG2`。
+- 残：`_kernel_tmevtb_enqueue` 6分岐は特定シナリオ（多段ヒープ）で未到達。
+- **simt は実時間 zybo+QEMU でハングする time 系の唯一の到達手段**（M1 で確立済の知見と同じ）。
+- **統合：(A) を実施済（2026-06）**。`scripts/coverage_gcov_hrp_simt.sh` を拡張し、SOM テストに加えて
+  カーネル `simt_systim1〜4(+_64hrt)`（計7本）を `configure.rb` で 1 テスト 1 バイナリ・gcov 計測ビルドし、
+  QEMU 実行→同一 union に取り込むようにした（`KSRC` は symlink 非解決パスで SOM 群と gcno パスを揃える）。
+  ランナー 1 回で M1+M5 を一括計測。19 ターゲット全本緑。**union 実測**：
+  - **time_manage.c：100% line / 65.0% branch（26/40）**（bb 10% → simt union）
+  - **time_event.c：95.9% line / 86.2% branch（69/80）**（SOM twd_som ＋ systim の合算で単独調査の 75% を上回る）
+  - 副次：alarm.c 44.0% / cyclic.c 42.6% も systim で点灯。domain.c は 67.8% で不変。
+  - 残：`_kernel_tmevtb_enqueue` 6分岐（多段ヒープの特定シナリオ）と time_manage.c の 14 分岐は未到達。
+  - （案 (B) TTSP 側 time-management テスト新規作成は、TTG/TESRY 流儀へ載せ替える場合の将来オプションとして保留。）
 
 ---
 
@@ -328,7 +351,7 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 | 3 | **M3** ref_mem＋prb_mem read | 中 ~50 | 中 | 不要 |
 | 4 | **M4** sys_manage tail＋m系調査 | 中〜大 | 中 | 不要 |
 | 5 | **M1** SOM/時間区画 | 最大 ~70 | 大（要TTG） | 不要 |
-| 6 | **M5** standard tail/ASP WB移植 | 小 | 小 | 不要 |
+| 6 | **M5** standard tail/ASP WB移植（time系は simt で大幅底上げ可能・⑤参照） | 小〜中 | 小 | 不要（M1の simt 流用） |
 
 **到達目標（目安）**：M2+M3+M4tail+M6 で **82% → 90%前後**（保護/メモリ/messagebuf の正常系・異常系回収）。
 さらに M1（SOM）到達で **92〜94%**。ASP(99.3%)/FMP(97.1%) 並みは SOM・m系の構造的到達性次第。
