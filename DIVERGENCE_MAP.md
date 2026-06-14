@@ -287,6 +287,17 @@ FMP3（`fmp3/arch/posix_gcc`）に適用した（fmp3 作業コピー。コミ�
 timer check_library の FAIL は `FUNC_TIME=false`（実時間駆動でティック停止不可）の既知制約で
 本修正とは無関係。記録：`fmp3/target/linux_gcc/{target_user.txt, issues/20260607-2150_*/README.md}`。
 
+### 2026-06-15 上流 r1254 までの追従
+
+上流 HRMP3 trunk が **r1252 → r1254** に進み、POSIX 依存部の追加修正を FMP3 に適用。
+- **r1253（デッドロック修正）** `thread_ctrl.c` の `start_dispatch_thread` で `thrcb_mutex`
+  ロック前に全シグナルをマスク（`pthread_sigmask_blockall`）し解放後に復元。6/14 の
+  `sigalrm_handler` と同系のデッドロック回避の横展開。
+- **r1254（コメントのみ）** `interrupt_sim.c`（「実行状態すべき」→「実行すべき」3箇所）・
+  `posix_tpcb.h`（`pending_intr_queue` の説明追加）。機能差なし。
+- 検証（linux_gcc・execute.log）：`check_library/interrupt` PASS／**API 13/20 を 5 周連続で
+  同一再現**（失敗群 {3,6,11,12,13,15,19}・フレーク/ハングなし・`ter_tsk` 緑）。回帰なし。
+
 ---
 
 ## 更新手順

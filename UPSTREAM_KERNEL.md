@@ -42,6 +42,12 @@ TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 > EXCNO 統一（r1234）は引き続き見送り。
 > 検証：**linux_gcc `check_library/interrupt` PASS・API 13/20 を 5 周連続で同一に再現**
 > （フレーク/ハングなし・`ter_tsk` 系緑）。詳細は DIVERGENCE_MAP.md E節「2026-06-14」。
+>
+> **2026-06-15 上流 r1254 までの追従（CI固定版 `223ed7e` には未反映）**：
+> r1252→**r1254**。(1) r1253 デッドロック修正＝`thread_ctrl.c` の `start_dispatch_thread` で
+> `thrcb_mutex` ロック前に全シグナルをマスクし解放後に復元、(2) r1254 はコメント・著作権年のみ
+> （機能差なし）。検証：`check_library/interrupt` PASS・API 13/20 を 5 周連続で同一再現（回帰なし）。
+> 詳細は DIVERGENCE_MAP.md E節「2026-06-15」。
 
 ## 検証済み環境（2026-06-06 緑確認・タグ v3.2.0-rc1）
 
