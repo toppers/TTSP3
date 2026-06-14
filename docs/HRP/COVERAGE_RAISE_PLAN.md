@@ -320,7 +320,7 @@ M1 で整備した `simtimer_zybo_z7_gcc`（kernel target ＋ TTSP target）上�
 | **time_event.c** | 79.4% line / 58.8% branch | **87.0% line / 75.0% branch（60/80）** | 多くの関数が 100% に |
 
 - フラグ対応：`simt_systim1/2/3` → `-DHRT_CONFIG1`、`*_64hrt` → `-DHRT_CONFIG3`、`simt_systim4` → `-DHRT_CONFIG2`。
-- 残：`_kernel_tmevtb_enqueue` 6分岐は特定シナリオ（多段ヒープ）で未到達。
+- 残：`_kernel_tmevt_proc_top`（1/4）・`_kernel_tmevtb_enqueue`（4/6）等のヒープ多段が一部未到達（§5）。
 - **simt は実時間 zybo+QEMU でハングする time 系の唯一の到達手段**（M1 で確立済の知見と同じ）。
 - **統合：(A) を実施済（2026-06）**。`scripts/coverage_gcov_hrp_simt.sh` を拡張し、SOM テストに加えて
   カーネル `simt_systim1〜4(+_64hrt)`（計7本）を `configure.rb` で 1 テスト 1 バイナリ・gcov 計測ビルドし、
@@ -329,7 +329,8 @@ M1 で整備した `simtimer_zybo_z7_gcc`（kernel target ＋ TTSP target）上�
   - **time_manage.c：100% line / 65.0% branch（26/40）**（bb 10% → simt union）
   - **time_event.c：95.9% line / 86.2% branch（69/80）**（SOM twd_som ＋ systim の合算で単独調査の 75% を上回る）
   - 副次：alarm.c 44.0% / cyclic.c 42.6% も systim で点灯。domain.c は 67.8% で不変。
-  - 残：`_kernel_tmevtb_enqueue` 6分岐（多段ヒープの特定シナリオ）と time_manage.c の 14 分岐は未到達。
+  - 残：time_event.c は `_kernel_tmevt_proc_top`（1/4）・`tmevtb_enqueue`（4/6）等のヒープ多段。
+    time_manage.c の simt 残（get_tim 等）は **bb 側で到達済**（bb 90.0%）＝simt 非寄与。詳細 `BB_UNREACHABLE.md` §5。
   - （案 (B) TTSP 側 time-management テスト新規作成は、TTG/TESRY 流儀へ載せ替える場合の将来オプションとして保留。）
 
 ---

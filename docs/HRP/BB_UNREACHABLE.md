@@ -166,6 +166,11 @@ acptn2 でチェックされるため `E_OACV`。**実測検証**：対象の ac
 mempfix / alarm / cyclic / wait）は **line 90〜100%** に達しており，§1 の早期終了が
 無ければさらに上振れする余地がある（後半未実行分の回収）。
 
+> ⚠ **上表は着手当初の bb ベースライン値**（早期終了下流を含む）。その後 M1〜M6＋simt で
+> domain.c 8.3%→67.8%・time_event.c 58.8%→86.2%・sys_manage.c 46.1%→76.7%・messagebuf.c 0.9%→88.5%
+> 等に底上げ済み（現状値は [`ALL_COVERAGE.md`](ALL_COVERAGE.md)）。**時間系・SOM の simt 計測後の
+> 残未到達は §5 を参照**。
+
 ---
 
 ## §3. 構造的・既知の未到達（WBテスト不要）
@@ -189,6 +194,55 @@ mempfix / alarm / cyclic / wait）は **line 90〜100%** に達しており，§
 
 **対策候補（後段）**：(a) `.gcov_info` 用に専用の固定マッピング領域を予約して配置衝突を回避，
 (b) 分割数を増やして1グループあたりのメモリオブジェクト密度を下げる。
+
+---
+
+## §5. 時間系・SOM の残未到達（simt 計測後・2026-06-14）
+
+§2 の表は**着手当初の bb ベースライン**（実機タイマ zybo・early-exit 下流）の値である。その後，
+M1〜M6 の拡充と **simt ターゲット（`simtimer_zybo_z7_gcc`・`scripts/coverage_gcov_hrp_simt.sh`）**で
+時間系・SOM を大幅に底上げした（time_event.c 58.8%→86.2%・domain.c 8.3%→67.8%・[`ALL_COVERAGE.md`](ALL_COVERAGE.md)）。
+ここでは **simt でも到達できなかった残分岐**を関数単位で分類する（区分＝① bb 側で到達済・simt 非寄与／
+② より深いシナリオ要・到達可能性あり／③ 構造的に到達不能と確定）。
+
+### domain.c（simt 61/90・残 29 分岐）
+
+| 関数 | simt 分岐 | 残 | 区分 | 残分岐の内容 |
+|---|---|---|---|---|
+| `_kernel_chg_som` | 18/24 | 6 | ② | 複数 SOM 切替・SOM 稼働状態の組合せ（単一 SOM 中心に駆動） |
+| `_kernel_twd_start` | 7/10 | 3 | ② | 複数ウィンドウ／TA_INISOM 以外の起動経路 |
+| `_kernel_twd_switch` | 3/6 | 3 | ② | 連続ウィンドウ境界・SOM 切替を跨ぐ窓遷移 |
+| `_kernel_twdtimer_control` | 4/8 | 4 | ② | オーバラン／停止と再開の複合タイミング |
+| `_kernel_scyc_start` | 3/4 | 1 | ② | 周期開始の別経路 |
+| `_kernel_scyc_switch` | 1/2 | 1 | ② | 周期境界での SOM 切替同時刻 |
+| `_kernel_set_dspflg` | 3/4 | 1 | **③** | elseif-T（`pending_twdswitch`）＝dspflg 偽での窓切替コインシデンス。**カーネル自身の `simt_twd1` も 0/4**＝upstream 未カバーの corner case（本群は 3/4 で上回る）。詳細 [`SIMT_HANDOFF.md`](SIMT_HANDOFF.md) |
+
+> ②は複数窓・SOM 切替・dispatch の同時刻シナリオで、simt の `target_custom_idle` が次イベントを
+> 1 つずつ発火する（同時刻コインシデンスを作れない）制約と、TTG のマージ系列検査の制約が重なる。
+> domain.c の現実的上限は概ね現状値。③は到達不能確定。
+
+### time_event.c（simt 69/80・残 11 分岐）
+
+| 関数 | simt 分岐 | 残 | 区分 | 残分岐の内容 |
+|---|---|---|---|---|
+| `_kernel_tmevt_proc_top` | 1/4 | 3 | ② | ヒープ先頭処理の多段（複数イベント同時満了・割込み中の再入） |
+| `_kernel_initialize_tmevt` | 6/8 | 2 | ② | 初期化時の境界（イベント数 0／最大） |
+| `_kernel_tmevtb_enqueue` | 4/6 | 2 | ② | 多段ヒープの深い挿入位置（sift-up 多段） |
+| `_kernel_tmevt_down` / `tmevtb_delete` / `_enqueue_reltim` / `_dequeue` | 各 -1 | 4 | ② | ヒープ sift-down／削除の特定深さ・相対時刻境界 |
+
+> いずれも内部ヒープ状態に依存する多段操作で、ASP/FMP でも同傾向（深いヒープ構成を作る専用シナリオ要）。
+
+### time_manage.c（simt 26/40だが **bb で 36/40＝90.0%**）
+
+| 関数 | simt 分岐 | bb での扱い | 区分 |
+|---|---|---|---|
+| `_kernel_get_tim` | 6/14 | 標準 `get_tim` API テストで到達 | **①** |
+| `_kernel_set_tim` | 5/8 | 同上 | **①** |
+| `_kernel_adj_tim` | 15/18 | 同上 | **①** |
+
+> **time_manage.c は simt の寄与なし**＝bb（zybo 実機タイマの標準 time API テスト）が既に 90.0% に到達。
+> simt 単独値（65.0%）は bb を下回るため [`ALL_COVERAGE.md`](ALL_COVERAGE.md) では bb 値を採る。残 4 分岐
+> （bb 36/40）は長期タイムアウト・HRTCNT 境界等で、64bit/分解能変種（`simt_systim*_64hrt`）でも一部のみ。
 
 ---
 
