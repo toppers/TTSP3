@@ -223,15 +223,25 @@ get_som を chg_som より前に実行する構成にする。**TTG 拡張・テ
 
 #### 段階④ 着手メモ（chg_som/get_som 残分岐のカーネル順・2026-06-14 分析）
 
-**進捗（batch1 完了・2026-06-14）**：chg_som **13→16/24**・get_som **6→7/18**・set_dspflg 0→2/4・domain.c **44.4→48.9%(44/90)**。
-SOM隔離群 6本（H-a〜H-d, get_som H-a/H-b）全緑・20分割もハングなし。追加テスト：
-- `chg_som_H-b`＝E_ID（無効 somid=2）／`chg_som_H-c`＝停止モードで `chg_som(TSOM_STP)`（`p_cursom==NULL && p_sominib==NULL` 短絡）
+**進捗（batch1+2 完了・2026-06-14）**：chg_som **13→17/24**・get_som **6→8/18**・set_dspflg 0→2/4・domain.c **44.4→51.1%(46/90)**。
+SOM隔離群 8本（chg_som H-a〜H-e, get_som H-a〜H-c）全緑・20分割もハングなし。追加テスト：
+- **batch1**：`chg_som_H-b`＝E_ID（無効 somid=2）／`chg_som_H-c`＝停止モードで `chg_som(TSOM_STP)`（`p_cursom==NULL && p_sominib==NULL` 短絡）
   ／`chg_som_H-d`＝E_OBJ（DEF_SCY 未定義）／`get_som_H-b`＝SOM稼働中（`chg_som(SOM1)`→`get_som`＝`p_cursom!=NULL` 側）。
+- **batch2**：`chg_som_H-e`／`get_som_H-c`＝**E_CTX**（アラーム通知ハンドラ＝非タスクコンテキストから呼出＝`CHECK_TSKCTX_UNL` 不成立）。
 - ※「SOM→SOM」は H-a の `chg_som(TSOM_STP)`（else 経路）で既達のため別テスト不要と判断。
-- 残（batch2/3 予定）：E_CTX（chg_som/get_som・アラームハンドラ）／E_MACV（get_som）／E_OACV（両・SAC_SYS で不許可）／
-  dspflg=false（dis_dsp 後 chg_som）／dispatch（SOM 切替で実行タスク変化）／**(b) twd_switch・scyc_switch・twdtimer_stop**（時間進行）。
 
-現状（batch1 後）chg_som 16/24・get_som 7/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
+> **⚠ E_OACV／E_MACV は (a) では不可・(b) 段階へ再分類（batch3 で判明）**：
+> `VIOLATE_ACPTN(acptn) = (rundom != TACP_KERNEL && (rundom & acptn)==0)`（`check.h`）＝**カーネルドメインの呼出しは
+> 常に acptn 検査を通過**するため、E_OACV にはユーザドメイン呼出しが必須。E_MACV も同様（カーネルドメインは広範な
+> 書込み権で MACV を通過）。だが **DEF_SCY 定義下ではユーザドメインのタスクは停止モードで走らない**（実証：caller を
+> DOM1 に置くと QEMU ハング＝time event だけでなくタスク自体も窓外で非実行）。よって E_OACV／E_MACV は
+> **`somatr: TA_INISOM`＋呼出しタスクのドメインにタイムウィンドウを与え、その窓が稼働中に呼ぶ**必要があり、
+> **(b) タイミング依存段階**に属する。（試作した user ドメイン版・SAC_SYS でカーネルを弾く版は revert 済み。）
+
+残（次段階）：dspflg=false（dis_dsp 後 chg_som）／dispatch（SOM 切替で実行タスク変化）／
+**(b) E_OACV・E_MACV・twd_switch・scyc_switch・twdtimer_stop**（`TA_INISOM`＋ウィンドウ稼働＋時間進行）。
+
+現状（batch1+2 後）chg_som 17/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
 
 - **chg_som のチェック順**（domain.c L576-）：`CHECK_TSKCTX_UNL`(E_CTX) → `CHECK_OBJ(system_cyctim!=0)`(E_OBJ※SOM定義時成立) →

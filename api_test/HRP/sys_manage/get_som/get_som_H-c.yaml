@@ -1,0 +1,26 @@
+version: "PoC段階④(a): get_som E_CTX（非タスクコンテキスト）"
+HRP_sys_manage_get_som_H_c:
+  note: "【NGKI5061】【NGKI5062】アラーム通知ハンドラ（非タスクコンテキスト）から get_som を呼ぶ＝CHECK_TSKCTX_UNL 不成立で E_CTX．E_CTX は最初のチェックのため DEF_SCY 不要．"
+
+  pre_condition:
+    ALM1:
+      type     : ALARM
+      nfytype  : TNFY_HANDLER
+      nfy_info1: EXINF_A
+      almstat  : TALM_STP
+      hdlstat  : ACTIVATE
+      var      :
+        p_somid:
+          type: ID
+
+    TASK1:
+      type   : TASK
+      tskpri : TSK_PRI_MID
+      tskstat: running
+
+  do:
+    id     : ALM1
+    syscall: get_som(&p_somid)
+    ercd   : E_CTX
+
+  post_condition:
