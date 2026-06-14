@@ -243,6 +243,23 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 **E_OACV・E_MACV**（ユーザドメイン呼出しを窓稼働中に）／**dispatch**（`p_runtsk!=p_schedtsk`・SOM 切替で実行タスク変化）／
 **twd_switch・scyc_switch・twdtimer_stop**（周期タイマ実チックでウィンドウ境界跨ぎ）。**(a) 容易系はこれで打ち止め。**
 
+> ### ⛔ (b) は zybo_z7_gcc + QEMU では到達不能（2026-06-14 実測でブロッカー確定）
+> **周期を実際に走らせて時間を進める (b) は、現状の zybo_z7_gcc + QEMU では実行できない。**
+> - **実測**：`somatr: TA_INISOM`（起動時から周期稼働）＋カーネルドメインタスクで `dly_tsk` すると、**窓内に収まる
+>   100ms（< twdlen 250ms＝窓切替すら起こさない長さ）でも QEMU がハング**（チェックポイント2＝セットアップ直後で停止）。
+>   **gcov 計装を外しても同様にハング**＝gcov 性能問題ではなく**ランタイムの構造的問題**。
+> - **切り分け**：`chg_som(SOM1)` で周期を**開始するだけ**（`scyc_start`/`twd_start`/private timer 起動）は緑（chg_som_H-a/H-g）。
+>   ハングするのは**周期稼働中にシステムがアイドル/待ちに入った瞬間**（`dly_tsk`→WAITING→idle）。
+> - **原因（推定）**：zybo は HRT=MPCore グローバルタイマ、タイムウィンドウタイマ=MPCore プライベートタイマ、
+>   オーバランタイマ=ウォッチドッグ（`arch/arm_gcc/zynq7000/chip_timer.h`）。周期稼働中のアイドルで
+>   ウィンドウ切替割込み／オーバラン WDG の QEMU エミュレーションが期待通り動かず停止すると見られる。
+>   （これは「DEF_SCY 下で停止モードのユーザドメイン time event が発火しない」現象と同根の、QEMU での
+>   時間区画ランタイム非機能。plan 既述の「HRP simt 未整備」とも整合。）
+> - **結論**：(b)（twd_switch/scyc_switch/twdtimer_stop/dispatch/窓稼働中の E_OACV・E_MACV）は
+>   **実機 HRP か HRP 用 simt（シミュレーションタイマ）ターゲットが要る**。zybo+QEMU CI では**到達不能として文書化**。
+>   試作した TA_INISOM+dly_tsk テスト（get_som_H-f）は revert 済み。
+>   → domain.c の現実的な上限は **(a) 完了時点の 48/90（53.3%）**。残り 42 分岐の大半が (b)＝この基盤制約に依存。
+
 現状（batch1+2+3 後）chg_som 18/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
 
