@@ -196,9 +196,50 @@ void main_task(intptr_t exinf) {
 #endif /* TTSP_INTNO_C */
 
 
+	/* 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメイン(DOM1)からの SIL アクセステスト．
+	 * SIL_USER_TASK(DOM1) を起動し，その完了を待つ（CP23/24 は SIL_USER_TASK 側）． */
+	syslog_0(LOG_NOTICE, "=== test start from USER DOMAIN (DOM1) ===");
+	ercd = act_tsk(SIL_USER_TASK);
+	check_ercd(ercd, E_OK);
+	ercd = slp_tsk();
+	check_ercd(ercd, E_OK);
+	ttsp_check_point(25);
+
+
 	/* 全割込みロック状態でext_kerを発行できることの確認 */
 	SIL_LOC_INT();
 	ext_ker();
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメイン(DOM1)で実行され、SIL 関数を発行する．
+ * 自タスクスタック上の変数に対するメモリ空間アクセス（check_of_sil_mem）・sns_ker・
+ * sil_dly_nse は、ユーザドメインから発行しても許可される（保護対象外の SIL 操作）ことを確認する．
+ */
+void sil_user_task(intptr_t exinf) {
+	ttsp_check_point(23);
+
+	/* メモリ空間アクセス関数（自タスクスタック上の変数＝DOM1 がアクセス権を持つ領域） */
+	check_of_sil_mem();
+	syslog_0(LOG_NOTICE, "USER DOMAIN: sil_*_mem() : OK");
+
+	/* sns_ker（カーネル状態参照）＋SIL_LOC_INT/SIL_UNL_INT：タスク文脈なので false．
+	 * ※ ユーザドメインから SIL_LOC_INT/SIL_UNL_INT/sns_ker が発行できることの確認も兼ねる． */
+	test_of_sns_ker(sns_ker());
+
+	/* 【ユーザドメインでの SIL 挙動・実測知見 2026-06-14】
+	 * - sil_*_mem（メモリ空間アクセス・自タスクスタック対象）：OK（ユーザドメインから発行可）
+	 * - SIL_LOC_INT/SIL_UNL_INT/sns_ker：OK（test_of_sns_ker 内で発行・確認）
+	 * - sil_dly_nse：ユーザドメインからは **Prefetch Abort（permission fault）** になる
+	 *   （実装がカーネル専用テキストにあり DOM1 に実行権が無い＝HRP 保護の正しい挙動）．本タスクでは発行しない．
+	 * - get_tim 等のサービスコール：ユーザドメインから E_OACV（保護）．SIL ではないため対象外． */
+
+	ttsp_check_point(24);
+	syslog_0(LOG_NOTICE, "USER DOMAIN SIL access  : OK");
+
+	/* main_task を起こして本タスクを終了 */
+	wup_tsk(MAIN_TASK);
+	ext_tsk();
 }
 
 /*

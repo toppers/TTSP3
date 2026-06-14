@@ -111,6 +111,22 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 > ※ ビルドは ASP と同型（REF_MK 流用＋`KERNEL_COBJS`/`APPL_COBJS` 指定）。FMP は `KERNEL_COBJS` に `spin_lock.o` を含め、
 > QEMU は **-smp 2**。
 
+## 2c. ユーザドメインからの SIL アクセステスト（HRP・実装済み・緑）
+
+`sil_test/HRP/` に **ユーザドメイン(DOM1)タスク `sil_user_task`** を追加し、保護ドメイン下での SIL 発行挙動を検証（CP23-25）。
+構成：`DOMAIN(DOM1){ CRE_TSK(SIL_USER_TASK, ..., &ttg_ustack[DOM1-1][0][0], ..., &ttg_sstack[0][0]); SAC_TSK(SHARED) }`、
+out.h に `TTSP_STACK_SHARE_HRP`/`TTG_DOMAIN_NUM`/`TTG_STACK_NUM`、cfg に `ATT_SEC(".ttg_stack_section", ...)`（無いと
+ttg_ustack が discard される）。main_task（カーネルドメイン）が `act_tsk`→`slp_tsk` で起動・待機、ユーザタスクが `wup_tsk`。
+
+**実測知見（HRP zybo・ユーザドメインからの SIL 発行）：**
+| SIL/操作 | ユーザドメインからの結果 |
+|---|---|
+| `sil_reb/wrb/reh/…_mem`（自タスクスタック対象） | **OK**（アクセス権のある領域なら発行可） |
+| `SIL_LOC_INT`/`SIL_UNL_INT` | **OK**（test_of_sns_ker 内で確認） |
+| `sns_ker` | **OK**（タスク文脈で false） |
+| `sil_dly_nse` | **Prefetch Abort（permission fault）**＝実装がカーネル専用テキストにあり DOM1 に実行権なし（HRP 保護の正しい挙動） |
+| `get_tim`（SIL でなくサービス） | **E_OACV**（時刻管理サービスのアクセス保護） |
+
 ## 4. 残作業（ロードマップ）
 
 - [x] **ASP3 3.7.2 + zybo**：緑（§2）
@@ -147,6 +163,9 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
       加えて HRP 固有：`ttsp_svc.cfg` 追加・out.h インクルードガード・`inthdr`/`isr` の extern 無条件宣言。
 - [ ] **DIVERGENCE_MAP 連携**：本移植の 3.4→3.7 差分（タスク例外廃止・通知書式・RELTIM µs・i_begin_int 廃止・
       FMP の systim モード廃止・クラス命名変更）を A 表に記録。
+- [~] **ユーザドメイン SIL テストの HRMP 展開**：HRP は実装済（§2c）。HRMP は同パターンだが **per-PE スタック
+      （`ttg_ustack_prc1`/`ttg_sstack_prc1`）＋`CLASS(CLS_*){ DOMAIN(DOM1){ … } }` ネスト**が必要（HRMP api 準拠）。
+      ユーザドメインからの SIL 挙動自体は HRP と同一（同じ保護モデル）。
 - [ ] **TTG 生成化（任意・将来）**：現状は生成済み out.* の手保守。SIL TESRY/生成ルールを TTG に持たせるかは要検討。
 
 ---

@@ -45,6 +45,13 @@
 #ifndef TTSP_SIL_OUT_H
 #define TTSP_SIL_OUT_H
 
+/* 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメインからの SIL アクセステスト用に
+ * ユーザ/システムスタック（ttg_ustack/ttg_sstack）を有効化．API テストの TTG 生成
+ * out.h と同じ定義（ttsp_target_test.h の #ifdef TTSP_STACK_SHARE_HRP を有効にする）． */
+#define TTSP_STACK_SHARE_HRP
+#define TTG_STACK_NUM   2
+#define TTG_DOMAIN_NUM  2
+
 #include "ttsp_target_test.h"
 
 /*
@@ -73,6 +80,8 @@ typedef enum e_test_type {
 } E_TEST_TYPE;
 
 extern void main_task(intptr_t exinf);
+/* 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメイン(DOM1)からの SIL アクセステストタスク． */
+extern void sil_user_task(intptr_t exinf);
 /* 【TTSP3向け改変 2026-06-14】texhdr は第3世代カーネルにタスク例外機能が無いため削除． */
 extern void almhdr(intptr_t exinf);
 extern void cychdr(intptr_t exinf);
