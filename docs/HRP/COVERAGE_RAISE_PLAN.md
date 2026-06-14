@@ -134,6 +134,13 @@ E_OBJ 早期リターンのみ（＝現状 6/90）。残り 78 分岐は system 
 - 静的API: `ATT_TWD({ ID domid, ID somid, int_t twdord, PRCTIM twdlen, <通知方法> })`（user.txt L1268）。
   DEF_SCY が先に必要（無いと ATT_TWD 無視・NGKI5052）、保護ドメインの**外**に記述（E_RSATR・NGKI5041）。
 
+**実装結果（2026-06-14・commit 67f6012 PoC＋94e1a3f 隔離ビルド群）**：TTG に新オブジェクト型3種
+（`SYSTEM_CYCLE`/`SYSTEM_OPERATION_MODE`/`TIME_WINDOW`→`DEF_SCY`/`CRE_SOM`/`ATT_TWD`）を追加（`SystemCycle.rb`）。
+chg_som/get_som テスト＋**SOM 隔離ビルド群**（DEF_SCY 単一＝1テスト1バイナリ・通常bbからは exclude_tests.txt で除外し
+ハング回避・gcda union）で **domain.c 6.7%→44.4%（chg_som 13/24・get_som 6/18・scyc/twd/twdtimer 点灯）、HRP 全体
+89.4%→90.8%**。カーネル無編集。**残**：`_kernel_twd_switch`/`scyc_switch`/`twdtimer_stop`（0%）は周期タイマが
+ウィンドウ境界を**実際に跨ぐ**時に動くため、時間を進める追加テスト（TA_INISOM で初期SOM起動＋十分な twdlen 経過）が必要。
+
 **判定（2026-06-14 TTG 組み込み再調査）：TTG への組み込みが可能（中規模）。手書きWB限定ではない。**
 - 当初「TTG 非対応＝手書きWBのみ」と判定したが、TTG 内部を精査して**組み込み可能**と再判定。
 - ⭐ **最大の障壁（スケジューラのモデル化）は不要**：`tools/ttg/ttc/bin/test_scenario/TestScenario.rb` は
