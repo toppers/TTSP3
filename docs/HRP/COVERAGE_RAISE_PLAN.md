@@ -221,6 +221,22 @@ get_som を chg_som より前に実行する構成にする。**TTG 拡張・テ
 
 **注意**：カーネル(hrp3)編集は不要（TTG＝ttsp3 git 側のみ）。`DEF_SCY` が無いと `ATT_TWD`/`CRE_SOM` は無視される。
 
+#### 段階④ 着手メモ（chg_som/get_som 残分岐のカーネル順・2026-06-14 分析）
+
+現状 chg_som 13/24・get_som 6/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
+`sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
+
+- **chg_som のチェック順**（domain.c L576-）：`CHECK_TSKCTX_UNL`(E_CTX) → `CHECK_OBJ(system_cyctim!=0)`(E_OBJ※SOM定義時成立) →
+  `somid==TSOM_STP` 分岐 or `CHECK_ID(VALID_SOMID)`(E_ID) → `CHECK_ACPTN(sysstat1_acvct.acptn1)`(E_OACV) →
+  `if(p_cursom==NULL && p_sominib!=NULL)`（STP→SOM＝周期開始） / `else`（SOM→SOM・SOM→STP） → `dspflg` true/false → `p_runtsk!=p_schedtsk`(dispatch)。
+  → 追加変種：①E_CTX（アラームハンドラ呼出）②E_ID（不正 somid＝CRE_SOM 数+1）③E_OACV（sysstat1 通常操作1 不許可ドメイン）
+  ④**SOM→SOM**（CRE_SOM 2つ＋各 TIME_WINDOW、chg_som(SOM1)→chg_som(SOM2)→STP＝else 経路・dspflg 分岐）⑤dispatch 分岐（SOM 切替で実行タスク変化）。
+- **get_som のチェック順**（domain.c L666-）：`CHECK_TSKCTX_UNL`(E_CTX) → `CHECK_OBJ` → `CHECK_MACV_WRITE(p_somid)`(E_MACV) →
+  `CHECK_ACPTN(acptn4)`(E_OACV) → `*p_somid = (p_cursom==NULL)? TSOM_STP : SOMID(p_cursom)`。
+  → 追加変種：①E_CTX ②E_MACV（TTSP_MACV_ADDRESS）③E_OACV ④**SOM 稼働中**（chg_som(SOM1) 後に get_som＝`p_cursom!=NULL` 側で SOMID 返り。現状 STP 側のみ）。
+- **(b) twd/scyc 点灯**：`SYSTEM_OPERATION_MODE` に `somatr: TA_INISOM`（起動時から周期稼働）＋ TIME_WINDOW 複数、
+  時間を十分進めて（dly_tsk 等で twdlen 超）ウィンドウ境界を跨がせる → `twd_switch`/`scyc_switch`/`twdtimer_stop` 発火（alarm/cyclic タイミングテスト同様）。
+
 ---
 
 ## Method 5（小ゲイン）：standard API の tail（ASP WB 技法の移植）
