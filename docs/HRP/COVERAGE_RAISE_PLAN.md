@@ -269,6 +269,7 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 >   TESRY の `do` ステップ語彙に追加する（`simt_twd1.c` が雛形）中規模インフラ作業が要る。それまで (b) は**到達不能として文書化**。
 >   試作（TA_INISOM+dly_tsk の get_som_H-f／CYCLIC 心拍版）は revert 済み。
 >   → domain.c の現実的な上限は **(a) 完了時点の 48/90（53.3%）**。残り 42 分岐の大半が (b)＝simt 整備が前提。
+> - **🛠 着手用の引き継ぎ資料**：[`SIMT_HANDOFF.md`](SIMT_HANDOFF.md)（HRP simt ターゲット整備の段取り・既存資産・フェーズ計画）。
 
 現状（batch1+2+3 後）chg_som 18/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。

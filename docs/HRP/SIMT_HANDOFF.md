@@ -1,0 +1,92 @@
+# SIMT_HANDOFF.md — HRP simt ターゲット整備（M1 段階④(b) 解錠）引き継ぎ
+
+> 目的：HRP3 の**時間区画スケジューリング（SOM）タイミングテスト**を CI で実行可能にするため、
+> TTSP に **HRP 用シミュレーションタイマ（simt）ターゲット**を整備する。
+> これにより Method 1 段階④(b)（`twd_switch`/`scyc_switch`/`twdtimer_stop`/dispatch/窓稼働中の E_OACV・E_MACV）が到達可能になる。
+> 親計画：[`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md) Method 1。
+
+## 1. なぜ必要か（確定済みの事実）
+
+- M1 段階④(a)（error/state 変種）まで完了済み：**domain.c branch 6.7%→53.3%（48/90）**、chg_som 18/24・get_som 8/18、SOM隔離群9本緑（commit `8d5f03e`/`244ee62`/`8b974e7`）。
+- 残り 42 分岐の大半は (b) タイミング依存。だが **zybo_z7_gcc + QEMU の実機タイマ路線では (b) は到達不能と実測確定**：
+  - `somatr: TA_INISOM` で周期稼働起動＋`dly_tsk` すると、窓内に収まる 100ms（窓切替すら起こさない長さ）でも **QEMU がハング**。**gcov を外しても同様**＝性能でなくランタイム構造問題。
+  - 周期を**開始するだけ**（`chg_som(SOM1)`）は緑。ハングは**周期稼働中にシステムがアイドル/待ちに入った瞬間**。
+  - カーネル自身の実機タイマ版テスト（`test_tprot1`〜5）と同型の**カーネルドメイン CYCLIC 心拍**を付けても同じくハング。
+  - 原因：zybo は HRT=MPCore グローバルタイマ・窓タイマ=MPCore プライベートタイマ・オーバラン=WDG（`hrp3/arch/arm_gcc/zynq7000/chip_timer.h`）。**周期稼働中の窓切替割込み/WDG の QEMU エミュレーションが非機能**。
+- **解決策＝simt**：カーネルは `hrp3/test/simt_twd1.{c,cfg,h}` という**シミュレーションタイマ版** SOM テストを持つ。同じ `DEF_SCY`/`CRE_SOM`/`ATT_TWD` 構成を、テストが **`DO(simtim_advance(N))`** で時間を決定論的に進めて検証する（実機タイマ emulation に依存しない）。
+
+## 2. ゴール
+
+1. TTSP に **HRP simt ターゲット**（`library/HRP/target/<simt名>_gcc/` の4ファイル）を追加し、QEMU でビルド→実行→gcov 取得できる。
+2. **`simtim_advance(N)`** を TESRY の `do` ステップで使えるようにする（SOM テストが窓境界を決定論的に跨げる）。
+3. (b) テスト（`twd_switch`/`scyc_switch`/`twdtimer_stop`/dispatch/窓稼働中の E_OACV・E_MACV）を追加し domain.c を底上げ。
+
+## 3. 既存資産（カーネル側 simt 基盤・**そのまま使える**）
+
+| 場所 | 内容 |
+|---|---|
+| `hrp3/arch/simtimer/sim_timer.{c,h}` | **ソフトウェアで HRT/TWD/OVR を全エミュレート**。公開IF `simtim_advance(uint_t time)`（`sim_timer.h:139`）。`target_hrt_*`/`target_twdtimer_*`/`target_ovrtimer_*`/`target_custom_idle` を提供。 |
+| `hrp3/arch/simtimer/tSimTimerCntl*.c`、`sim_timer_cntl.h` | simt 制御アダプタ（TECS）。 |
+| `hrp3/target/simtimer_ct11mpcore_gcc/` | **完成済みの ARM + simt ターゲット**（target_timer.c/.cfg/.trb、target.cdl、Makefile.target に `SIMTIMERDIR=$(SRCDIR)/arch/simtimer` と `sim_timer.o`）。`TOPPERS_USE_QEMU` 対応。**TTSP HRP simt ターゲットの雛形**。 |
+| `hrp3/target/simtimer_macos_xcode/` | host(macOS) simt 版（POSIX）。参考。 |
+| `hrp3/test/simt_twd1.{c,cfg,h}` | **simt での SOM テスト実例**。`simt_twd1.h`：`SYSTEM_CYCLE 1000`/`TWD_DOM1_TIME 500`。`simt_twd1.c`：`DO(simtim_advance(499U))`→`(10U)`→`(1U)` と窓境界直前まで刻む。**(b) テスト設計の手本**。 |
+
+## 4. TTSP 側の現状（接続先）
+
+- TTSP HRP ターゲット雛形：`library/HRP/target/zybo_z7_gcc/`（`ttsp_target_test.{c,h}`・`ttsp_target.sh`・`ttsp_target.cfg`）。AGENTS.md §6 の4ファイル構成。
+- **時間進行の plumbing は既にある**：
+  - `library/HRP/target/zybo_z7_gcc/ttsp_target_test.c:88` `ttsp_target_gain_tick()`（zybo は GTC ビジーループで早送り＝実機タイマ前提）。
+  - TTG：`tools/ttg/bin/builder/CBuilder.rb:379` で `#define ttsp_target_gain_tick() cal_svc(TTSP_FN_GAIN_TICK,…)`。`gain_time` variation／`is_all_gain_time_mode?`（`tools/ttg/bin/product/IntermediateCode.rb:122`）。テストデータ例 `tools/ttg/test/just_in_case/asp/gain_time_*.yaml`。
+  - **→ simt ターゲットでは `ttsp_target_gain_tick`（または新 SVC）を `simtim_advance(固定tick)` に差し替えるのが素直**。ただし SOM 窓切替は「窓長ぴったりに進める」必要があり、固定 tick では粒度が粗い。**`simtim_advance(N)` に任意 N を渡せる do ステップ**（例 `do: { syscall: ttsp_simt_advance(N) }`）を新設するのが本命（`simt_twd1.c` の `DO(simtim_advance(N))` に相当）。
+- SOM 隔離ビルド群：`scripts/coverage_gcov_hrp.sh` の「SOM tests (isolated, 1 test/binary)」節（`find api_test/HRP/sys_manage/{chg_som,get_som}`）。simt 版は別ランナー or 本節の simt 対応が要る。
+- 既存 SOM テスト：`api_test/HRP/sys_manage/{chg_som,get_som}/*.yaml`（9本・全緑）。`exclude_tests.txt`（zybo）で通常bbから除外済み。
+
+## 5. 推奨プラン（フェーズ・spike 先行）
+
+### Phase 0：feasibility spike（**最初に必ず**・カーネル編集なし）
+**目的**：simt での SOM 窓切替が QEMU で動くことを最小コストで確認し、プロジェクト全体を de-risk。
+- カーネルの `simt_twd1` を `simtimer_ct11mpcore_gcc` でビルドし QEMU 実行 → 緑（`All check points passed`）を確認する。
+  - ビルド：`ruby hrp3/configure.rb -T simtimer_ct11mpcore_gcc -A simt_twd1 -a hrp3/test -c hrp3/test/simt_twd1.cfg -o "-DTOPPERS_USE_QEMU"`（TECS .cdl 問題が出たら simtimer_ct11mpcore_gcc の target.cdl/MANIFEST を参照。ct11mpcore のビルド手順は `hrp3/target/ct11mpcore_gcc/Makefile.target` 冒頭コメント）。
+  - QEMU machine：ct11mpcore は QEMU `realview-eb-mpcore`（要確認。`Makefile.target` の runq/QEMU 定義 or upstream ドキュメント）。
+- **判定**：緑なら simt 路線確定→Phase 1 へ。ビルド/実行に難（QEMU machine 無い等）なら、ct11mpcore でなく **zybo+simt ハイブリッド**（Phase 1 案B）に切替。
+
+### Phase 1：TTSP HRP simt ターゲット作成
+2案。Phase 0 の結果で選ぶ。
+- **案A（ct11mpcore ベース・カーネル編集なし優先）**：`library/HRP/target/simtimer_ct11mpcore_gcc/`（TTSP4ファイル）を新設し、カーネル `simtimer_ct11mpcore_gcc` を使う。gcov ツール（`scripts/`・`ttsp_gcov_report.py`）を ct11mpcore QEMU 用に適応。`ttsp_target_gain_tick`→`simtim_advance`。
+- **案B（zybo+simt・要カーネル編集＝禁則②・要ユーザ許可）**：新カーネル target `hrp3/target/simtimer_zybo_z7_gcc/`（zybo の MMU/保護はそのまま、timer だけ simt へ）。R5 移植（commit 94e1a3f 系・memory 参照）と同型の「カーネル編集は改変明記・ユーザ許可」フロー。TTSP の gcov 基盤（zynq-a9 QEMU）をそのまま使えるのが利点。
+- 既存 `coverage_gcov_hrp.sh` の SOM 隔離群を simt ターゲットでも回せるよう分岐（または `coverage_gcov_hrp_simt.sh` 新設。R5 の `coverage_gcov_hrp_r5.sh` が雛形）。
+
+### Phase 2：`simtim_advance(N)` を TESRY do 語彙に
+- `do: { id: TASK1, syscall: <simt advance> }` で任意 N を進められる仕組み。`simt_twd1.c` の `DO(simtim_advance(N))` 相当。
+- 候補：①既存 `gain_time` を simt で `simtim_advance` にマップ＋N 指定可能化、②専用 `ttsp_simt_advance(N)` SVC/関数を CBuilder で定義し TESRY から呼ぶ。TTG 改変は `CBuilder.rb`/`IntermediateCode.rb`/`CommonModule.rb`（既存 `gain_time` 周辺）。
+
+### Phase 3：(b) テスト追加（simt 上）
+- 雛形＝`simt_twd1.c`。`somatr: TA_INISOM`＋複数 TIME_WINDOW（DOM1 twdord1・DOM2 twdord2 等）。`do_*` で `simtim_advance` を窓長ぴったりに刻んで窓境界を跨ぐ → `twd_switch`/`scyc_switch`/`twdtimer_stop`/dispatch。
+- 窓稼働中のユーザドメイン呼出し（TASK1 を DOM1 に置き、DOM1 窓稼働中に `chg_som`/`get_som`）→ **E_OACV/E_MACV**（(a) で不可だった分。`VIOLATE_ACPTN` はユーザドメイン呼出し必須＝`COVERAGE_RAISE_PLAN.md` 段階④メモ参照）。
+- 各追加は **SOM隔離群（simt）で1テスト1バイナリ・緑＋domain.c per-function 上昇**を毎回検証（(a) と同じ作法）。
+
+## 6. 重要な決定・リスク
+
+- **カーネル編集の要否**：案A は不要（既存 simtimer_ct11mpcore_gcc 利用）。案B は要（禁則② → **着手前にユーザ許可**。R5 と同様に改変明記）。
+- **QEMU machine 差**：ct11mpcore（realview 系）か zynq-a9 か。gcov 取得（`arm-none-eabi-gcov` JSON 集計＝`scripts/ttsp_gcov_report.py`）が両者で動くか要確認。zybo の gcov overlap 対策（`GCOVINFO` リージョン・memory §M6）は target 依存。
+- **simt と保護ドメイン**：simt_twd1 は HRP3（保護＋SOM）で動く実例なので両立は確認済み。
+- **TECS**：HRP は syssvc が TECS 化（方式A）。simt ターゲットの target.cdl/MANIFEST を正しく取り込むこと（ct11mpcore のものを参照）。
+
+## 7. 現在のリポジトリ状態（このセッション終了時点）
+
+- ブランチ：`main`。直近コミット：
+  - `3d76f00` docs M1(b) 解決の道筋＝simt（本調査）
+  - `d1c8eaa` docs M1(b) は zybo+QEMU で到達不能と確定
+  - `8b974e7` M1 段階④(a) batch3（chg_som dspflg=false）
+  - `244ee62` M1 段階④(a) batch2（E_CTX）
+  - `8d5f03e` M1 段階④(a) batch1（E_ID/E_OBJ/短絡/get_som稼働中）
+  - `67f6012` feat M1 SOM TTG 組み込み PoC（型 SYSTEM_CYCLE/SYSTEM_OPERATION_MODE/TIME_WINDOW）
+- 未コミットの試作は revert 済（hang する TA_INISOM+dly/CYCLIC 心拍テストは削除）。SOM テストは 9本（全緑）が正。
+- TTG 拡張済み（型3種）：`tools/ttg/common/bin/sys_state/SystemCycle.rb`、`tools/ttg/{common,ttc}` 各所、`CommonModule.rb`。
+
+## 8. まず読むべきファイル（新セッション）
+
+1. 本書（全体像）→ [`COVERAGE_RAISE_PLAN.md`](COVERAGE_RAISE_PLAN.md) Method 1（特に「⛔(b)は到達不能」節と段階④メモ）。
+2. `hrp3/test/simt_twd1.{c,cfg,h}`（(b) の手本）＋ `hrp3/arch/simtimer/sim_timer.h`（simtim_advance）。
+3. `hrp3/target/simtimer_ct11mpcore_gcc/`（ターゲット雛形）。
+4. `library/HRP/target/zybo_z7_gcc/`（TTSP ターゲット雛形）＋ `scripts/coverage_gcov_hrp.sh`（SOM 隔離群）＋ `scripts/coverage_gcov_hrp_r5.sh`（新ターゲット追加の前例）。
