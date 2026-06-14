@@ -132,7 +132,7 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 | 不正アドレス `sil_reb_mem`（0xd0000000） | **Data Abort（メモリアクセス違反）** | **異常系・明示CP化（DEF_EXC で捕捉＋pc-=4 復帰）** |
 | `sil_dly_nse` | **Prefetch Abort**＝実装がカーネル専用テキスト＝DOM1 に実行権なし | **異常系・明示CP化（DEF_EXC で捕捉＋pc=lr_usr 復帰）** |
 | `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort**＝共有スピンロックは特権 | **異常系・明示CP化（専用ラッパ＋pc=lr_usr＋cpsr の I/F 復元）** |
-| `sil_get_pid`（MPIDR を MRC で読む） | **不正値を返す（fault しない）**＝ユーザモードの CP15 読みが UNPREDICTABLE | 異常系（fault でない・知見記録） |
+| `sil_get_pid`（MPIDR を MRC で読む・HRMP） | **不正値を返す（fault しない）**＝ユーザモードの CP15 読みが UNPREDICTABLE | **異常系・値チェック明示テスト（check_assert で「実行中 prcid を返さない」を検証）** |
 
 ### 異常系テストの扱い（明示 CP 化）
 - **サービスコール保護（E_OACV）**：`get_tim → E_OACV` を `check_ercd(ercd, E_OACV)` で検証（HRP api の保護テスト標準・138例と同方式）。
@@ -147,8 +147,10 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
   アクセスして Data Abort になる。マクロが複数命令にまたがり中間状態（割込みロック）が残るため、**専用の非インライン
   ラッパ `sil_spn_probe()`** で発行し、`sil_dabort_handler`（DABORT は sil_reb_mem と共用なので**静的カウンタで分岐**）が
   捕捉して **`pc = lr_usr`（ラッパ呼出し直後へ復帰）＋`cpsr` の I/F ビット復元（cpsid fi を巻き戻し）** で復帰する。HRMP 緑。
-- **CP 化しない 1 種（知見記録のみ）**：`sil_get_pid` は MPIDR を `MRC p15` で読むが、ユーザモードの CP15 読みは
-  UNPREDICTABLE で**fault せず不正値**を返す（実測 75/20 等）。CPU 例外でないため捕捉できず、値も非決定的なため CP 化しない。
+- **プロセッサ ID 読みの不正（値チェック・HRMP）**：`sil_get_pid` は MPIDR を `MRC p15` で読むが、ユーザモードの CP15 読みは
+  UNPREDICTABLE で**fault せず不正値**を返す（CPU 例外でないため例外捕捉は不可）。そこで**値チェック**＝ユーザドメインから
+  読んだ prcid が実行中の正しい値（PE1=1）を返さないことを `check_assert(user_pid != 1)` で明示検証する。
+  実測では QEMU 上で安定して 20 を返す（決定的）ため CI でも安定して緑。
 - 実装メモ：cfg.rb には `EXCNO_DABORT`/`EXCNO_PABORT` を渡す（core_test.h の `EXCNO_MACV_*` は cfg 未到達）。HRMP の DEF_EXC は
   per-PE エンコード（`0x10000|EXCNO_*`）を要求。`lr_usr` 取得は `stm sp,{lr}^` の小ヘルパ（out.c）で実装。
 

@@ -366,6 +366,17 @@ void sil_user_task(intptr_t exinf) {
 	sil_spn_probe();
 	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: SIL_LOC_SPN -> DABORT caught & recovered : OK");
 
+	/* 【異常系・値チェック・明示テスト】sil_get_pid は MPIDR を MRC p15 で読むが、ユーザモードの
+	 * CP15 読みは UNPREDICTABLE で fault せず不正値を返す＝実行中の正しい prcid(1) を返さないことを確認．
+	 * （fault でないため CPU 例外では捕捉できず、値の不正を check_assert で検証する．） */
+	{
+		ID user_pid = 0;
+		sil_get_pid(&user_pid);
+		syslog_1(LOG_NOTICE, "USER DOMAIN abnormal: sil_get_pid returned %d (running prcid=1)", user_pid);
+		check_assert(user_pid != 1);
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_get_pid -> wrong value (not running prcid) : OK");
+	}
+
 	wup_tsk(MAIN_TASK1);
 	ext_tsk();
 }
