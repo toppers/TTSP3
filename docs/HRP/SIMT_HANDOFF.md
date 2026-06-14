@@ -102,7 +102,18 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
   qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio -nographic -smp 1 -kernel hrp
   ```
 
-#### 残：Phase 2（TTSP 統合）— 次セッション
+#### Phase 2（TTSP 統合）— 一部着手（2026-06-14）
+- ✅ **TTSP target `library/HRP/target/simtimer_zybo_z7_gcc/` 作成**（zybo の4ファイルを複製・改変）：
+  - `ttsp_target.sh`：`KERNEL_COBJS_TARGET` を `mpcore_timer.o`→`target_timer.o sim_timer.o` に変更、`CONFIG_OPT` に `-DHRT_CONFIG1` 付与。
+    **`-DSIMTIM_TEST` は付けない**（カーネルの simt テスト専用＝hook_hrt_* を要求するため。TTSP テストは未定義でリンク不能）。
+  - `ttsp_target_test.c`：`ttsp_target_gain_tick`→`simtim_advance(TTSP_SIMT_GAIN_STEP)`、`stop/start_tick` は no-op（simt は時刻制御済）。
+- ✅ **パイプライン検証**：`TTSP_TARGET_NAME=simtimer_zybo_z7_gcc OBJ_DIR=obj_hrp_simt bash scripts/coverage_gcov_hrp.sh smoke`
+  で **check_library exception/interrupt が「All check points passed」**（gcov 計装・QEMU xilinx-zynq-a9）。
+  ＝**TTSP build→simt カーネル→QEMU→gcov の統合パイプラインが動作**。
+- **残（重要）＝精密 advance**：`ttsp_target_gain_tick` は 1 ステップ刻みのため、SOM 窓（twdlen 大）跨ぎには
+  **`simtim_advance(N)` を任意 N で呼ぶ do ステップが必要**（zybo の per-1us gain は窓スケールに不適）。下記参照。
+
+#### 残：Phase 2 続き — 次セッション
 1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・
    `ttsp_target.sh`（`OS_TARGET=simtimer_zybo_z7_gcc`・USE_QEMU・gcov）・`ttsp_target.cfg`。`ttsp_target_gain_tick`→`simtim_advance`。
    ただし TTG 生成テスト（out.c）は `-DHRT_CONFIG1 -DSIMTIM_TEST` が要る＋app CDL に tTestService 不要（TTSP は ttsp_check_point）
