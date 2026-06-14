@@ -1,0 +1,18 @@
+version: "PoC段階④(a): chg_som E_OBJ（システム周期未定義）"
+HRP_sys_manage_chg_som_H_d:
+  note: "【NGKI5035】DEF_SCY を定義しない構成(system_cyctim==0)で chg_som を呼ぶ＝CHECK_OBJ(system_cyctim!=0) 不成立で E_OBJ．SOM オブジェクトを置かないため隔離群でも単独バイナリでビルドできる．"
+
+  pre_condition:
+    TASK1:
+      type   : TASK
+      tskstat: running
+      tskpri : TSK_PRI_MID
+
+  do:
+    id     : TASK1
+    syscall: chg_som(1)
+    ercd   : E_OBJ
+
+  post_condition:
+    TASK1:
+      tskstat: running
