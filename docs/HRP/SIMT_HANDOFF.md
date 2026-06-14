@@ -43,16 +43,36 @@
 
 ## 5. 推奨プラン（フェーズ・spike 先行）
 
-### Phase 0：feasibility spike（**最初に必ず**・カーネル編集なし）
+### Phase 0：feasibility spike — ✅ **完了・成功（2026-06-14）**
 **目的**：simt での SOM 窓切替が QEMU で動くことを最小コストで確認し、プロジェクト全体を de-risk。
-- カーネルの `simt_twd1` を `simtimer_ct11mpcore_gcc` でビルドし QEMU 実行 → 緑（`All check points passed`）を確認する。
-  - ビルド：`ruby hrp3/configure.rb -T simtimer_ct11mpcore_gcc -A simt_twd1 -a hrp3/test -c hrp3/test/simt_twd1.cfg -o "-DTOPPERS_USE_QEMU"`（TECS .cdl 問題が出たら simtimer_ct11mpcore_gcc の target.cdl/MANIFEST を参照。ct11mpcore のビルド手順は `hrp3/target/ct11mpcore_gcc/Makefile.target` 冒頭コメント）。
-  - QEMU machine：ct11mpcore は QEMU `realview-eb-mpcore`（要確認。`Makefile.target` の runq/QEMU 定義 or upstream ドキュメント）。
-- **判定**：緑なら simt 路線確定→Phase 1 へ。ビルド/実行に難（QEMU machine 無い等）なら、ct11mpcore でなく **zybo+simt ハイブリッド**（Phase 1 案B）に切替。
+**結果**：カーネルの `simt_twd1`（DEF_SCY/CRE_SOM/ATT_TWD＋HRP3 保護＋simtimer arch）を `simtimer_ct11mpcore_gcc`
+で**ビルド成功→QEMU(realview-eb-mpcore)で「All check points passed.」（全22チェックポイント）**。
+`simtim_advance(N)` で時間を決定論的に進める simt 方式は **QEMU でハングせず動く**ことを実証。**→ simt 路線確定（案A 有望）**。
+
+**再現レシピ（カーネル編集なし・/tmp で完結）**：
+```sh
+HRP3=$(realpath hrp3); TTSP=$(realpath ttsp3)
+B=/tmp/simt_spike; rm -rf "$B"; mkdir -p "$B"; cd "$B"
+# 1) configure：ターゲット=simtimer_ct11mpcore_gcc、app=simt_twd1、要 -DHRT_CONFIG1 -DSIMTIM_TEST
+ruby "$HRP3/configure.rb" -T simtimer_ct11mpcore_gcc -A simt_twd1 -a "$HRP3/test" \
+     -c "$HRP3/test/simt_twd1.cfg" -o "-DTOPPERS_USE_QEMU -DHRT_CONFIG1 -DSIMTIM_TEST"
+# 2) app CDL：TECS テストサービス(check_point 等)を wire する手本 test_pf.cdl を APPLNAME.cdl として配置
+cp "$HRP3/test/test_pf.cdl" ./simt_twd1.cdl
+# 3) build
+make
+# 4) run（CT11MPCore = QEMU realview-eb-mpcore・semihosting）
+qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -nographic -kernel hrp
+#   → "All check points passed."（semihosting 終了で qemu 終了コードは非0だがハングではない）
+```
+**ハマりどころ（解決済・記録）**：
+- TECS app CDL が要る（APPLNAME.cdl）。`library/HRP/test/out.cdl` は SerialPort 前提で不足→
+  **`hrp3/test/test_pf.cdl`（tTestService/tTestServiceAdapter＋SysLog＋Banner＋target.cdl）が正解**（check_point 等が解決）。
+- `simt_twd1.c` は `-DHRT_CONFIG1`（TSTEP_HRTCNT 等の HRT 構成）と `-DSIMTIM_TEST` を**両方**要求（無いと #error）。
+- 出力は低レベル PutLog（semihosting）。SerialPort セルは不要。
 
 ### Phase 1：TTSP HRP simt ターゲット作成
-2案。Phase 0 の結果で選ぶ。
-- **案A（ct11mpcore ベース・カーネル編集なし優先）**：`library/HRP/target/simtimer_ct11mpcore_gcc/`（TTSP4ファイル）を新設し、カーネル `simtimer_ct11mpcore_gcc` を使う。gcov ツール（`scripts/`・`ttsp_gcov_report.py`）を ct11mpcore QEMU 用に適応。`ttsp_target_gain_tick`→`simtim_advance`。
+**Phase 0 で案A（ct11mpcore）の実行性が実証されたので案A を本命とする。** 2案を併記。
+- **案A（ct11mpcore ベース・カーネル編集なし・★Phase0で実証）**：`library/HRP/target/simtimer_ct11mpcore_gcc/`（TTSP4ファイル）を新設し、カーネル `simtimer_ct11mpcore_gcc` を使う。app CDL は `hrp3/test/test_pf.cdl` 型（TTSP の test framework=`ttsp_check_point` を使うなら TTSP 版 out.cdl を test_pf 型に作り替え）。QEMU=`realview-eb-mpcore`。gcov ツール（`scripts/`・`ttsp_gcov_report.py`）を realview-eb-mpcore 用に適応（**要検証**：ARM11/realview で gcov 計装＋.gcov_info 収集が動くか。zybo の `GCOVINFO` リージョン対策は target 依存＝ct11mpcore 版の target_mem/ldscript 調整が要るかも）。時間進行は `ttsp_target_gain_tick`→`simtim_advance`、ただし窓境界ぴったりに刻むため**任意 N を渡せる do ステップ**（Phase 2）が本命。
 - **案B（zybo+simt・要カーネル編集＝禁則②・要ユーザ許可）**：新カーネル target `hrp3/target/simtimer_zybo_z7_gcc/`（zybo の MMU/保護はそのまま、timer だけ simt へ）。R5 移植（commit 94e1a3f 系・memory 参照）と同型の「カーネル編集は改変明記・ユーザ許可」フロー。TTSP の gcov 基盤（zynq-a9 QEMU）をそのまま使えるのが利点。
 - 既存 `coverage_gcov_hrp.sh` の SOM 隔離群を simt ターゲットでも回せるよう分岐（または `coverage_gcov_hrp_simt.sh` 新設。R5 の `coverage_gcov_hrp_r5.sh` が雛形）。
 
