@@ -262,6 +262,31 @@ TTSP3側の対応は完了（`library/FMP/target/linux_gcc/` 新設）。
   退行は r1247〜r1248。調査記録は
   `fmp3/target/linux_gcc/issues/20260607-2150_*_posix-smp-thread-switch/README.md`「追記2（2026-06-13）」。
 
+### 2026-06-14 上流 r1252 までの追従（POSIX依存部の追加修正）
+
+上流 HRMP3 trunk が **r1247 → r1252** に進んだのを受け，POSIX 依存部の追加修正を
+FMP3（`fmp3/arch/posix_gcc`）に適用した（fmp3 作業コピー。コミットは fmp3 側で実施）。
+
+**適用内容**：
+- **r1252（デッドロック修正）** `arch/posix_gcc/posix_timer_itimer.c`：`sigalrm_handler` で
+  `timer_mutex` をロックする前に全シグナルをマスク（`pthread_sigmask_blockall`）し，
+  アンロック後に復元。タイマミューテックス保持中のシグナル受信に起因するデッドロックを回避。
+  ※他の `timer_mutex` ロック箇所（FMP3 では既に blockall 済み）に倣い，残っていた
+  `sigalrm_handler` のみを是正。コメントも「全シグナルをマスク」に更新。
+- **r1252（API整理）** `thread_ctrl.c`/`thread_ctrl.h`：`terminate_thread`／`preempt_thread` の
+  未使用第1引数 `TPCB *` を削除。呼び出し側（`posix_kernel_impl.h` の `activate_context`
+  マクロ・`interrupt_sim.c` 3箇所）も更新。`suspend_thread` の `p_my_thrcb` 取得を if 文外へ整理（等価）。
+- **r1248** 実行再開待ち直後の `pthread_testcancel()` は 2026-06-13 に当方が先行導入済みで
+  公式と一致（差分なし）。**r1249/r1250** はコメント・一時コメントアウトの戻しで機能差なし。
+- **EXCNO 統一（r1234）は引き続き見送り**（上流未完成。なお linux_gcc の例外 check_library は
+  以前から `TTSP_EXCNO_C` 未定義でビルド不可＝本節の表脚注参照。本追従とは無関係）。
+
+**検証（linux_gcc・ネイティブ）**：`check_library/interrupt` PASS／**API 13/20 を 5 周連続で
+同一に再現（失敗グループ {3,6,11,12,13,15,19}・フレーク/ハングなし・`ter_tsk` 系は緑）**。
+残 7 は interrupt シミュレーション・タイマ分解能・静的スタック配置のターゲット依存差分のみ。
+timer check_library の FAIL は `FUNC_TIME=false`（実時間駆動でティック停止不可）の既知制約で
+本修正とは無関係。記録：`fmp3/target/linux_gcc/{target_user.txt, issues/20260607-2150_*/README.md}`。
+
 ---
 
 ## 更新手順

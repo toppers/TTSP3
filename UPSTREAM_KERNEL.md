@@ -31,6 +31,17 @@ TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 > **上流確認**：HRMP3 trunk は **r1249** で同修正（`suspend_thread` に `pthread_testcancel()`）を
 > 適用済みで，本 FMP3 修正は r1249 と関数本体一致＝FMP3 は r1249 追従済み（HRMP3 側追加対応不要）。
 > 詳細は DIVERGENCE_MAP.md E節・fmp3 `target/linux_gcc/issues/`・`../posix/posix_hrmp3_r1246/`。
+>
+> **2026-06-14 上流 r1252 までの追従（CI固定版 `223ed7e` には未反映）**：
+> 上流 HRMP3 trunk が r1247→**r1252** に進み，POSIX 依存部の追加修正を fmp3 作業コピーに適用。
+> (1) r1252 デッドロック修正＝`posix_timer_itimer.c` の `sigalrm_handler` で `timer_mutex`
+> ロック前に全シグナルをマスク（`pthread_sigmask_blockall`）し解放後に復元，
+> (2) r1252 API整理＝`terminate_thread`／`preempt_thread` の未使用第1引数 `TPCB *` を削除
+> （`activate_context` マクロ・`interrupt_sim.c` の呼び出しも更新），
+> (3) r1248 の `pthread_testcancel` は 6/13 に先行導入済みで一致，r1249/r1250 は機能差なし。
+> EXCNO 統一（r1234）は引き続き見送り。
+> 検証：**linux_gcc `check_library/interrupt` PASS・API 13/20 を 5 周連続で同一に再現**
+> （フレーク/ハングなし・`ter_tsk` 系緑）。詳細は DIVERGENCE_MAP.md E節「2026-06-14」。
 
 ## 検証済み環境（2026-06-06 緑確認・タグ v3.2.0-rc1）
 
