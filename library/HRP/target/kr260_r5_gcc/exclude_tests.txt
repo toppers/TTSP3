@@ -1,0 +1,17 @@
+# library/HRP/target/zcu102_r5_gcc/exclude_tests.txt
+#
+# このターゲット（ZynqMP Cortex-R5 / PMSAv7 MPU）が原理的に非対応の機能を使う
+# テストを、TTSP のテスト生成・ビルド・実行から除外するリスト。
+#
+# 形式: 1行1パターン。MANIFEST_AUTO_CODE の各 yaml パスに対する「部分一致（固定文字列）」。
+#       先頭 # のコメント行・空行は無視される。
+# 適用: scripts/ttsp_parallel_api.sh の build_group が `grep -vF -f` で除外する。
+#       （他ターゲット＝zybo_z7_gcc 等には影響しない。yaml 本体は削除しない）
+#
+# --- 除外理由 ---
+# ATT_PMA（物理メモリ領域・TESRY type: PHYSICAL_MEMORY）は、MPU(PMSAv7) が
+# アドレス変換を持たず原理的に実現できないため out.cfg で E_NOSPT になる
+# （hrp3/arch/arm_gcc/zynqmp_r5/chip_design.md §「意図的な割切り・制限と根拠」4項）。
+# HRP で ATT_PMA を生成する唯一の元は sample/hrp_parameter.yaml（全オブジェクト型入り
+# サンプル）。zybo_z7_gcc(A9/MMU) は ATT_PMA 対応のため、そちらでは除外しない。
+sample/hrp_parameter
