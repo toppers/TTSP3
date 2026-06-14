@@ -83,6 +83,7 @@ extern void main_task(intptr_t exinf);
 extern void sil_user_task(intptr_t exinf);
 extern void sil_dabort_handler(void *p_excinf);
 extern void sil_pabort_handler(void *p_excinf);
+extern void sil_spn_probe(void);
 /* 【TTSP3向け改変 2026-06-14】texhdr 削除（第3世代にタスク例外なし） */
 extern void almhdr(intptr_t exinf);
 extern void cychdr(intptr_t exinf);

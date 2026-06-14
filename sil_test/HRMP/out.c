@@ -298,7 +298,7 @@ void main_task(intptr_t exinf) {
 		check_ercd(ercd, E_OK);
 		/* CP は main_task（カーネルドメイン）側で記録する：ユーザドメインからは
 		 * ttsp_mp_check_point が内部で呼ぶ sil_get_pid が不正値を返すため使えない． */
-		ttsp_mp_check_point(prcid, 25);
+		ttsp_mp_check_point(prcid, 26);
 	}
 
 	/* SILスピンロック状態でext_kerを発行できることの確認 */
@@ -359,11 +359,18 @@ void sil_user_task(intptr_t exinf) {
 	sil_dly_nse(SIL_DLY_TIME);
 	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() -> PABORT caught & recovered : OK");
 
+	/* 【異常系・fault・明示CP化】SIL_LOC_SPN（SILスピンロック取得）はユーザドメインから共有スピンロック
+	 * 変数にアクセスして Data Abort になる＝SIL スピンロックの保護を明示確認．SIL_LOC_SPN は割込みロック
+	 * （cpsid fi）後にスピンロック変数を読むため、専用ラッパ sil_spn_probe() で発行し、ハンドラは
+	 * pc=lr_usr（ラッパ呼出し直後へ）＋cpsr の I/F ビット復元（割込みロックを巻き戻す）で復帰する． */
+	sil_spn_probe();
+	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: SIL_LOC_SPN -> DABORT caught & recovered : OK");
+
 	wup_tsk(MAIN_TASK1);
 	ext_tsk();
 }
 
-/* ユーザモードの lr（バンクレジスタ）を取得する（PABORT 復帰用）． */
+/* ユーザモードの lr（バンクレジスタ）を取得する（PABORT/SPN-DABORT 復帰用）． */
 static uint32_t sil_get_lr_usr(void) {
 	uint32_t lr;
 	Asm("sub sp, sp, #4		\n"
@@ -373,12 +380,31 @@ static uint32_t sil_get_lr_usr(void) {
 	return(lr);
 }
 
+/* 【TTSP3向け改変 2026-06-14・HRMP版】SIL_LOC_SPN を単独で発行する非インラインラッパ．
+ * ユーザドメインから呼ぶとスピンロック変数アクセスで Data Abort になる．ハンドラは本関数の
+ * 呼出し直後（lr_usr）へ復帰するため、SIL_UNL_SPN は呼ばない（取得失敗が前提）． */
+void __attribute__((noinline)) sil_spn_probe(void) {
+	SIL_PRE_LOC;
+	SIL_LOC_SPN();
+}
+
 /*
- * 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメインからの不正アドレス SIL アクセス（データアボート）
- * を捕捉する CPU 例外ハンドラ（PE1）．CP23 を記録し、p_excinf の PC を fault 命令の次へ進めて復帰する． */
+ * 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメインからのデータアボートを捕捉する CPU 例外ハンドラ（PE1）．
+ * 同一 EXCNO で 2 種の異常系を順に捕捉する：
+ *   1回目＝不正アドレス sil_reb_mem（CP23・pc-=4 で fault した load をスキップ）
+ *   2回目＝SIL_LOC_SPN（CP25・pc=lr_usr でラッパ呼出し直後へ＋cpsr の I/F 復元で割込みロックを巻き戻し） */
 void sil_dabort_handler(void *p_excinf) {
-	ttsp_mp_check_point(1, 23);
-	((T_EXCINF *) p_excinf)->pc -= 4U;
+	static int dab_cnt = 0;
+	dab_cnt++;
+	if (dab_cnt == 1) {
+		ttsp_mp_check_point(1, 23);
+		((T_EXCINF *) p_excinf)->pc -= 4U;
+	}
+	else {
+		ttsp_mp_check_point(1, 25);
+		((T_EXCINF *) p_excinf)->pc = sil_get_lr_usr();
+		((T_EXCINF *) p_excinf)->cpsr &= ~(0x80U | 0x40U);	/* SIL_LOC_SPN の cpsid fi を巻き戻す */
+	}
 }
 
 /*
