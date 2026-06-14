@@ -70,8 +70,49 @@ qemu-system-arm -M realview-eb-mpcore -semihosting -m 256M -serial mon:stdio -no
 - `simt_twd1.c` は `-DHRT_CONFIG1`（TSTEP_HRTCNT 等の HRT 構成）と `-DSIMTIM_TEST` を**両方**要求（無いと #error）。
 - 出力は低レベル PutLog（semihosting）。SerialPort セルは不要。
 
-### Phase 1：TTSP HRP simt ターゲット作成
-**Phase 0 で案A（ct11mpcore）の実行性が実証されたので案A を本命とする。** 2案を併記。
+### Phase 1（カーネル側）：✅ **完了・gcov 検証まで成功（2026-06-14・案B＝zybo+simt 採用）**
+ユーザ判断で**案B（zybo+simt・新ターゲット dir 方式）を採用**（gcov・QEMU・TTSP ツールを丸ごと再利用できるため）。
+**カーネル新ターゲット `hrp3/target/simtimer_zybo_z7_gcc/`（SVN・未コミット・各ファイル冒頭に【改変】明記）を作成し、end-to-end 検証に成功**：
+
+- **構成**：zybo_z7_gcc を `TARGETDIR2` として流用し、MPCore ハードウェアタイマ（`mpcore_timer.o`）の代わりに
+  タイマドライバシミュレータ（`arch/simtimer/sim_timer.o` ＋ 本target の `target_timer.o`）を用いる。
+  HRT＝MPCore グローバルタイマ割込み(27)、TWD＝プライベートタイマ割込み(29)、OVR＝ウォッチドッグ割込み(30)の
+  番号を流用し、`raise_int()`（GIC set-pending/SGI）で simt から割込みを生成。**gcov・MMU・GIC・シリアル・起動部・
+  リンカスクリプト(.gcov_info)は zybo を流用**。
+- **作成ファイル**（14個）：Makefile.target / target_timer.{c,h,cfg} / target.cdl（SimTimerCntl 追加）/
+  target_kernel.h（HRTCNT_BOUND・HRT_CONFIG）/ target_kernel_impl.h（TOPPERS_CUSTOM_IDLE）/
+  target_stddef.h（TOPPERS_SIMTIMER）/ target_rename.{def,h}・target_unrename.h（simt 関数リネーム）/ MANIFEST 等。
+- **検証結果**：
+  1. `simt_twd1` を `simtimer_zybo_z7_gcc` でビルド→**QEMU `xilinx-zynq-a9` で「All check points passed.」（全22CP・ハングなし）**。
+  2. **gcov 計装ビルド（`ENABLE_GCOV=true`＋`ATT_MOD("libgcov.a")/("librdimon.a")`）→ QEMU 緑 → .gcda 79個（domain.gcda 含む）取得**。
+  3. `ttsp_gcov_report.py` で集計成功。**(b) の核心分岐が点灯**：`_kernel_twd_switch` 0→5/10、`_kernel_scyc_switch` 0→1/2、
+     `_kernel_twdtimer_stop` 0→2/2、`_kernel_twdtimer_start` 1→2/2、`_kernel_twd_start` 5→7/10（実機タイマ zybo+QEMU では
+     ハングで到達不能だった分岐）。＝**simt が (b) を解錠することを実証**。
+- **再現レシピ**：
+  ```sh
+  HRP3=$(realpath hrp3)
+  cat > /tmp/B/spike_gcov.cfg <<EOF
+  INCLUDE("$HRP3/test/simt_twd1.cfg");
+  KERNEL_DOMAIN { ATT_MOD("libgcov.a"); ATT_MOD("librdimon.a"); }
+  EOF
+  ruby "$HRP3/configure.rb" -T simtimer_zybo_z7_gcc -A simt_twd1 -a "$HRP3/test" \
+       -c /tmp/B/spike_gcov.cfg -o "-DTOPPERS_USE_QEMU -DHRT_CONFIG1 -DSIMTIM_TEST"
+  cp "$HRP3/test/test_pf.cdl" ./simt_twd1.cdl
+  make ENABLE_GCOV=true
+  qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio -nographic -smp 1 -kernel hrp
+  ```
+
+#### 残：Phase 2（TTSP 統合）— 次セッション
+1. **TTSP target** `library/HRP/target/simtimer_zybo_z7_gcc/`（4ファイル）：zybo の TTSP target を複製し、`ttsp_target_test.{c,h}`・
+   `ttsp_target.sh`（`OS_TARGET=simtimer_zybo_z7_gcc`・USE_QEMU・gcov）・`ttsp_target.cfg`。`ttsp_target_gain_tick`→`simtim_advance`。
+   ただし TTG 生成テスト（out.c）は `-DHRT_CONFIG1 -DSIMTIM_TEST` が要る＋app CDL に tTestService 不要（TTSP は ttsp_check_point）
+   →TTSP の out.cdl（SerialPort 型）で良いか要確認（kernel test の test_pf.cdl とは別系統）。
+2. **`simtim_advance(N)` を TESRY do 語彙へ**：`simt_twd1.c` の `DO(simtim_advance(N))` 相当。TTG の `gain_time`/`ttsp_target_gain_tick`
+   （`CBuilder.rb:379`）を simt 用に N 指定可能化、or 専用 `ttsp_simt_advance(N)`。
+3. **ランナー** `coverage_gcov_hrp_simt.sh`（R5 の `coverage_gcov_hrp_r5.sh` 雛形）：SOM テストを simt ターゲットでビルド/実行/gcov union。
+4. **(b) テスト追加**：TA_INISOM＋複数 TIME_WINDOW＋`simtim_advance` で窓境界跨ぎ、ユーザドメイン窓稼働中の E_OACV/E_MACV/dispatch。
+
+> ### （参考）当初の2案併記（Phase 0 時点）
 - **案A（ct11mpcore ベース・カーネル編集なし・★Phase0で実証）**：`library/HRP/target/simtimer_ct11mpcore_gcc/`（TTSP4ファイル）を新設し、カーネル `simtimer_ct11mpcore_gcc` を使う。app CDL は `hrp3/test/test_pf.cdl` 型（TTSP の test framework=`ttsp_check_point` を使うなら TTSP 版 out.cdl を test_pf 型に作り替え）。QEMU=`realview-eb-mpcore`。gcov ツール（`scripts/`・`ttsp_gcov_report.py`）を realview-eb-mpcore 用に適応（**要検証**：ARM11/realview で gcov 計装＋.gcov_info 収集が動くか。zybo の `GCOVINFO` リージョン対策は target 依存＝ct11mpcore 版の target_mem/ldscript 調整が要るかも）。時間進行は `ttsp_target_gain_tick`→`simtim_advance`、ただし窓境界ぴったりに刻むため**任意 N を渡せる do ステップ**（Phase 2）が本命。
 - **案B（zybo+simt・要カーネル編集＝禁則②・要ユーザ許可）**：新カーネル target `hrp3/target/simtimer_zybo_z7_gcc/`（zybo の MMU/保護はそのまま、timer だけ simt へ）。R5 移植（commit 94e1a3f 系・memory 参照）と同型の「カーネル編集は改変明記・ユーザ許可」フロー。TTSP の gcov 基盤（zynq-a9 QEMU）をそのまま使えるのが利点。
 - 既存 `coverage_gcov_hrp.sh` の SOM 隔離群を simt ターゲットでも回せるよう分岐（または `coverage_gcov_hrp_simt.sh` 新設。R5 の `coverage_gcov_hrp_r5.sh` が雛形）。

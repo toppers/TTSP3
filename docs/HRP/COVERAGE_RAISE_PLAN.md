@@ -272,7 +272,12 @@ SOM隔離群 9本（chg_som H-a〜H-e/H-g, get_som H-a〜H-c）全緑・20分割
 > - **🛠 着手用の引き継ぎ資料**：[`SIMT_HANDOFF.md`](SIMT_HANDOFF.md)（HRP simt ターゲット整備の段取り・既存資産・フェーズ計画）。
 > - **✅ Phase 0 spike 成功（2026-06-14）**：カーネル `simt_twd1` を `simtimer_ct11mpcore_gcc` でビルドし
 >   QEMU(`realview-eb-mpcore`)で **「All check points passed.」**（全22CP）＝`simtim_advance(N)` の simt 方式は
->   QEMU でハングせず SOM 窓切替を試験できることを実証。**simt 路線確定（案A 有望）**。再現レシピは SIMT_HANDOFF.md Phase0。
+>   QEMU でハングせず SOM 窓切替を試験できることを実証。再現レシピは SIMT_HANDOFF.md Phase0。
+> - **✅ Phase 1（カーネル側）成功＝gcov 検証まで（2026-06-14・案B zybo+simt 採用）**：新カーネルターゲット
+>   `hrp3/target/simtimer_zybo_z7_gcc/`（zybo を流用しタイマだけ simt 化・改変明記）を作成。`simt_twd1` を
+>   **QEMU `xilinx-zynq-a9` で緑＋gcov 計装で .gcda 79個取得＋集計成功**。**(b) の核心分岐が点灯**：twd_switch 0→5/10、
+>   scyc_switch 0→1/2、twdtimer_stop 0→2/2（実機タイマでハング＝到達不能だった分岐）。**simt が (b) を解錠することを実証**。
+>   残は Phase 2（TTSP 統合：TTSP target＋simtim_advance を TESRY do へ＋ランナー＋(b)テスト）。詳細 SIMT_HANDOFF.md Phase1。
 
 現状（batch1+2+3 後）chg_som 18/24・get_som 8/18。配置は `api_test/HRP/sys_manage/{chg_som,get_som}/`（exclude_tests.txt の
 `sys_manage/chg_som`・`get_som` パターンで通常bb除外＆SOM隔離群入り＝**追加設定不要**）。caller は running 維持（T5_012/013 回避）。
