@@ -87,11 +87,12 @@ scripts/ci_run.sh [ASP|FMP|HRP|HRMP] [zybo_z7_gcc]   # QEMU(Cortex-A9)前提
 
 ### 合否の根拠は必ず execute.log
 
-- 「通るはず」で報告しない（[`AGENTS.md`](../AGENTS.md) §4）。各 `<dir>/execute.log` の末尾を見る：
-  - `All check points passed` ＝緑
-  - `## Unexpected ... failed at out.c:NN` / `Check point N failed` ＝赤
-  - `## Unexpected error E_OACV detected` ＝保護違反による早期終了（HRP/HRMP の系統要因。[`docs/HRP/BB_UNREACHABLE.md`](HRP/BB_UNREACHABLE.md) §1）
-  - `Unexpected check point 0` ＝**走ってはいけない番兵タスクが走った**（停止すべき操作が失敗）
+- 「通るはず」で報告しない（[`AGENTS.md`](../AGENTS.md) §4）。各 `<dir>/execute.log` の末尾を見る（実マーカ書式は `library/*/test/ttsp_test_lib.c`）：
+  - `All check points passed.` ＝緑（各CPは `Check point N passed.`）
+  - ``## Assertion `...' failed at <file>:NN.`` / ``## Unexpected value V for `A == B' failed at out.c:NN.`` ＝赤（assert／値・状態の不一致）
+  - `## Unexpected error <ERCD> detected at <file>:NN.` ＝想定外のエラーコード。`<ERCD>=E_OACV` は保護違反（HRP/HRMP の系統要因。**TESRY 移行で多くは解消済**＝[`docs/HRP/BB_UNREACHABLE.md`](HRP/BB_UNREACHABLE.md) §1。`E_SYS` は既存 flaky）
+  - `## Unexpected check point N.` ＝シーケンス番兵。とくに **`N=0`** は**走ってはいけない番兵タスクが走った**（停止すべき操作が失敗）
+  > ⚠ いずれも `## ` 接頭辞付き／末尾ピリオド付きが正書式。`Check point N failed` のような文字列は**存在しない**。grep するなら上記の逐語で。
 
 ### どのグループにどのテストが入ったか
 
@@ -140,12 +141,14 @@ TTG_ABS=$(realpath "$TTG_BIN")
 OPT="-h --out_file_name out --func_time $FUNC_TIME --func_interrupt $FUNC_INTERRUPT --func_exception $FUNC_EXCEPTION"
 yaml=$(realpath api_test/HRP/sys_manage/twd_som/<NAME>.yaml)
 dir="$OBJ_DIR/check_library/som_<NAME>"; rm -rf "$dir"; mkdir -p "$dir/objs"; cp "$REF_MK" "$dir/Makefile"
-( cd "$dir" \
-  && ruby "$TTG_ABS" $OPT "$yaml" > result_ttg.log 2>&1 \
-  && { grep -q 'libgcov.a' out.cfg || printf 'KERNEL_DOMAIN {\n\tATT_MOD("libgcov.a");\n\tATT_MOD("librdimon.a");\n}\n' >> out.cfg; } \
-  && make ENABLE_GCOV=true -j4 > result_make.log 2>&1 \
-  && rm -f objs/*.gcda \
-  && timeout 120 qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio -nographic -smp 1 -kernel hrp < /dev/null > execute.log 2>&1 )
+# 注1: && チェーンにせず文を分離する（サブシェルで cwd を保ちつつ各ステップを順に実行）。
+# 注2: libgcov 判定は `command grep`（実 grep バイナリ）を使う＝§6「grep ラッパ」回避。
+( cd "$dir"
+  ruby "$TTG_ABS" $OPT "$yaml" > result_ttg.log 2>&1
+  command grep -q 'libgcov.a' out.cfg || printf 'KERNEL_DOMAIN {\n\tATT_MOD("libgcov.a");\n\tATT_MOD("librdimon.a");\n}\n' >> out.cfg
+  make ENABLE_GCOV=true -j4 > result_make.log 2>&1
+  rm -f objs/*.gcda
+  timeout 120 qemu-system-arm -M xilinx-zynq-a9 -semihosting -m 512M -serial null -serial mon:stdio -nographic -smp 1 -kernel hrp < /dev/null > execute.log 2>&1 )
 tail -3 "$dir/execute.log"
 ```
 
@@ -188,7 +191,9 @@ tail -3 "$dir/execute.log"
 - **simt の `target_custom_idle` は次イベントを1つずつ発火**（ハンドラ完了後に次へ）＝**同時刻コインシデンスが作れない**。`set_dspflg` の elseif-T（dspflg 偽での窓切替）等は到達不能（upstream `simt_twd1` も 0/4）。
 - **窓切替(twd_switch)は dly_tsk(idle文脈)型が本命**、scyc/overrun の明示制御は `ttsp_simt_advance(N)` 型（[`docs/HRP/SIMT_HANDOFF.md`](HRP/SIMT_HANDOFF.md)）。
 
-### 背景実行・通知
+### シェル環境（AIエージェント特有）
+- **`grep` がラッパ関数になっている環境がある**（Claude Code 等は `grep` を `ugrep` ラッパ関数に置換）。この関数は**サブシェル `( )` 内で `exec` により自プロセスを置換**するため、`( ... && grep ... && ... )` のように `grep` を `&&` チェーン途中に置くと**そこで以降の処理（make/qemu等）が消えて失敗**する（実害：§5 の旧 recipe がこれで壊れていた）。
+  - 回避：①`&&` チェーンにせず**文を分離**する ②スクリプト用途では **`command grep`**（実バイナリ）を使う。`grep -c` 等の読み取りは通常問題ないが、**`( )` 内の `&&` チェーンに grep を混ぜない**のが安全。
 - `run_in_background` と `nohup &` の**二重背景化**でランチャが即終了し誤通知になる。どちらか一方にする。
 
 ---
