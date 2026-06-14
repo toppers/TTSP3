@@ -203,7 +203,7 @@ void main_task(intptr_t exinf) {
 	check_ercd(ercd, E_OK);
 	ercd = slp_tsk();
 	check_ercd(ercd, E_OK);
-	ttsp_check_point(25);
+	ttsp_check_point(26);
 
 
 	/* 全割込みロック状態でext_kerを発行できることの確認 */
@@ -253,12 +253,27 @@ void sil_user_task(intptr_t exinf) {
 		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: get_tim -> E_OACV : OK");
 	}
 
-	ttsp_check_point(24);
+	/* 【異常系・fault・明示CP化】不正アドレス（ILLEGAL_DADDR=0xd0000000）への SIL メモリアクセスは
+	 * データアボート（メモリアクセス違反）になる＝SIL アクセスの保護を明示的に確認する．
+	 * DEF_EXC(EXCNO_MACV_DATA) の sil_dabort_handler が捕捉して CP24 を記録し、pc を進めて復帰する． */
+	(void) sil_reb_mem((void *) 0xd0000000U);
+	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
+
+	ttsp_check_point(25);
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL (normal+abnormal): OK");
 
 	/* main_task を起こして本タスクを終了 */
 	wup_tsk(MAIN_TASK);
 	ext_tsk();
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメインからの不正アドレス SIL アクセス（データアボート）
+ * を捕捉する CPU 例外ハンドラ．CP24 を記録し、p_excinf の PC を fault 命令の次へ進めて復帰する
+ * （PREPARE_RETURN_CPUEXC_DABORT 相当＝ARM の load 命令1個分 4 バイトをスキップ）． */
+void sil_dabort_handler(void *p_excinf) {
+	ttsp_check_point(24);
+	((T_EXCINF *) p_excinf)->pc -= 4U;
 }
 
 /*
@@ -395,7 +410,7 @@ void isr(intptr_t exinf) {
 		all_test();
 	}
 	if (bootcnt == 2) {
-		ttsp_check_point(25);
+		ttsp_check_point(26);
 		part_test(DIS_DSP);
 	}
 }

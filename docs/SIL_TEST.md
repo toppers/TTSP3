@@ -129,17 +129,20 @@ ASP と同じ 3.4→3.7 改変（タスク例外・通知書式・RELTIM µs・i
 | `SIL_LOC_INT`/`SIL_UNL_INT` | **OK** | 正常系（test_of_sns_ker 内） |
 | `sns_ker` | **OK**（タスク文脈で false） | 正常系 |
 | `get_tim`（SIL でなくサービス） | **E_OACV**（時刻管理サービスのアクセス保護） | **異常系・明示テスト（check_ercd(…, E_OACV)）** |
+| 不正アドレス `sil_*_mem`（0xd0000000） | **Data Abort（メモリアクセス違反）** | **異常系・明示テスト（DEF_EXC で捕捉＋pc 前進復帰・CP 化）** |
 | `sil_dly_nse` | **Prefetch Abort（permission fault）**＝実装がカーネル専用テキスト＝DOM1 に実行権なし | 異常系（fault・知見記録） |
 | `SIL_LOC_SPN`（SILスピンロック・HRMP） | **Data Abort（permission fault）**＝共有スピンロックは特権 | 異常系（fault・知見記録） |
 | `sil_get_pid` | **不正値を返す**（MPIDR 読みが特権） | 異常系（`ttsp_mp_check_point` 不可・知見記録） |
 
-### 異常系テストの扱い
-- **明示的にテスト（CP に組込み）**：`get_tim → E_OACV` を `check_ercd(ercd, E_OACV)` で検証（サービスコールの
-  アクセス保護が働くことを確認）。HRP api の保護テスト標準（E_OACV・138例）と同方式。
-- **fault 系（sil_dly_nse / SIL_LOC_SPN / 不正アドレス sil_*_mem / sil_get_pid 不正値）**：CPU 例外（Prefetch/Data
-  Abort）または特権レジスタ読みで、`ttsp_cpuexc_hook` が UNDEF 専用（空）のため **in-flow での捕捉・復帰ができない**。
-  そのため明示 CP には組み込まず、上表の実測知見として記録（保護が働く＝fault することは確認済み）。
-  ※ 将来：DABORT/PABORT を DEF_EXC で捕捉し p_excinf の PC を進める復帰機構を作れば fault 系も CP 化可能（target 依存）。
+### 異常系テストの扱い（明示 CP 化）
+- **サービスコール保護（E_OACV）**：`get_tim → E_OACV` を `check_ercd(ercd, E_OACV)` で検証（HRP api の保護テスト標準・138例と同方式）。
+- **メモリアクセス違反（Data Abort）の明示 CP 化**：不正アドレス `0xd0000000` への `sil_reb_mem` をユーザドメインから発行 →
+  Data Abort。**`DEF_EXC(EXCNO_DABORT)`（HRMP は per-PE 値 `0x10000|EXCNO_DABORT`）の `sil_dabort_handler` が捕捉**し、
+  チェックポイントを記録 → `((T_EXCINF*)p_excinf)->pc -= 4`（fault した load 命令をスキップ＝`PREPARE_RETURN_CPUEXC_DABORT` 相当）
+  で復帰。これにより「SIL メモリアクセスの保護違反」を**明示的なチェックポイント**として検証できる（HRP/HRMP とも緑）。
+- **残りの fault 系（sil_dly_nse=Prefetch Abort / SIL_LOC_SPN=Data Abort / sil_get_pid 不正値）**：同じ DEF_EXC＋PC 復帰
+  機構で CP 化可能だが、命令列が複数命令にまたがり PC 前進量が単純でない（sil_dly_nse はループ・SIL_LOC_SPN はマクロ）ため、
+  代表として不正アドレス sil_*_mem（単一 load）を明示 CP 化し、他は上表の実測知見として記録。
 
 ## 4. 残作業（ロードマップ）
 

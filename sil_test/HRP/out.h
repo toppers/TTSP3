@@ -82,6 +82,7 @@ typedef enum e_test_type {
 extern void main_task(intptr_t exinf);
 /* 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメイン(DOM1)からの SIL アクセステストタスク． */
 extern void sil_user_task(intptr_t exinf);
+extern void sil_dabort_handler(void *p_excinf);
 /* 【TTSP3向け改変 2026-06-14】texhdr は第3世代カーネルにタスク例外機能が無いため削除． */
 extern void almhdr(intptr_t exinf);
 extern void cychdr(intptr_t exinf);

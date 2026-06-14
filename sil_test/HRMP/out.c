@@ -298,7 +298,7 @@ void main_task(intptr_t exinf) {
 		check_ercd(ercd, E_OK);
 		/* CP は main_task（カーネルドメイン）側で記録する：ユーザドメインからは
 		 * ttsp_mp_check_point が内部で呼ぶ sil_get_pid が不正値を返すため使えない． */
-		ttsp_mp_check_point(prcid, 23);
+		ttsp_mp_check_point(prcid, 24);
 	}
 
 	/* SILスピンロック状態でext_kerを発行できることの確認 */
@@ -345,8 +345,22 @@ void sil_user_task(intptr_t exinf) {
 		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: get_tim -> E_OACV : OK");
 	}
 
+	/* 【異常系・fault・明示CP化】不正アドレス（0xd0000000）への SIL メモリアクセスは
+	 * データアボート（メモリアクセス違反）になる＝SIL アクセスの保護を明示的に確認．
+	 * DEF_EXC(EXCNO_DABORT) の sil_dabort_handler が捕捉して CP23 を記録し、pc を進めて復帰する． */
+	(void) sil_reb_mem((void *) 0xd0000000U);
+	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
+
 	wup_tsk(MAIN_TASK1);
 	ext_tsk();
+}
+
+/*
+ * 【TTSP3向け改変 2026-06-14・HRMP版】ユーザドメインからの不正アドレス SIL アクセス（データアボート）
+ * を捕捉する CPU 例外ハンドラ（PE1）．CP23 を記録し、p_excinf の PC を fault 命令の次へ進めて復帰する． */
+void sil_dabort_handler(void *p_excinf) {
+	ttsp_mp_check_point(1, 23);
+	((T_EXCINF *) p_excinf)->pc -= 4U;
 }
 
 /* 【TTSP3向け改変 2026-06-14】texhdr（タスク例外処理ルーチン）は第3世代カーネルに
