@@ -92,6 +92,7 @@ find "$OBJ_DIR" -name "*.o" -delete 2>/dev/null || true
 
 mkdir -p "$OUT_DIR"
 INFOS=""
+FULL_INFOS=""
 
 # $1=ビルドディレクトリ, $2=ラベル
 trace_and_cover() {
@@ -123,31 +124,35 @@ trace_and_cover() {
 	python3 "$ASMCOV_DIR/branchcov.py" --elf "$dir/$kbin" --log "$qlog" \
 		--prefix "$PREFIX" --include "$SRC_FILTER" --lcov "$info" 2>/dev/null \
 		| grep -E '網羅|条件分岐' | sed 's/^/  /'
-	# .info を「.S のみ」に絞り，SF: パスを realpath で正規化する．
-	# 各テストは別ビルドdir のため SF: が ".../<test>/../../../../asp3//.../foo.S" と
-	# テストごとに異なり，そのままだと lcov -a が同一 .S を別ファイル扱いして
-	# マージできない．realpath で全テスト同一パスへ揃えて統合を成立させる．
-	python3 - "$info" <<-'PY'
+	# SF: パスを realpath で正規化（各テストは別ビルドdir のため SF が
+	# ".../<test>/../../../../asp3//.../foo.S" とテストごとに異なり，そのままだと
+	# lcov -a が同一ファイルを別物扱いしてマージできない）した上で2つの .info を作る：
+	#   $full ＝ 依存部の .S＋.c 全部（.c は gcov 整合の参考。HTML/合算用）
+	#   $info ＝ .S のみ（手書きアセンブリの .S サマリ・統合用）
+	local full="$dir/asmcov_full.info"
+	python3 - "$info" "$full" <<-'PY'
 		import os, sys
-		path = sys.argv[1]
-		out, keep = [], False
-		with open(path) as f:
+		src, full = sys.argv[1], sys.argv[2]
+		all_lines, s_lines, keep = [], [], False
+		with open(src) as f:
 		    for line in f:
 		        if line.startswith('SF:'):
-		            sf = line[3:].strip()
-		            keep = sf.endswith('.S')
+		            rp = os.path.realpath(line[3:].strip())
+		            all_lines += ['TN:\n', 'SF:' + rp + '\n']
+		            keep = rp.endswith('.S')
 		            if keep:
-		                out.append('TN:\n')
-		                out.append('SF:' + os.path.realpath(sf) + '\n')
+		                s_lines += ['TN:\n', 'SF:' + rp + '\n']
 		            continue
+		        all_lines.append(line)
 		        if keep:
-		            out.append(line)
-		with open(path, 'w') as f:
-		    f.writelines(out)
+		            s_lines.append(line)
+		open(full, 'w').writelines(all_lines)
+		open(src, 'w').writelines(s_lines)
 	PY
 	# trace ログは大きいので集計後に削除（.info は残す）
 	rm -f "$qlog"
 	[ -s "$info" ] && INFOS="$INFOS -a $info"
+	[ -s "$full" ] && FULL_INFOS="$FULL_INFOS -a $full"
 }
 
 echo "===== build: check_library ($PROFILE / -gdwarf-4) ====="
@@ -220,10 +225,30 @@ echo "===== merge ($PROFILE, all tests) ====="
 lcov $INFOS -o "$MERGED" --rc lcov_branch_coverage=1 2>/dev/null | tail -3
 
 echo ""
-echo "===== HTML レポート（行網羅＋分岐網羅） ====="
-genhtml "$MERGED" -o "$OUT_DIR/html" --branch-coverage \
+echo "===== HTML レポート（.S のみ・行網羅＋分岐網羅） ====="
+genhtml "$MERGED" -o "$OUT_DIR/html" --num-spaces 4 --branch-coverage \
 	--rc genhtml_branch_coverage=1 >/dev/null 2>&1 \
 	&& echo "  open $OUT_DIR/html/index.html"
+
+# 依存部の .S＋.c を含む full レポート＋HTML（.c の網羅は gcov 整合の参考）．
+if [ -n "$FULL_INFOS" ]; then
+	MERGED_FULL="$OUT_DIR/asmcov_full_merged.info"
+	lcov $FULL_INFOS -o "$MERGED_FULL" --rc lcov_branch_coverage=1 2>/dev/null | tail -3
+	echo "===== HTML レポート（.S＋.c・full） ====="
+	genhtml "$MERGED_FULL" -o "$OUT_DIR/html_full" --num-spaces 4 --branch-coverage \
+		--rc genhtml_branch_coverage=1 >/dev/null 2>&1 \
+		&& echo "  open $OUT_DIR/html_full/index.html"
+	# .S / .c 内訳サマリ
+	awk '
+		/^SF:/ { n=split($0,a,"/"); f=a[n]; lf=lh=0 }
+		/^LF:/ { sub("LF:",""); lf=$0 }
+		/^LH:/ { sub("LH:",""); lh=$0 }
+		/^end_of_record/ { tlh+=lh; tlf+=lf;
+		         if (f ~ /\.S$/) { slh+=lh; slf+=lf } else { clh+=lh; clf+=lf } }
+		END { if (tlf>0) printf "  .S %d/%d(%.1f%%) | .c等 %d/%d(%.1f%%) | 合計 %d/%d(%.1f%%)\n",
+		      slh,slf,(slf?100*slh/slf:0), clh,clf,(clf?100*clh/clf:0), tlh,tlf,100*tlh/tlf }
+	' "$MERGED_FULL"
+fi
 
 echo ""
 echo "===== 網羅サマリ（.S・全テスト統合 / C0 行網羅 + C1 分岐網羅） ====="
