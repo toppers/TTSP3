@@ -159,7 +159,13 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
   - 寝かせ移送（act→slp→`mig_tsk`→wup）も同様にバリアで待ち合わせて PE2 実行を確認。
   - 検証ログ：`self migration (mig_tsk TSK_SELF): now on PE2` / `PE 2 : Barrier sync phase: N`、
     `dispatch_and_migrate` 283/290/292/300 が hit。
-- 例外ハンドラは PE 付きログを出力（`sil_get_pid`＋`syslog`）。
+- **マイグレーションのキューイング→ter_tsk 移送**も追加：非休止タスクへの `mact_tsk(tskid, prcid)`
+  は起動をキューイング（`actque`/`actprc`）し、`ter_tsk` による終了時に `actprc` の PE へ移送して
+  再起動する（kernel/task.c `task_terminate`）。MACT_TASK を高優先で起動→`slp_tsk`→`mact_tsk(,2)`
+  でキューイング→`ter_tsk`→PE2 で再起動、をバリアで確認（`mact_tsk queued migration:
+  reactivated on PE2`）。これで task_terminate の移送経路（C）も踏み、`.c` 網羅 77.5%→79.5%。
+- 例外ハンドラは PE 付きログ＋**`xlog_sys(p_excinf)`** で例外フレーム（pc/cpsr/lr/r0-r3/
+  nest_count/intpri）をダンプ（`core_kernel_impl.h` の公開関数）。
 - **教訓**：API の `mig_tsk` テストはエラー系（`E_CTX` 等）のみで成功移送を検証しないため
   「API がパス＝移送 OK」とは言えないが、移送機能自体はカーネルで正しく動く。SMP の
   待ち合わせは `dly_tsk` ではなく**バリア同期**を使うこと。

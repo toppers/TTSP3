@@ -56,6 +56,7 @@ static ID g_prcid;            /* 本スクラッチは PE1 で進行（get_pid�
 
 #define TTSP_PHASE_MIG		1	/* 他タスク移送（MIG_TASK）とのバリア同期フェーズ */
 #define TTSP_PHASE_SELFMIG	2	/* 自己移送（SELFMIG_TASK）とのバリア同期フェーズ */
+#define TTSP_PHASE_MACT		3	/* mact_tsk キューイング移送（MACT_TASK）の同期フェーズ */
 
 void fpu_task(intptr_t exinf)
 {
@@ -136,6 +137,35 @@ void selfmig_task(intptr_t exinf)
 	ext_tsk();
 }
 
+/*
+ *  マイグレーションのキューイング対象タスク．1 回目は PE1 で起動して待ち状態に入り
+ *  （mact_tsk のキューイング対象になる），main の ter_tsk で終了されると，キューイング
+ *  された起動要求により actprc（PE2）へ移送されて再起動される．2 回目（PE2）で
+ *  バリア同期する．main より高優先で，act_tsk で即起動して待ち状態に入る．
+ */
+void mact_task(intptr_t exinf)
+{
+	volatile double m = 4.5;
+	int_t	i;
+	ID	prc = 0;
+
+	(void) sil_get_pid(&prc);
+	if (prc == 1) {
+		slp_tsk();		/* PE1 で待ち状態に（ter_tsk で終了される） */
+		ext_tsk();		/* 通常ここへは戻らない（保険） */
+		return;
+	}
+	/* ter_tsk のキューイング再起動で PE2 上で実行される */
+	for (i = 0; i < 64; i++) {
+		m = m * 1.0000001 + 0.5;
+	}
+	fpu_acc += m;
+	syslog_1(LOG_NOTICE, "mact_tsk queued migration: reactivated on PE%d",
+			 (int_t) prc);
+	ttsp_barrier_sync(TTSP_PHASE_MACT, TNUM_PRCID);
+	ext_tsk();
+}
+
 void main_task(intptr_t exinf)
 {
 	ER	ercd;
@@ -206,6 +236,17 @@ void main_task(intptr_t exinf)
 	ercd = act_tsk(SELFMIG_TASK);
 	check_ercd(ercd, E_OK);
 	ttsp_barrier_sync(TTSP_PHASE_SELFMIG, TNUM_PRCID);
+
+	/* SMP：マイグレーションのキューイング→ter_tsk で移送・再起動．
+	   非休止タスクへの mact_tsk は起動をキューイング（actque/actprc）し，
+	   ter_tsk による終了時に actprc のプロセッサ（PE2）へ移送して再起動する． */
+	ercd = act_tsk(MACT_TASK);		/* MACT_TASK(高優先) 即起動→ slp_tsk で待ち */
+	check_ercd(ercd, E_OK);
+	ercd = mact_tsk(MACT_TASK, 2);		/* 非休止→起動をキューイング(actprc=2) */
+	check_ercd(ercd, E_OK);
+	ercd = ter_tsk(MACT_TASK);		/* 終了時に PE2 へ移送して再起動 */
+	check_ercd(ercd, E_OK);
+	ttsp_barrier_sync(TTSP_PHASE_MACT, TNUM_PRCID);
 	ttsp_mp_check_point(g_prcid, 10);
 
 	/* §6.4／§6.6 割込み：禁止/許可と多重割込み（低→中→高） */
@@ -256,7 +297,7 @@ void exception_ttsp_excno_a(void *p_excinf)
 	(void) xsns_dpn(p_excinf);
 	(void) sil_get_pid(&prcid);
 	ttsp_mp_check_point(g_prcid, 13);
-	/* CPU例外ハンドラが走った PE と例外情報領域をログ出力する */
-	syslog_2(LOG_NOTICE, "[PE%d] CPU exception (EXCNO_A) handled : OK (excinf=%p)",
-			 (int_t) prcid, p_excinf);
+	/* CPU例外ハンドラが走った PE をログ出力し，例外フレームを xlog_sys で吐く */
+	syslog_1(LOG_NOTICE, "[PE%d] CPU exception (EXCNO_A) handled : OK", (int_t) prcid);
+	xlog_sys(p_excinf);	/* pc/cpsr/lr/r0-r3/nest_count/intpri をダンプ */
 }
