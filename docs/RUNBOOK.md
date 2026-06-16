@@ -52,6 +52,32 @@
 - **環境変数**：`OBJ_DIR`（作業dir）/ `API_DIV_NUM`（分割数 既定20）/ `QEMU_TIMEOUT`（秒）。
 - `arm-none-eabi-gcov` を使う場合は集計コマンド頭に `GCOV=arm-none-eabi-gcov` を付ける（HRP/simt の例多数）。
 
+### 手書きアセンブリ(.S)の網羅（C0+C1・QEMU / gcov 非対応部）
+
+gcov で計測できない手書きアセンブリ（`arch/arm_gcc/common/{start,core_support,gic_support}.S`）の
+**命令/行網羅(C0) と分岐網羅(C1)** を QEMU 実行から取得する。原理は「実行された命令アドレス集合を
+QEMU `-d` ログから収集し addr2line で `.S` の行へ逆マッピング／TB 遷移エッジで分岐の taken/fall を判定」。
+ツールは `scripts/asmcov/`（`asm-coverage-demo` から無改変ベンダリング）、ランナーは下記。
+
+```bash
+bash scripts/coverage_asmcov_zybo.sh smoke              # ASP3 check_library のみ（数分）
+bash scripts/coverage_asmcov_zybo.sh bb                 # + API auto-code 20分割を統合
+PROFILE=HRP  bash scripts/coverage_asmcov_zybo.sh smoke # HRP（単一コア）
+PROFILE=FMP  bash scripts/coverage_asmcov_zybo.sh smoke # FMP（SMP・-smp 2）
+PROFILE=HRMP bash scripts/coverage_asmcov_zybo.sh smoke # HRMP（SMP・-smp 2）
+```
+
+- **4プロファイル対応**：`PROFILE=ASP|HRP|FMP|HRMP`（OS_PATH は既定でプロファイル別 `../asp3/` 等）。
+  FMP/HRMP は **SMP（`-smp 2`）** で実行。C0 はコア順序非依存で SMP 安全、C1 は branchcov が
+  `Trace <cpu>:` のコア番号でエッジ復元をコア別に分離（交錯ログでも偽エッジ混入なし）。コア数は `SMP_NCPU` で上書き可。
+
+- 出力：`obj_asp_asmcov/asmcov/asmcov_merged.info`（DA+BRDA）、`.../html/index.html`（`genhtml --branch-coverage`）。
+- **DWARF の要点**：gcc13.2 既定の DWARF5 だと `.debug_line_str` がリンク時に脱落し addr2line が `.S` の
+  ファイル名を解決できない。ランナーは `COPTS=-gdwarf-4` を**自動付与**して回避する（カーネル/リンカ無改変）。
+  注意：`-gdwarf-4` は env COPTS で渡す（`make COPTS=...` は `-mcpu` を消し `cpsid` がアセンブルエラー）。
+- 各テストは別リンク＝アドレス非互換のため、テスト横断の統合は **`lcov -a`（行/分岐単位）** で行う
+  （命令アドレスの単純 union は不可）。詳細・既知制約は `scripts/asmcov/README.md`。
+
 ### 関数別・未到達行を見る（深掘り時）
 
 ```bash
