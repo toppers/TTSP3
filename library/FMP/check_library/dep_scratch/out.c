@@ -213,8 +213,13 @@ void inthdr_ttsp_intno_c(void)
 
 void exception_ttsp_excno_a(void *p_excinf)
 {
+	ID	prcid = 0;
+
 	ttsp_cpuexc_hook(TTSP_EXCNO_A, p_excinf);
 	(void) xsns_dpn(p_excinf);
+	(void) sil_get_pid(&prcid);
 	ttsp_mp_check_point(g_prcid, 13);
-	syslog_0(LOG_NOTICE, "ttsp_cpuexc_raise(TTSP_EXCNO_A) : OK");
+	/* CPU例外ハンドラが走った PE と例外情報領域をログ出力する */
+	syslog_2(LOG_NOTICE, "[PE%d] CPU exception (EXCNO_A) handled : OK (excinf=%p)",
+			 (int_t) prcid, p_excinf);
 }

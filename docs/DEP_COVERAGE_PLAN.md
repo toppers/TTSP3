@@ -144,8 +144,15 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
 - 効果（FMP 依存部 `.S`・`-smp 2`）：check_library 77.4%/72.9% → **＋scratch で 行 84.6%（292/345）・
   分岐 79.2%（38/48）**。QEMU で `PE 1 : All check points passed`。
 - **`dispatch_and_migrate` は本 zybo FMP ビルドの `USE_BYPASS_IPI_DISPATCH_HANDER`
-  （core_support.S L430）で IPI 経由ディスパッチがバイパスされ構成的に到達不能**。寝かせ移送・
-  自己移送いずれでも踏めないことを確認（ビルド構成依存の上限）。
+  （core_support.S L430）＋`OMIT_MULTIPRC_INTERRUPT` で IPI 経由ディスパッチがバイパスされ
+  構成的に到達不能**。**実行時マイグレーション自体がこの構成では成立しない**ことを追検証：
+  寝かせ移送（act→slp→`mig_tsk`→wup）・自己移送（`mig_tsk(TSK_SELF,2)`）に加え、
+  **PE2 常駐タスクを置いて PE2 を稼働させても**、移送先 PE2 はタスクをディスパッチしない
+  （selfmig 完了フラグが立たず・ログも出ず・カバレッジ不変・`dispatch_and_migrate` hit=0）。
+  例外終了ではなく（abort/fault 無し・全 CP 緑）、純粋に PE2 への移送ディスパッチが起きない。
+  → 実行時マイグレーション系の網羅は**非バイパス（`OMIT_MULTIPRC_INTERRUPT` 無効）の
+  ターゲット変種**が必要（SELECTIVE FPU 同様、ターゲット依存で用意）。現スクラッチは
+  spinlock・FPU・割込み・例外（PE 付きログ）を踏む有効分のみ残す。
 5. gcov（C）と asmcov（.S）の依存部統合レポートを 1 コマンド化。
 6. 「API 全件 vs スクラッチ＋層2」の網羅・所要時間を比較し、CI の既定計測を決める。
 
