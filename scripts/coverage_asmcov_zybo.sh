@@ -192,8 +192,16 @@ if [ -f "$scratch_src/out.c" ] && [ -n "$ref_built" ]; then
 	sdir="$OBJ_DIR/check_library/dep_scratch"
 	rm -rf "$sdir"; cp -rp "$ref_built" "$sdir"
 	cp "$scratch_src"/out.c "$scratch_src"/out.cfg "$scratch_src"/out.h "$sdir"/
+	# scratch も check_library と同じ計測 COPTS（$COPTS＝-gdwarf-4＋NDEBUG＋fno-inline）で
+	# ビルドする．ttsp_custom_idle.inc があれば -include で注入する（カーネルの idle ループに
+	# custom idle を差し込み，アイドル中 CPU 例外＝p_runtsk==NULL 経路を踏むため．無改変）．
+	scratch_copts="$COPTS"
+	if [ -f "$scratch_src/ttsp_custom_idle.inc" ]; then
+		cp "$scratch_src/ttsp_custom_idle.inc" "$sdir/"
+		scratch_copts="$scratch_copts -include $(cd "$sdir" && pwd)/ttsp_custom_idle.inc"
+	fi
 	( cd "$sdir" && rm -f "$kbin" qemu.log execute.log asmcov.info && make clean >/dev/null 2>&1; mkdir -p objs
-	  COPTS=-gdwarf-4 make KERNEL_COBJS="$K_COMMON $K_TARGET" APPL_COBJS="$A_COMMON $A_TARGET" \
+	  COPTS="$scratch_copts" make KERNEL_COBJS="$K_COMMON $K_TARGET" APPL_COBJS="$A_COMMON $A_TARGET" \
 	    > /tmp/asmcov_build_scratch_$$.log 2>&1 )
 	if [ -f "$sdir/$kbin" ]; then
 		trace_and_cover "$sdir" "dep_scratch"

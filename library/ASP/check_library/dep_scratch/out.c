@@ -202,16 +202,42 @@ void main_task(intptr_t exinf)
 	ttsp_cpuexc_raise(TTSP_EXCNO_A);
 	ttsp_wait_check_point(13);
 
+	/* §SIL 微少時間待ち：sil_dly_nse でターゲット依存の待ちループ
+	   （core_support.S 1379-1389：sil_dly_nse / sil_dly_nse1）を踏む． */
+	sil_dly_nse(1000);
+
 	/*
-	 *  §6.7.5 デフォルトのCPU例外ハンドラ：本スクラッチは DEF_EXC(TTSP_EXCNO_A) のみ
-	 *  登録するため，未登録の CPU 例外（TTSP_EXCNO_C＝フェイタルデータアボート）を発生
-	 *  させると default_exc_handler（例外種別ログ→xlog_sys→xlog_fsr→ext_ker）が走る．
-	 *  default_exc_handler は ext_ker で終了するため，本テストの最後に実行する．
-	 *  合否マーカ（All check points passed.）は ext_ker の前に手動出力する．
+	 *  最終フェーズ：自タスクを終了して系をアイドル（p_runtsk==NULL）にし，
+	 *  custom idle フック（idle_hook）から CPU 例外を発生させる．
+	 *   1周目：復帰可能例外（EXCNO_A）→ ハンドラ復帰後に core_support.S の
+	 *          p_runtsk==NULL 経路（1139-1150 → dispatcher_0）を踏み，再びアイドルへ．
+	 *   2周目：未登録例外（EXCNO_C）→ §6.7.5 default_exc_handler（種別ログ→xlog_sys→
+	 *          xlog_fsr→ext_ker）で終了．
+	 *  合否マーカは ext_tsk の前に手動出力する（以降タスク文脈に戻らないため）．
 	 */
 	ttsp_check_point(14);
 	syslog_0(LOG_NOTICE, "All check points passed.");
-	ttsp_cpuexc_raise(TTSP_EXCNO_C);	/* 未登録例外→ default_exc_handler → ext_ker */
+	ext_tsk();			/* → アイドル → idle_hook（custom idle 注入） */
+}
+
+/*
+ *  custom idle フック．core_support.S のアイドルループ（dispatcher_1）から
+ *  toppers_asm_custom_idle 経由で SVC モード・p_runtsk==NULL で呼ばれる
+ *  （ttsp_custom_idle.inc を -include して注入．カーネル無改変）．
+ */
+void idle_hook(void)
+{
+	static volatile uint_t idle_cnt = 0;
+
+	idle_cnt++;
+	if (idle_cnt == 1) {
+		/* アイドル中の復帰可能 CPU例外（1139-1150 を踏む） */
+		ttsp_cpuexc_raise(TTSP_EXCNO_A);
+	}
+	else {
+		/* 未登録例外→ default_exc_handler → ext_ker */
+		ttsp_cpuexc_raise(TTSP_EXCNO_C);
+	}
 }
 
 /*
@@ -256,8 +282,10 @@ void exception_ttsp_excno_a(void *p_excinf)
 
 	exc_cnt++;
 	ttsp_cpuexc_hook(TTSP_EXCNO_A, p_excinf);
-	if (exc_cnt == 1) {
-		/* カーネル管理外CPU例外：サービスコール禁止．最小限で復帰 */
+	if (exc_cnt != 2) {
+		/* 1回目＝カーネル管理外（CPUロック中），3回目＝アイドル中（p_runtsk==NULL）．
+		   どちらもサービスコール禁止のため最小限（hook）で復帰する．
+		   3回目の復帰で core_support.S の p_runtsk==NULL 経路（1139-1150）を踏む． */
 		return;
 	}
 	(void) xsns_dpn(p_excinf);

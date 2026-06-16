@@ -53,4 +53,5 @@ extern void inthdr_ttsp_intno_a(void);
 extern void inthdr_ttsp_intno_b(void);
 extern void inthdr_ttsp_intno_c(void);
 extern void exception_ttsp_excno_a(void *p_excinf);
+extern void idle_hook(void);
 extern void xlog_sys(void *p_excinf);

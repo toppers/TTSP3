@@ -269,14 +269,44 @@ void main_task(intptr_t exinf)
 	ttsp_mp_wait_check_point(g_prcid, 13);
 
 	/*
-	 *  §6.7.5 デフォルトのCPU例外ハンドラ：未登録の CPU 例外（TTSP_EXCNO_C＝
-	 *  フェイタルデータアボート．本スクラッチは DEF_EXC(TTSP_EXCNO_A) のみ登録）を
-	 *  発生させ default_exc_handler（例外種別ログ→xlog_sys→xlog_fsr→ext_ker）を踏む．
-	 *  ext_ker で終了するため最後に実行し，合否マーカは手前で手動出力する．
+	 *  最終フェーズ：自タスクを終了して系をアイドル（p_runtsk==NULL）にし，
+	 *  custom idle フック（idle_hook）から CPU 例外を発生させる（SMP のため PE1 のみ）．
+	 *   1周目：復帰可能例外（EXCNO_A）→ ハンドラ最小復帰で core_support.S の
+	 *          p_runtsk==NULL 例外復帰経路（… → dispatcher_0）を踏み，再びアイドルへ．
+	 *   2周目：未登録例外（EXCNO_C）→ §6.7.5 default_exc_handler（例外種別ログ→xlog_sys→
+	 *          xlog_fsr→ext_ker）で系終了．
+	 *  ext_ker で終了するため，合否マーカは ext_tsk の手前で手動出力する．
 	 */
 	ttsp_mp_check_point(g_prcid, 14);
 	syslog_1(LOG_NOTICE, "PE %d : All check points passed.", (int_t) g_prcid);
-	ttsp_cpuexc_raise(TTSP_EXCNO_C);	/* 未登録例外→ default_exc_handler → ext_ker */
+	ext_tsk();			/* → アイドル → idle_hook（custom idle 注入） */
+}
+
+/*
+ *  custom idle フック．core_support.S のアイドルループ（dispatcher_2）から
+ *  toppers_asm_custom_idle 経由で SVC モード・p_runtsk==NULL で呼ばれる
+ *  （ttsp_custom_idle.inc を -include して注入．カーネル無改変）．
+ *  SMP では各 PE のアイドルから呼ばれるため，PE1 のみが例外を起こす
+ *  （PE2 は何もせず復帰．例外/終了は PE1 に一本化して競合を避ける）．
+ */
+void idle_hook(void)
+{
+	static volatile uint_t idle_cnt = 0;
+	ID prc = 0;
+
+	(void) sil_get_pid(&prc);
+	if (prc != 1) {
+		return;			/* PE1 以外のアイドルでは何もしない */
+	}
+	idle_cnt++;
+	if (idle_cnt == 1) {
+		/* アイドル中の復帰可能 CPU例外（p_runtsk==NULL 復帰経路を踏む） */
+		ttsp_cpuexc_raise(TTSP_EXCNO_A);
+	}
+	else {
+		/* 未登録例外→ default_exc_handler → ext_ker（系終了） */
+		ttsp_cpuexc_raise(TTSP_EXCNO_C);
+	}
 }
 
 /*
@@ -310,9 +340,10 @@ void exception_ttsp_excno_a(void *p_excinf)
 
 	exc_cnt++;
 	ttsp_cpuexc_hook(TTSP_EXCNO_A, p_excinf);
-	if (exc_cnt == 1) {
-		/* カーネル管理外CPU例外（CPUロック中の発生）：サービスコール禁止．
-		   最小限（hook のみ）で復帰する． */
+	if (exc_cnt != 2) {
+		/* 1回目＝カーネル管理外（CPUロック中），3回目＝アイドル中（p_runtsk==NULL）．
+		   どちらもサービスコール禁止のため最小限（hook のみ）で復帰する．
+		   3回目の復帰で core_support.S の p_runtsk==NULL 例外復帰経路を踏む． */
 		return;
 	}
 	(void) xsns_dpn(p_excinf);

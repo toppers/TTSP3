@@ -42,8 +42,8 @@ asmcov 計測・2026-06-16）：
 
 | プロファイル | 構成 | check_library のみ | ＋共通スクラッチ | scratch 状況 |
 |---|---|---|---|---|
-| ASP3 | 単一コア | 81.4% / 65.0% | **92.0% / 80.0%** | 作成済（step1/2/Tier1/1.5/.data） |
-| FMP3 | SMP `-smp 2` | 77.4% / 72.9% | **87.0% / —** | 作成済（step4・SMP＋移送） |
+| ASP3 | 単一コア | 81.4% / 65.0% | **93.6% / 85.0%** | 作成済（step1/2/Tier1/1.5/.data/custom-idle） |
+| FMP3 | SMP `-smp 2` | 77.4% / 72.9% | **91.3% / 85.4%** | 作成済（step4・SMP＋移送＋custom-idle） |
 | HRP3 | 単一コア・保護 | 69.8% / 53.1% | — | 未作成（step5 候補） |
 | HRMP3 | SMP `-smp 2`・保護 | 64.7% / 56.9% | — | 未作成（step5 候補） |
 
@@ -265,6 +265,46 @@ ASP の残未到達（例外ハンドラ系）を仕分けし、確実に踏め�
 **結論**：層2 の「fault 注入」は HRMP では既に check_library がカバー済み・ASP では到達不能
 のため、SIL の asm 計測統合は採用しない（SIL は SIL-API 適合性テストとしての価値は別途維持）。
 残りの依存部 `.S` 向上は **step4＝スクラッチの user ドメイン/移送対応**（HRP/HRMP）が筋。
+
+### 進捗（2026-06-17・ASP custom idle＝アイドル中CPU例外で p_runtsk==NULL 経路を回収）
+
+step2 で「到達不能」とした例外復帰変種のうち、**アイドル中（`p_runtsk==NULL`）の CPU 例外
+復帰経路（core_support.S 1139-1150：`b dispatcher_0`）** をカーネル無改変で回収した。
+
+- 仕組み：`TOPPERS_CUSTOM_IDLE` フックを使う。`library/ASP/check_library/dep_scratch/`
+  に `ttsp_custom_idle.inc`（`#define TOPPERS_CUSTOM_IDLE` ＋ `toppers_asm_custom_idle` を
+  `msr cpsr_c,#CPSR_SVC_MODE; bl idle_hook` に展開）を置き、計測時のみ COPTS に
+  `-include` で注入する（カーネル `core_support.S` の `dispatcher_1` に展開・**カーネル無改変**）。
+  ランナー（`coverage_asmcov_zybo.sh`）が scratch ビルド時に自動で `-include` する。
+- 流れ：`main_task` が全 CP 後 `ext_tsk()` → 系がアイドル（`p_runtsk==NULL`）→ `idle_hook` 起動。
+  1周目は復帰可能例外（EXCNO_A）→ ハンドラ最小復帰で `1139-1150 → dispatcher_0` を踏む。
+  2周目は未登録例外（EXCNO_C）→ `default_exc_handler`（既出）で系終了。
+  ※ idle 例外を「通常復帰させてから別経路で 264 を踏む」案も試したが、2周目 idle 例外の
+  入口で SP 破綻（Data Abort）を誘発するため不採用。1周目で即例外を起こす方式が安定。
+- 併せて `sil_dly_nse(1000)`（SIL 微少時間待ち）を1回呼び、`sil_dly_nse`/`sil_dly_nse1`
+  （1379-1389）も回収。
+- 効果（ASP 依存部 `.S`）：92.0% → **93.6%（293/313）/ C1 85.0%**。`core_support.S` 233/252。
+  残 20 行＝`srsfd` 例外ベクタ入口（SVC 714-722／プリフェッチ 763-772／データ 825-834／
+  FIQ 937-946）＋`start.S:191 hardware_init_hook` 弱定義。いずれも**この QEMU ハーネスでは
+  注入不能/上書き済み＝構造的上限**。**ASP の実質上限 ≈ 93-94%**に更新。
+
+### 進捗（2026-06-17・FMP へ custom idle を横展開＝SMP 対応）
+
+ASP と同手法を FMP スクラッチへ展開。FMP は同じ `TOPPERS_CUSTOM_IDLE` フックを持つ
+（`core_support.S` の `dispatcher_2`）ため、`ttsp_custom_idle.inc` は**ASP と同一**を配置
+（ランナーが自動 `-include`）。
+
+- SMP 固有の配慮：アイドルは**各 PE で**発生するため、`idle_hook` は `sil_get_pid()` で
+  **PE1 のみ**例外を起こすようガード（PE2 のアイドルでは即復帰）。例外発生と系終了
+  （EXCNO_C→`ext_ker`）を PE1 に一本化し、PE 間の競合・二重終了を避ける。
+- 例外ハンドラのガードも ASP と揃え `if (exc_cnt != 2) return;`（1=管理外/3=アイドルは
+  最小復帰、2=タスク文脈のみフル経路）。main 末尾は `ext_tsk()` でアイドルへ落とす。
+- 効果（FMP 依存部 `.S`）：90.1% → **91.3%（316/346）/ C1 85.4%**。`core_support.S` 232/261。
+  `p_runtsk==NULL` 例外復帰経路（516-534・`b dispatcher_0`）を回収。`All check points passed.`
+  → idle EXCNO_A 復帰 → idle EXCNO_C → `default_exc_handler` 終了を確認。
+- 残（FMP `.S`）：`srsfd` 例外ベクタ入口（SVC/プリフェッチ/データアボート）＋ 二系統目の
+  ディスパッチャ/ハンドラ変種（1053-1100 等＝拡張サービスコール/ネスト変種）＋`start.S:246`。
+  SVC・拡張サービスコール経路は HRMP と同様に**多ドメイン/SVC を伴うテスト**の領分（step4 残）。
 
 ---
 
