@@ -112,9 +112,24 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
 1. ✅ **共通スクラッチを1本試作**（`library/ASP/check_library/dep_scratch/`）→ ASP で効果測定（下記「進捗」）。
 2. ✅ FPU・dispatch 変種を踏むようスクラッチを調整（FPU 復帰経路 575/594 を回収・下記「進捗 step2」）。
 3. ✅ 層2/fault 系を SIL で検証→**.S では無価値と判明し統合見送り**（下記「進捗 step3」）。
-4. （step4）スクラッチの **user ドメイン/SMP 移送/SVC 対応**（HRP/HRMP）＝保護ドメイン・
-   メモリオブジェクトの cfg 追加。HRMP の残り 192 行（`start_utask_r`/`dispatch_and_migrate`/
-   `svc_handler` 等）を狙う。あるいは当該領域は API カバレッジに委ねる判断も可。
+4. ✅（step4 一部）**FMP スクラッチ（SMP）を作成**＝スピンロック＋PE1→PE2 タスク移送を追加
+   （下記「進捗 step4」）。残る user ドメイン（HRP/HRMP）対応は step5 に継続。
+5. （step5）HRP/HRMP スクラッチの **user ドメイン/SVC 対応**（保護ドメイン・メモリオブジェクト
+   cfg 追加）で `start_utask_r`/`svc_handler` を狙う。あるいは当該領域は API カバレッジに委ねる。
+
+### 進捗（2026-06-16・step4＝FMP スクラッチ）
+
+`library/FMP/check_library/dep_scratch/` を作成（ASP 版＋SMP 刺激）：
+
+- FMP 固有：cfg は `CLASS(CLS_PRCn)` 構造、チェックポイントは **MP 版 `ttsp_mp_check_point(prcid,…)`**
+  （基本版は FMP test lib に無い）。スピンロックは `CRE_SPN`（**CLASS 内必須**）＋`loc_spn/unl_spn`。
+  移送対象タスクは **affinity [1,2] の `CLS_ALL_PRC1`** に置く（`CLS_PRC1` は PE1 限定で
+  `mig_tsk` が E_PAR）。`mig_tsk` の prcid は 1 始まり。
+- 効果（FMP 依存部 `.S`・`-smp 2`）：check_library 77.4%/72.9% → **＋scratch で 行 84.6%（292/345）・
+  分岐 79.2%（38/48）**。QEMU で `PE 1 : All check points passed`。
+- **`dispatch_and_migrate` は本 zybo FMP ビルドの `USE_BYPASS_IPI_DISPATCH_HANDER`
+  （core_support.S L430）で IPI 経由ディスパッチがバイパスされ構成的に到達不能**。寝かせ移送・
+  自己移送いずれでも踏めないことを確認（ビルド構成依存の上限）。
 5. gcov（C）と asmcov（.S）の依存部統合レポートを 1 コマンド化。
 6. 「API 全件 vs スクラッチ＋層2」の網羅・所要時間を比較し、CI の既定計測を決める。
 
