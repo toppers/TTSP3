@@ -258,7 +258,13 @@ void main_task(intptr_t exinf)
 	ttsp_mp_wait_check_point(g_prcid, 11);
 	ttsp_mp_check_point(g_prcid, 12);
 
-	/* §6.7 CPU例外（復帰可能）と発生時のシステム状態参照 */
+	/* §6.7 カーネル管理外CPU例外：CPUロック状態（例外フレームの I/F ビットがセット）で
+	   CPU例外を起こし，カーネル管理外CPU例外の出入口（nk_exc_handler）を踏む． */
+	loc_cpu();
+	ttsp_cpuexc_raise(TTSP_EXCNO_A);
+	unl_cpu();
+
+	/* §6.7 CPU例外（復帰可能・タスク文脈）と発生時のシステム状態参照 */
 	ttsp_cpuexc_raise(TTSP_EXCNO_A);
 	ttsp_mp_wait_check_point(g_prcid, 13);
 
@@ -299,9 +305,16 @@ void inthdr_ttsp_intno_c(void)
 
 void exception_ttsp_excno_a(void *p_excinf)
 {
-	ID	prcid = 0;
+	static uint_t	exc_cnt = 0;
+	ID		prcid = 0;
 
+	exc_cnt++;
 	ttsp_cpuexc_hook(TTSP_EXCNO_A, p_excinf);
+	if (exc_cnt == 1) {
+		/* カーネル管理外CPU例外（CPUロック中の発生）：サービスコール禁止．
+		   最小限（hook のみ）で復帰する． */
+		return;
+	}
 	(void) xsns_dpn(p_excinf);
 	(void) sil_get_pid(&prcid);
 	ttsp_mp_check_point(g_prcid, 13);
