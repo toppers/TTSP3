@@ -99,6 +99,24 @@ void irq_task(intptr_t exinf)
 	ext_tsk();
 }
 
+/*
+ *  CPU例外ハンドラ（タスク文脈）から iact_tsk で起動される高優先タスク．
+ *  これにより例外出口で main が preempt され（再開番地 ret_exc_r を保存），
+ *  本タスク終了後に main が ret_exc_r 経由で復帰する＝例外復帰側のディスパッチ
+ *  経路（core_support.S exc_handler_3 のディスパッチ＋ret_exc_r）を踏む．
+ */
+void exc_task(intptr_t exinf)
+{
+	volatile double w = (double) exinf + 2.5;
+	int_t i;
+
+	for (i = 0; i < 64; i++) {
+		w = w * 1.0000001 + 0.5;
+	}
+	fpu_acc += w;
+	ext_tsk();
+}
+
 void main_task(intptr_t exinf)
 {
 	ER	ercd;
@@ -223,6 +241,11 @@ void exception_ttsp_excno_a(void *p_excinf)
 		return;
 	}
 	(void) xsns_dpn(p_excinf);
+	/*
+	 *  高優先タスクを起動する．例外出口で main が preempt され（再開番地
+	 *  ret_exc_r を保存），例外復帰側のディスパッチ経路を踏む．
+	 */
+	(void) iact_tsk(EXC_TASK);
 	ttsp_check_point(13);
 	syslog_0(LOG_NOTICE, "ttsp_cpuexc_raise(TTSP_EXCNO_A) : OK");
 }
