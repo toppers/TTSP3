@@ -89,6 +89,10 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
 ## 4. 計測フロー
 
 1. 共通スクラッチ＋層2 を **`-gdwarf-4`** でビルド（asmcov のため。`.debug_line_str` 脱落回避）。
+   加えて gcov ランナーと条件を揃えるため **`-DNDEBUG`（assert 無効）＋`-fno-inline` 系（inline 抑制・
+   -O2 維持）** も付与（`.c` の網羅を gcov と整合。`.S` は assert/inline の影響を受けない）。
+   ※ ASP の例外ハンドラでは `xlog_sys(p_excinf)` で例外フレームをダンプ（`_kernel_xlog_sys`。
+   TECS ビルドでは out.c に core_rename.h が入らないため out.h で `#ifndef xlog_sys` ガード付き定義）。
 2. QEMU 実行（FMP/HRMP は **`-smp 2`**）。トレースは `cap_stream.py` でサイズ上限つき取得
    （timer 等のアイドルスピンによるログ膨張を抑制）。
 3. **asmcov（.S）と gcov（C）を依存部ファイルにフィルタして統合**。

@@ -51,3 +51,13 @@ extern void inthdr_ttsp_intno_a(void);
 extern void inthdr_ttsp_intno_b(void);
 extern void inthdr_ttsp_intno_c(void);
 extern void exception_ttsp_excno_a(void *p_excinf);
+
+/*
+ *  xlog_sys は core_rename.h で _kernel_xlog_sys にリネームされるカーネル関数．
+ *  TECS ビルド（ASP）では out.c に core_rename.h が入らずリネームされないため，
+ *  未定義の場合のみここで補う（FMP 等の OMIT_TECS ビルドでは既定義なので二重定義を避ける）．
+ */
+#ifndef xlog_sys
+#define xlog_sys _kernel_xlog_sys
+#endif
+extern void xlog_sys(void *p_excinf);

@@ -78,9 +78,13 @@ for t in qemu-system-arm "${PREFIX}objdump" "${PREFIX}addr2line" lcov genhtml py
 	command -v "$t" >/dev/null 2>&1 || { echo "ERROR: required tool not found: $t"; exit 1; }
 done
 
-# DWARF4 を末尾に付与（Makefile の "COPTS := -g ... $(COPTS)" の後ろに展開され後勝ち）．
-# 注意: env で渡すこと（make COPTS=... のコマンドライン代入は -mcpu 等を消す）．
-export COPTS="${COPTS:+$COPTS }-gdwarf-4"
+# 計測用 COPTS（env で渡す．make COPTS=... のコマンドライン代入は -mcpu 等を消すため不可）．
+#  -gdwarf-4 : DWARF4（DWARF5 は .debug_line_str がリンクで脱落し addr2line が .S を解決不能）
+#  -DNDEBUG  : assert() を無効化（デバッグ用で仕様適合性の分岐ではないため計測対象外。
+#              gcov ランナー coverage_gcov_*.sh と条件を揃える）
+#  -fno-inline 系 : inline 展開を抑制（-O2 維持。展開後の各 call-site を独立計測する
+#              アーティファクト＝分岐数水増しを防ぎ、依存部 .c の網羅を gcov と整合させる）
+export COPTS="${COPTS:+$COPTS }-gdwarf-4 -DNDEBUG -fno-inline -fno-inline-functions-called-once -fno-inline-small-functions"
 
 # フラグ変更で旧 .o が stale になるため削除して再コンパイルを強制する
 echo "===== clean stale objects for -gdwarf-4 rebuild ====="

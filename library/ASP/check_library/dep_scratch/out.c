@@ -259,4 +259,5 @@ void exception_ttsp_excno_a(void *p_excinf)
 	(void) iact_tsk(EXC_TASK);
 	ttsp_check_point(13);
 	syslog_0(LOG_NOTICE, "ttsp_cpuexc_raise(TTSP_EXCNO_A) : OK");
+	xlog_sys(p_excinf);	/* 例外フレーム(pc/cpsr/lr/r0-r3/nest_count/intpri)をダンプ */
 }
