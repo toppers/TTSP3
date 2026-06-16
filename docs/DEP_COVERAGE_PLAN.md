@@ -43,7 +43,7 @@ asmcov 計測・2026-06-16）：
 | プロファイル | 構成 | check_library のみ | ＋共通スクラッチ | scratch 状況 |
 |---|---|---|---|---|
 | ASP3 | 単一コア | 81.4% / 65.0% | **92.0% / 80.0%** | 作成済（step1/2/Tier1/1.5/.data） |
-| FMP3 | SMP `-smp 2` | 77.4% / 72.9% | **84.6% / 79.2%** | 作成済（step4・SMP） |
+| FMP3 | SMP `-smp 2` | 77.4% / 72.9% | **87.0% / —** | 作成済（step4・SMP＋移送） |
 | HRP3 | 単一コア・保護 | 69.8% / 53.1% | — | 未作成（step5 候補） |
 | HRMP3 | SMP `-smp 2`・保護 | 64.7% / 56.9% | — | 未作成（step5 候補） |
 
@@ -141,18 +141,28 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
   （基本版は FMP test lib に無い）。スピンロックは `CRE_SPN`（**CLASS 内必須**）＋`loc_spn/unl_spn`。
   移送対象タスクは **affinity [1,2] の `CLS_ALL_PRC1`** に置く（`CLS_PRC1` は PE1 限定で
   `mig_tsk` が E_PAR）。`mig_tsk` の prcid は 1 始まり。
-- 効果（FMP 依存部 `.S`・`-smp 2`）：check_library 77.4%/72.9% → **＋scratch で 行 84.6%（292/345）・
-  分岐 79.2%（38/48）**。QEMU で `PE 1 : All check points passed`。
-- **`dispatch_and_migrate` は本 zybo FMP ビルドの `USE_BYPASS_IPI_DISPATCH_HANDER`
-  （core_support.S L430）＋`OMIT_MULTIPRC_INTERRUPT` で IPI 経由ディスパッチがバイパスされ
-  構成的に到達不能**。**実行時マイグレーション自体がこの構成では成立しない**ことを追検証：
-  寝かせ移送（act→slp→`mig_tsk`→wup）・自己移送（`mig_tsk(TSK_SELF,2)`）に加え、
-  **PE2 常駐タスクを置いて PE2 を稼働させても**、移送先 PE2 はタスクをディスパッチしない
-  （selfmig 完了フラグが立たず・ログも出ず・カバレッジ不変・`dispatch_and_migrate` hit=0）。
-  例外終了ではなく（abort/fault 無し・全 CP 緑）、純粋に PE2 への移送ディスパッチが起きない。
-  → 実行時マイグレーション系の網羅は**非バイパス（`OMIT_MULTIPRC_INTERRUPT` 無効）の
-  ターゲット変種**が必要（SELECTIVE FPU 同様、ターゲット依存で用意）。現スクラッチは
-  spinlock・FPU・割込み・例外（PE 付きログ）を踏む有効分のみ残す。
+- 効果（FMP 依存部 `.S`・`-smp 2`）：check_library 77.4% → **＋scratch で 行 87.0%（300/345）**。
+  QEMU で `PE 1 : All check points passed`。
+- **実行時マイグレーション（PE1→PE2）は機能する**。`dispatch_and_migrate`（core_support.S 283-）も
+  **到達できる**。`USE_BYPASS_IPI_DISPATCH_HANDER` は「ディスパッチ IPI を irq_handler で
+  バイパス（高速）処理する」最適化で、IPI 自体は機能する（`gic_kernel_impl.c` が
+  `IPINO_DISPATCH` を処理）。**当初『構成的に到達不能』としたのは誤りだった**。
+
+  到達の鍵は**待ち合わせ方**：
+  - **`dly_tsk` ポーリング待ちは不可**。main が 2 tick ごとに起きて PE1 を回し続けると、
+    （特に重い `-d` トレース下で）移送先 PE2 が走る時間を奪い、移送タスクが PE2 で完了しない。
+  - **バリア同期（`ttsp_barrier_sync`）で待つと成立**。移送タスクを **main より高優先**で
+    `act_tsk` して即起動→自己移送（`mig_tsk(TSK_SELF,2)`＋`dly_tsk` で一度ブロック）→PE2 で再開、
+    PE2 上の移送タスクと main(PE1) を `ttsp_barrier_sync(phase, TNUM_PRCID)` で待ち合わせる。
+    （バリアはマスタ PE で `sil_dly_nse` ビジー待ち＝同一 PE の低優先タスクは譲らないので、
+    移送タスクは高優先で先に起動・移送させておくのが要点。）
+  - 寝かせ移送（act→slp→`mig_tsk`→wup）も同様にバリアで待ち合わせて PE2 実行を確認。
+  - 検証ログ：`self migration (mig_tsk TSK_SELF): now on PE2` / `PE 2 : Barrier sync phase: N`、
+    `dispatch_and_migrate` 283/290/292/300 が hit。
+- 例外ハンドラは PE 付きログを出力（`sil_get_pid`＋`syslog`）。
+- **教訓**：API の `mig_tsk` テストはエラー系（`E_CTX` 等）のみで成功移送を検証しないため
+  「API がパス＝移送 OK」とは言えないが、移送機能自体はカーネルで正しく動く。SMP の
+  待ち合わせは `dly_tsk` ではなく**バリア同期**を使うこと。
 5. gcov（C）と asmcov（.S）の依存部統合レポートを 1 コマンド化。
 6. 「API 全件 vs スクラッチ＋層2」の網羅・所要時間を比較し、CI の既定計測を決める。
 

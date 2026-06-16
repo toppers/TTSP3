@@ -54,6 +54,9 @@
 static volatile double fpu_acc;
 static ID g_prcid;            /* 本スクラッチは PE1 で進行（get_pidで取得） */
 
+#define TTSP_PHASE_MIG		1	/* 他タスク移送（MIG_TASK）とのバリア同期フェーズ */
+#define TTSP_PHASE_SELFMIG	2	/* 自己移送（SELFMIG_TASK）とのバリア同期フェーズ */
+
 void fpu_task(intptr_t exinf)
 {
 	double x = (double) exinf + 0.5;
@@ -103,6 +106,33 @@ void mig_task(intptr_t exinf)
 		z = z * 1.0000001 + 0.5;
 	}
 	fpu_acc += z;
+	ttsp_barrier_sync(TTSP_PHASE_MIG, TNUM_PRCID);	/* PE2 として main と同期 */
+	ext_tsk();
+}
+
+/*
+ *  自タスクのマイグレーション：main より高優先で起動し，走行中に
+ *  mig_tsk(TSK_SELF, 2) で自分を PE2 へ自己移送する．dly_tsk で一度ブロックして
+ *  PE2 上で再開（PE 間移送ディスパッチ＝core_support.S の dispatch_and_migrate を踏む）．
+ *  PE2 で再開後，main(PE1) とバリア同期して完了を通知する（dly_tsk ポーリングだと
+ *  main が PE1 を起こし続け PE2 が走れないため，ビジー待ちのバリアで確実に待ち合わせる）．
+ */
+void selfmig_task(intptr_t exinf)
+{
+	volatile double s = 3.5;
+	int_t	i;
+	ID	prc = 0;
+
+	(void) mig_tsk(TSK_SELF, 2);	/* 自タスクを PE2 へ自己移送 */
+	dly_tsk(2);			/* 一度ブロックして次ディスパッチで PE2 へ移る */
+	(void) sil_get_pid(&prc);
+	for (i = 0; i < 64; i++) {
+		s = s * 1.0000001 + 0.5;
+	}
+	fpu_acc += s;
+	syslog_1(LOG_NOTICE, "self migration (mig_tsk TSK_SELF): now on PE%d",
+			 (int_t) prc);
+	ttsp_barrier_sync(TTSP_PHASE_SELFMIG, TNUM_PRCID);	/* PE2 として main と同期 */
 	ext_tsk();
 }
 
@@ -160,15 +190,22 @@ void main_task(intptr_t exinf)
 
 	/* SMP：PE1→PE2 のタスク移送（mig_tsk）．移送可能クラス CLS_ALL_PRC1 の
 	   タスクを PE1 で起動→寝かせ→PE2 へ移送→起床で PE2 ディスパッチ．
-	   ※ dispatch_and_migrate 自体は本ビルドの USE_BYPASS_IPI_DISPATCH_HANDER で
-	     IPI 経由ディスパッチがバイパスされるため到達不能（構成依存）． */
+	   PE2 上で走り切るのをバリアで待ち合わせる（dly_tsk ポーリングは PE2 を
+	   走らせ切れないため）． */
 	ercd = act_tsk(MIG_TASK);
 	check_ercd(ercd, E_OK);
 	ercd = mig_tsk(MIG_TASK, 2);
 	check_ercd(ercd, E_OK);
 	ercd = wup_tsk(MIG_TASK);
 	check_ercd(ercd, E_OK);
-	dly_tsk(20);
+	ttsp_barrier_sync(TTSP_PHASE_MIG, TNUM_PRCID);
+
+	/* SMP：自タスクの自己移送（mig_tsk(TSK_SELF, 2)）＝PE2 で再開させ
+	   dispatch_and_migrate を踏む．SELFMIG_TASK は main より高優先なので act_tsk で
+	   即起動→自己移送し，main はバリアで PE2 上の SELFMIG_TASK と待ち合わせる． */
+	ercd = act_tsk(SELFMIG_TASK);
+	check_ercd(ercd, E_OK);
+	ttsp_barrier_sync(TTSP_PHASE_SELFMIG, TNUM_PRCID);
 	ttsp_mp_check_point(g_prcid, 10);
 
 	/* §6.4／§6.6 割込み：禁止/許可と多重割込み（低→中→高） */
