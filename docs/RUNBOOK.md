@@ -244,5 +244,6 @@ tail -3 "$dir/execute.log"
 | gcov 計装（保護カーネル） | [`docs/HRP3_GCOV.md`](HRP3_GCOV.md) |
 | HRP 未到達分析・E_OACV 真因 | [`docs/HRP/BB_UNREACHABLE.md`](HRP/BB_UNREACHABLE.md) |
 | HRP カバレッジ向上計画 | [`docs/HRP/COVERAGE_RAISE_PLAN.md`](HRP/COVERAGE_RAISE_PLAN.md) |
+| 依存部カバレッジ取得 計画 | [`docs/DEP_COVERAGE_PLAN.md`](DEP_COVERAGE_PLAN.md) |
 | HRP simt（SOM/時間系）引き継ぎ | [`docs/HRP/SIMT_HANDOFF.md`](HRP/SIMT_HANDOFF.md) |
 | 仕様差分(3.4→3.7)・改変台帳 | [`DIVERGENCE_MAP.md`](../DIVERGENCE_MAP.md) |
