@@ -170,6 +170,13 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
   reactivated on PE2`）。これで task_terminate の移送経路（C）も踏み、`.c` 網羅 77.5%→79.5%。
 - 例外ハンドラは PE 付きログ＋**`xlog_sys(p_excinf)`** で例外フレーム（pc/cpsr/lr/r0-r3/
   nest_count/intpri）をダンプ（`core_kernel_impl.h` の公開関数）。
+- **デフォルトCPU例外ハンドラ `default_exc_handler`（§6.7.5）も回収**：スクラッチは
+  `DEF_EXC(TTSP_EXCNO_A)` のみ登録するため、**未登録の `TTSP_EXCNO_C`（フェイタルデータ
+  アボート）を最後に発生**させると `default_exc_handler`（例外種別ログ→`xlog_sys`→
+  `xlog_fsr`→`ext_ker`）が走る。`ext_ker` で終了するためテスト最後に実行し、合否マーカ
+  （`All check points passed.`）は手前で手動出力する。これで `default_exc_handler`＋`xlog_fsr`
+  （Fault status/address）の C 経路も踏む（ASP `.c` 79.3%→85.2%／合算 88.3%）。
+  ※ check_library/exception は `DEF_EXC(TTSP_EXCNO_C)` を登録するため default 側は未到達だった。
 - **教訓**：API の `mig_tsk` テストはエラー系（`E_CTX` 等）のみで成功移送を検証しないため
   「API がパス＝移送 OK」とは言えないが、移送機能自体はカーネルで正しく動く。SMP の
   待ち合わせは `dly_tsk` ではなく**バリア同期**を使うこと。

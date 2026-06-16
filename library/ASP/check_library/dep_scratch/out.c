@@ -202,7 +202,16 @@ void main_task(intptr_t exinf)
 	ttsp_cpuexc_raise(TTSP_EXCNO_A);
 	ttsp_wait_check_point(13);
 
-	ttsp_check_finish(14);
+	/*
+	 *  §6.7.5 デフォルトのCPU例外ハンドラ：本スクラッチは DEF_EXC(TTSP_EXCNO_A) のみ
+	 *  登録するため，未登録の CPU 例外（TTSP_EXCNO_C＝フェイタルデータアボート）を発生
+	 *  させると default_exc_handler（例外種別ログ→xlog_sys→xlog_fsr→ext_ker）が走る．
+	 *  default_exc_handler は ext_ker で終了するため，本テストの最後に実行する．
+	 *  合否マーカ（All check points passed.）は ext_ker の前に手動出力する．
+	 */
+	ttsp_check_point(14);
+	syslog_0(LOG_NOTICE, "All check points passed.");
+	ttsp_cpuexc_raise(TTSP_EXCNO_C);	/* 未登録例外→ default_exc_handler → ext_ker */
 }
 
 /*
