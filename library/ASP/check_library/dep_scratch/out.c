@@ -159,11 +159,21 @@ void main_task(intptr_t exinf)
 	ttsp_wait_check_point(10);
 	ttsp_check_point(11);
 
-	/* §6.7 CPU例外（復帰可能）と発生時のシステム状態参照 */
+	/*
+	 *  §6.7 CPU例外（カーネル管理外）：CPUロック状態（I ビットセット）で
+	 *  CPU例外を起こし，カーネル管理外CPU例外の出入口（nk_exc_handler）を踏む．
+	 *  （core_support.S：例外フレームの CPSR の I/F ビットがセットなら nk へ分岐）
+	 */
+	loc_cpu();
 	ttsp_cpuexc_raise(TTSP_EXCNO_A);
-	ttsp_wait_check_point(12);
+	unl_cpu();
+	ttsp_check_point(12);
 
-	ttsp_check_finish(13);
+	/* §6.7 CPU例外（復帰可能・タスク文脈）と発生時のシステム状態参照 */
+	ttsp_cpuexc_raise(TTSP_EXCNO_A);
+	ttsp_wait_check_point(13);
+
+	ttsp_check_finish(14);
 }
 
 /*
@@ -197,13 +207,22 @@ void inthdr_ttsp_intno_c(void)
 }
 
 /*
- *  CPU例外ハンドラ（復帰可能）．ttsp_cpuexc_hook で発生元の例外を解消し，
- *  §6.7.6 の発生時システム状態参照（xsns_dpn）を踏む．
+ *  CPU例外ハンドラ．ttsp_cpuexc_hook で発生元の例外（未定義命令）を解消する．
+ *  1回目はカーネル管理外（CPUロック中）の発生＝nk_exc_handler 経路で，この文脈では
+ *  カーネルサービスコールを発行できないため最小限（hook のみ）で復帰する．
+ *  2回目はタスク文脈の通常発生で，§6.7.6 の状態参照（xsns_dpn）まで踏む．
  */
 void exception_ttsp_excno_a(void *p_excinf)
 {
+	static uint_t exc_cnt = 0;
+
+	exc_cnt++;
 	ttsp_cpuexc_hook(TTSP_EXCNO_A, p_excinf);
+	if (exc_cnt == 1) {
+		/* カーネル管理外CPU例外：サービスコール禁止．最小限で復帰 */
+		return;
+	}
 	(void) xsns_dpn(p_excinf);
-	ttsp_check_point(12);
+	ttsp_check_point(13);
 	syslog_0(LOG_NOTICE, "ttsp_cpuexc_raise(TTSP_EXCNO_A) : OK");
 }
