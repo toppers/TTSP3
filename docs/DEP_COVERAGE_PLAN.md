@@ -111,9 +111,10 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
 
 1. ✅ **共通スクラッチを1本試作**（`library/ASP/check_library/dep_scratch/`）→ ASP で効果測定（下記「進捗」）。
 2. ✅ FPU・dispatch 変種を踏むようスクラッチを調整（FPU 復帰経路 575/594 を回収・下記「進捗 step2」）。
-3. 層2 のターゲット固有テスト＋例外/fault 系（SVC・abort）を追加（GIC/pl310/MPU/IPI/SIL fault 注入）。
-4. 4プロファイル（ASP/HRP/FMP/HRMP）へ展開。FMP/HRMP は `-smp 2`。
-   ※ HRP/HRMP のスクラッチは保護ドメイン・メモリオブジェクトの cfg 追加が要る。
+3. ✅ 層2/fault 系を SIL で検証→**.S では無価値と判明し統合見送り**（下記「進捗 step3」）。
+4. （step4）スクラッチの **user ドメイン/SMP 移送/SVC 対応**（HRP/HRMP）＝保護ドメイン・
+   メモリオブジェクトの cfg 追加。HRMP の残り 192 行（`start_utask_r`/`dispatch_and_migrate`/
+   `svc_handler` 等）を狙う。あるいは当該領域は API カバレッジに委ねる判断も可。
 5. gcov（C）と asmcov（.S）の依存部統合レポートを 1 コマンド化。
 6. 「API 全件 vs スクラッチ＋層2」の網羅・所要時間を比較し、CI の既定計測を決める。
 
@@ -144,6 +145,29 @@ step1 の残未到達を精査・調整した結果：
   アボート) しか刺激できないため**スクラッチでは到達不能**。これらは SIL テスト
   （`docs/SIL_TEST.md`／prefetch abort 等の fault 注入）または層2のターゲット固有テストで
   カバーすべき＝**共通スクラッチ（層1）の自然な上限**。次は層2（step3）へ。
+
+### 進捗（2026-06-16・step3 調査＝SIL は .S 計測に統合しない結論）
+
+層2（例外/fault 系）を SIL テストで埋められるか検証した結果、**SIL は依存部 `.S` の網羅を
+増やさない**ことが判明（証拠ベースで SIL 統合を見送り）：
+
+- **ASP**：保護なし＝MMU フォルトが起きず、SIL もアボートを誘発しない（`ttsp_cpuexc_raise`
+  は EXCNO_A のみ使用）。SIL の `.S` 寄与は +1 行のみ。アボート/SVC ハンドラ入口は
+  **ASP では構造的に到達不能**（意図的な致命 fault を起こさない限り）＝プロファイルの上限。
+- **HRMP**（`-smp 2`・`-gdwarf-4` で SIL ビルド・実行で確認）：プリフェッチ/データアボート
+  ハンドラ入口（741-843）は **check_library が既に踏んでいる**（HRMP の例外テストは保護対応で
+  アボートを誘発）。よって SIL を足しても `.S` は 64.7%（353/546）から変化なし。
+
+**HRMP の真の残り（192 行）の性格**（未到達行のラベル分布）：`start_utask_r`(20＝**ユーザ
+ドメイン実行**)・`dispatch_and_migrate`(12＝**SMP タスク移送**)・`svc_handler`(9＝**拡張サービス
+コール**)・`nk_exc_handler`/`exc_handler_3`/`irq_handler_2-3`（例外/割込みネスト変種）・
+`fatal_dabort_handler`。これらは**保護ドメイン・PE 間移送・SVC** の経路で、kernel-domain
+のみの check_library/共通スクラッチでは届かず、**多ドメイン/移送を伴うテスト（API 領域、
+または step4 でスクラッチを user ドメイン対応に拡張）** が必要。
+
+**結論**：層2 の「fault 注入」は HRMP では既に check_library がカバー済み・ASP では到達不能
+のため、SIL の asm 計測統合は採用しない（SIL は SIL-API 適合性テストとしての価値は別途維持）。
+残りの依存部 `.S` 向上は **step4＝スクラッチの user ドメイン/移送対応**（HRP/HRMP）が筋。
 
 ---
 
