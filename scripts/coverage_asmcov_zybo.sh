@@ -149,13 +149,49 @@ trace_and_cover() {
 echo "===== build: check_library ($PROFILE / -gdwarf-4) ====="
 printf 'c\n1\n1\nr\nr\nq\n' | bash ttb.sh "$OS_PATH" "$PROFILE" "$OBJ_DIR" \
 	> "/tmp/asmcov_build_chk_$$.log" 2>&1
+ref_built=""
 for d in exception interrupt timer; do
 	dir="$OBJ_DIR/check_library/$d"
 	if [ ! -f "$dir/$kbin" ]; then
 		echo "BUILD WARN: check_library/$d (skip)"; continue
 	fi
+	[ -z "$ref_built" ] && ref_built="$dir"
 	trace_and_cover "$dir" "check_library/$d"
 done
+
+# 依存部スクラッチ（層1・docs/DEP_COVERAGE_PLAN.md）．ソースが在る場合のみ．
+# 既存 check_library のビルド済みディレクトリを複製し out.* を差し替えて
+# -gdwarf-4 で再リンクする（COBJS はプロファイル別に明示指定）．
+scratch_src="library/$PROFILE/check_library/dep_scratch"
+if [ -f "$scratch_src/out.c" ] && [ -n "$ref_built" ]; then
+	echo "===== build: dep_scratch ($PROFILE / -gdwarf-4) ====="
+	# プロファイル別の共通カーネル/アプリ COBJS（ttb.sh と整合）
+	K_COMMON="objs/startup.o objs/task.o objs/wait.o objs/time_event.o objs/task_manage.o objs/task_refer.o objs/task_sync.o objs/task_term.o objs/taskhook.o objs/semaphore.o objs/eventflag.o objs/dataqueue.o objs/pridataq.o objs/mutex.o objs/mempfix.o objs/time_manage.o objs/cyclic.o objs/alarm.o objs/sys_manage.o objs/interrupt.o objs/exception.o"
+	case "$PROFILE" in
+		FMP)  K_COMMON="$K_COMMON objs/spin_lock.o" ;;
+		HRP)  K_COMMON="$K_COMMON objs/messagebuf.o objs/svc_table.o objs/domain.o objs/mem_manage.o objs/memory.o" ;;
+		HRMP) K_COMMON="$K_COMMON objs/messagebuf.o objs/svc_table.o objs/domain.o objs/mem_manage.o objs/memory.o objs/spin_lock.o" ;;
+	esac
+	A_COMMON="objs/out.o objs/ttsp_test_lib.o objs/log_output.o objs/vasyslog.o objs/t_perror.o objs/strerror.o"
+	# ターゲット依存 COBJS は ttsp_target.sh から取得
+	( unset KERNEL_COBJS_TARGET APPL_COBJS_TARGET
+	  source "./library/$PROFILE/target/${TTSP_TARGET_NAME:-zybo_z7_gcc}/ttsp_target.sh" 2>/dev/null
+	  echo "${KERNEL_COBJS_TARGET}|${APPL_COBJS_TARGET}" ) > /tmp/asmcov_cobjs_$$.txt
+	K_TARGET="$(cut -d'|' -f1 /tmp/asmcov_cobjs_$$.txt)"
+	A_TARGET="$(cut -d'|' -f2 /tmp/asmcov_cobjs_$$.txt)"
+	rm -f /tmp/asmcov_cobjs_$$.txt
+	sdir="$OBJ_DIR/check_library/dep_scratch"
+	rm -rf "$sdir"; cp -rp "$ref_built" "$sdir"
+	cp "$scratch_src"/out.c "$scratch_src"/out.cfg "$scratch_src"/out.h "$sdir"/
+	( cd "$sdir" && rm -f "$kbin" qemu.log execute.log asmcov.info && make clean >/dev/null 2>&1; mkdir -p objs
+	  COPTS=-gdwarf-4 make KERNEL_COBJS="$K_COMMON $K_TARGET" APPL_COBJS="$A_COMMON $A_TARGET" \
+	    > /tmp/asmcov_build_scratch_$$.log 2>&1 )
+	if [ -f "$sdir/$kbin" ]; then
+		trace_and_cover "$sdir" "dep_scratch"
+	else
+		echo "BUILD WARN: dep_scratch (skip)"; tail -5 "/tmp/asmcov_build_scratch_$$.log"
+	fi
+fi
 
 if [ "$MODE" = "bb" ]; then
 	echo "===== build: API auto-code (${DIV_NUM}-way / -gdwarf-4) ====="

@@ -109,13 +109,28 @@ zybo_z7 例（`ttsp_target.sh` の `KERNEL_COBJS_TARGET` 由来）：
 
 ## 6. 実装ステップ（案）
 
-1. **共通スクラッチを1本試作**（`check_library` 枠で `dep_scratch` 群を新設）→ ASP で
-   依存部 .S/C 網羅がどれだけ上がるか測る（層1 単体の効果検証）。
+1. ✅ **共通スクラッチを1本試作**（`library/ASP/check_library/dep_scratch/`）→ ASP で効果測定（下記「進捗」）。
 2. FPU・多重例外・dispatch 変種を踏むようスクラッチを調整（未到達域を狙い撃ち）。
 3. 層2 のターゲット固有テストを少数追加（GIC/pl310/MPU/IPI）。
 4. 4プロファイル（ASP/HRP/FMP/HRMP）へ展開。FMP/HRMP は `-smp 2`。
+   ※ HRP/HRMP のスクラッチは保護ドメイン・メモリオブジェクトの cfg 追加が要る。
 5. gcov（C）と asmcov（.S）の依存部統合レポートを 1 コマンド化。
 6. 「API 全件 vs スクラッチ＋層2」の網羅・所要時間を比較し、CI の既定計測を決める。
+
+### 進捗（2026-06-16・step1 完了）
+
+`dep_scratch`（porting §6＋arm §6.9 FPU を踏む単一アプリ）を作成し ASP で検証：
+
+- QEMU で **13/13 チェックポイント PASS**。`coverage_asmcov_zybo.sh` に scratch 自動ビルド
+  （既存 check_library ビルドを複製→`out.*` 差替→`-gdwarf-4`＋プロファイル別 COBJS で再リンク）を統合。
+- 依存部 `.S` 網羅（ASP）：スクラッチ単独 行68.6%/分岐45.0%（**1本で大半**）。
+  check_library のみ 81.4%/66.7% → **＋scratch で 83.3%/67.5%**（FPU 保存ブロック等を新規回収）。
+
+**step2 の狙い目（測定で特定した残未到達）**：
+- FPU 全保存/復帰の残り（`vpop {d8-d15}` 等）＝より多様な FPU コンテキスト切替が必要。
+- `__TARGET_ARCH_ARM < 6`（ARMv5）ブロックは Cortex-A9 では**到達不能のデッドコード**＝
+  **分母から除外**する計測精緻化が必要（現状は未到達として分母に残り網羅率を押し下げている）。
+- `exc_handler_1`/`exc_handler_3`・多重（ネスト）例外＝複数の例外種別とネスト発生シナリオが必要。
 
 ---
 
