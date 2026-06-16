@@ -45,6 +45,7 @@
 extern void main_task(intptr_t exinf);
 extern void high_task(intptr_t exinf);
 extern void fpu_task(intptr_t exinf);
+extern void irq_task(intptr_t exinf);
 extern void inthdr_ttsp_intno_a(void);
 extern void inthdr_ttsp_intno_b(void);
 extern void inthdr_ttsp_intno_c(void);

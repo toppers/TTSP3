@@ -80,6 +80,25 @@ void high_task(intptr_t exinf)
 	ext_tsk();
 }
 
+/*
+ *  割込みハンドラ（割込みコンテキスト）から起動される高優先タスク．
+ *  これにより main は「割込み契機のディスパッチ」で preempt され，後で
+ *  ret_int_r 経由で復帰する（§6.6 割込みハンドラ出口でのコンテキスト復帰
+ *  ＝ARM core_support.S の割込み復帰側 FPU/レジスタ復帰経路を踏む）．
+ *  FPU を使うことで復帰時の FPU レジスタ復帰も併せて踏ませる．
+ */
+void irq_task(intptr_t exinf)
+{
+	volatile double y = (double) exinf + 1.25;
+	int_t i;
+
+	for (i = 0; i < 64; i++) {
+		y = y * 1.0000001 + 0.25;
+	}
+	fpu_acc += y;
+	ext_tsk();
+}
+
 void main_task(intptr_t exinf)
 {
 	ER	ercd;
@@ -167,6 +186,14 @@ void inthdr_ttsp_intno_b(void)
 void inthdr_ttsp_intno_c(void)
 {
 	ttsp_clear_int_req(TTSP_INTNO_C);
+	/*
+	 *  割込みコンテキストから高優先タスクを起動する．多重割込みが解け，
+	 *  最外段の割込み出口で IRQ_TASK がディスパッチされて main が preempt
+	 *  され（コンテキストは ret_int_r を再開番地として保存される），
+	 *  IRQ_TASK 終了後に main が ret_int_r 経由で復帰する（割込み復帰側の
+	 *  レジスタ/FPU 復帰経路を踏む）．
+	 */
+	iact_tsk(IRQ_TASK);
 }
 
 /*
