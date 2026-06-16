@@ -57,6 +57,13 @@
  */
 static volatile double fpu_acc;
 
+/*
+ *  初期値付きグローバル変数（非ゼロ）．.data セクションに置かれ，起動時の
+ *  ROM→RAM データ初期化コピー（start.S の DATA コピーループ）を踏ませる．
+ *  .bss（ゼロ初期化）ではコピーループは走らないため，非ゼロ初期値が必要．
+ */
+static volatile uint32_t init_data = 0xDEADBEEFU;
+
 void fpu_task(intptr_t exinf)
 {
 	double x = (double) exinf + 0.5;
@@ -123,6 +130,10 @@ void main_task(intptr_t exinf)
 	PRI	ipm;
 
 	ttsp_initialize_test_lib();
+	/* 起動時の .data コピーが効いていることを確認（最適化除去防止も兼ねる） */
+	if (init_data != 0xDEADBEEFU) {
+		syslog_0(LOG_ERROR, "init_data mismatch (start.S .data copy)");
+	}
 	ttsp_check_point(1);
 
 	/* §6.3 システム状態の管理：CPUロック／ディスパッチ禁止／状態参照 */
