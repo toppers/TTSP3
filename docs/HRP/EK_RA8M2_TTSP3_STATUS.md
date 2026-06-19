@@ -56,6 +56,29 @@ out.c 内 `[a]` 出力前）で停止。例外メッセージ無し。
   プリエンプト＆resume）の挙動を実機検証, (c) wait_raise_int の busy 区間で WDT リフレッシュ。
 - 参考: タイマ割込み優先度 INTPRI_TIMER=TMAX_INTPRI-1=-2（低）, TTSP_INTNO_A=-15（高）。
 
+#### 実機 halt 詳細解析（2026-06-20・決定的）
+スピン時（単一 JLink セッションで読取り・有効値）:
+- PC=0x0200B4BE（loc_cpu 相当）, IPSR=0（タスク文脈）, **BASEPRI=0x10（CPUロック中）**,
+  FAULTMASK=0, PRIMASK=0, CONTROL=0（特権）, CycleCnt 増加＝能動スピン。
+- `int_flag`(0x2200a5e0)=0（割込み未発火）。
+- NVIC: ISER0=0x0000000E（IRQ1-3=SCI8 のみ enable。**TTSP_INTNO_A=IRQ24 は未 enable**）,
+  ISPR0=0（未 pending）, IRQ24 の IPR=0。
+→ wait_raise_int 文脈で **テスト割込みが未 enable・未 pending かつ CPU ロック中**。
+
+**構造的制約（重要）**: `TTSP_GE_TIMER_INTPRI = TMIN_INTPRI = -15`、その内部表現
+`INT_IPM(-15)=0x10=field1` は **CPU ロックレベル IIPM_LOCK と同一**。M-profile では CPU ロック中
+（BASEPRI=field1）に field≥1 の割込みは全てマスクされ、field0 は フォルト/SVCall 専用。よって
+**「CPU ロック中／高優先度ハンドラ文脈で割込みを上げて発火を待つ」テスト（wait_raise_int を伴う
+SIL_LOC_INT サブテスト）は M-profile では原理的に成立しない**（A-profile は別機構で成立）。
+TASK 文脈[a-k]はロック解除後に待つので成立（CP2 通過実績）。
+
+**次の対応案**:
+1. ALARM/CYCLIC（ハンドラ）文脈および CPU ロック中の wait_raise_int サブテストを，本ターゲット用に
+   out.c で M-profile ガード（#ifdef __TARGET_PROFILE_M）して skip するか、TTSP の exclude 機構へ。
+   sys_manage SOM 除外（simt 専用）と同じ「ターゲット非対応テストの除外」方針。
+2. もしくは TTSP_INTNO_A を field0 では出せない以上、ハンドラ/ロック文脈の当該サブテストは
+   構造的に対象外と整理。
+
 ### （旧記録）起動 LOCKUP の根本原因 — 解決済
 - 症状: フラッシュ・起動後、シリアルに "12" のみ出力しバナー(tBannerMain)前で停止。
 - JLink halt で **PC=0xEFFFFFFE（ARM-M LOCKUP）, PSP=0（タスク起動前）, LR=0x0201006B**。
