@@ -48,6 +48,19 @@ cd obj_ekra8m2/sil_test && arm-none-eabi-objcopy -O ihex hrp hrp.hex
   処理，復帰時に PC 等を ustk フレームへ反映して PSP=ustk へ戻す」を実装する。hrp3/test の mprot
   （ユーザドメイン MemManage）も同じ修正で前進する見込み。
 
+**MPU リージョン実測（決定的・2026-06-20）**: 故障時 halt で MPU 設定をダンプ:
+- MPU_CTRL=0x5(ENABLE+PRIVDEFENA)。Region4: RBAR=0x22000007, RLAR=0x22003FE1
+  → base=0x22000000, limit=0x22003FE0, **AP=0b11=リードオンリー(any privilege)**, XN=1。
+- すなわち **ttg_ustack 全域(0x22000000-0x22003FE0)が現アクティブ MPU で RO**。よって故障タスクの
+  ustk への HW 例外スタッキング(MSTKERR)と core_exc_entry の stmfd(DACCVIOL)が両方フォルトする。
+- sstk(ttg_sstack@0x22007DC8)はどの region にも含まれず PRIVDEFENA 背景で特権 RW 可
+  → **sstk 上での処理は可能**だが，HW 例外フレームが RO の ustk 上に積めない/積まれた点が壁。
+- 本質: ユーザタスク実行時は DOM1 MPU で ustk RW だが，CPU 例外処理中のアクティブ MPU では
+  ustk が RO（カーネル/別ドメインのマッピング）。ネスト例外+svc を通じた MPU ドメイン状態の
+  扱い（例外処理中に DOM1 MPU を有効化する，or 例外スタッキング自体を回避する）が必要で，
+  **単純な ustk→sstk コピーでは解決しない**（コピー back の ustk 書込みも RO で不可）。要・腰を据えた
+  MPU ドメイン状態の解析と設計。
+
 **（旧記述）残課題: USER DOMAIN abort (CP24/25)**:
 sil_user_task(ユーザドメイン)の sil_reb_mem(不正アドレス)→MemManage の処理で，core_exc_entry の
 `stmfd r0!,{r1,lr}`(PC=0x…f6e)が **ユーザスタック(ustk=PSP)への書込みで再フォルト→HardFault**
