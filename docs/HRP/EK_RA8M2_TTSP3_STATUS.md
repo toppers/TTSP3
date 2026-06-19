@@ -200,3 +200,55 @@ R4=R5=2(索引), BASEPRI=0x10。nm は 0x0200b460 を `_kernel_clr_int` と示�
 - asp3_tz_work cpuexc 調査: `docs/hrp3-test-campaign-status.md`（B節）＋ branch `m2-cpuexc-thread-handler`。
 - 共通の本質的課題: secure Cortex-M85 で「非タスク/CPU例外/初期化 文脈からの svc」が未対応。
   HW ブレークポイント不可のため proper debug access 下での機構実装が望ましい。
+
+---
+
+## 【2026-06-20 更新】SIL は CP1〜23 PASS。CP24 で M2 アクセス制御の本丸に到達
+
+### 現状（実機）
+- ブート LOCKUP・非タスク文脈 svc・タスク文脈 CPU 例外（exchdr 経由 CP13/15/17）・
+  ALARM/CYCLIC ライブロック・ユーザタスク起動（ustk）まで**全て解決済**。
+- **SIL は Check point 1〜23 まで実機 PASS**。`=== test start from USER DOMAIN (DOM1) ===`
+  → CP23、`USER DOMAIN: sil_*_mem() : OK` / `test_of_sns_ker() : OK` / `USER DOMAIN SIL access : OK`
+  まで到達（ユーザドメイン DOM1 のタスクが実際に走行）。
+- **残ブロッカー = out.c:249 `check_ercd(get_tim(&abntim), E_OACV)`**。
+  ユーザドメインからの `get_tim` が **期待 E_OACV にならない**。
+
+### 根本原因（今回特定・最重要）＝ **M2 ドメインアクセス制御が未有効化**
+- `get_tim`（kernel/time_manage.c）は `CHECK_MACV_WRITE(p_systim)`→`CHECK_ACPTN(sysstat1_acvct.acptn4)`
+  の順でチェック。両者とも **グローバル `rundom`**（実行中保護ドメインのビットパターン）を参照する
+  （`VIOLATE_ACPTN = rundom!=TACP_KERNEL && (rundom & acptn)==0`／`probe_mem_write` も `rundom`）。
+- **HRP3 移植の必須手順（porting.txt:595 / posix_kernel_impl.c:299）**＝ディスパッチ時に
+  `rundom = p_runtsk->p_dominib->domptn` を設定すること。**EK-RA8M2 の arm_m_gcc ディスパッチ
+  （core_support.S の pendsv_handler:259 付近 と dispatcher_0/svc#1:809 付近の2経路）は
+  この設定を欠いていた**ため、`rundom` が常に TACP_KERNEL 相当に留まり、**全ドメインの
+  アクセス制御が無効化**されていた（＝get_tim が E_OK を返す M1-暫定状態）。
+
+### 実験結果（2経路に `rundom = domptn` を追加して検証 → 一旦 revert 済）
+- 追加すると **アクセス制御が実際に効き始める**ことを確認：get_tim が **E_OK → E_MACV** に変化
+  （`CHECK_MACV_WRITE(&abntim)` が先に発火）。＝ rundom 機構は正しく動く。
+- ただし **CP24 はまだ E_OACV にならない**。理由：`abntim` はユーザタスクのスタック上ローカルだが、
+  そのユーザスタックが **TA_USTACK メモリオブジェクトとして DOM1 に登録されていない**
+  （out.cfg の `CRE_TSK(SIL_USER_TASK, {... , &ttg_sstack[0][0]})` のユーザスタック指定が
+  `.system_stack`＝カーネル領域を指しており、`probe_mem_write`→`search_meminib` が
+  非 DOM1 書込許可領域と判定 → E_MACV）。本来は **ユーザスタックを DOM1 RW の TA_USTACK
+  領域**にすれば MACV を通過 → 次の `CHECK_ACPTN(sysstat1_acvct.acptn4)` で **E_OACV** になるはず。
+- **副作用（revert 理由）**：rundom 有効化は hrp3/test の **calsvc を PASS→FAIL(CP8) に退行**させ、
+  **extsvc1/prbstr が Excno=0 でクラッシュ**する（多ドメイン拡張サービスコールの cdmid 整合・
+  フォルト処理が M1-暫定のままのため）。`test` の PASS-26 ベースラインを壊さないため **revert**。
+
+### M2 アクセス制御を完全有効化するための ToDo（次セッションの本丸）
+1. **ディスパッチ2経路で `rundom = p_runtsk->p_dominib->domptn` を設定**
+   （core_support.S: pendsv_handler / dispatcher_0。`DOMINIB_domptn=0`、dominib_kernel.domptn==TACP_KERNEL
+   なのでカーネルドメインも domptn 代入で正しく TACP_KERNEL になる）。
+2. **拡張サービスコールの cdmid を実ドメインに**（svc_dispatch の TDOM_KERNEL 暫定を解消）。
+   これをやらないと calsvc 退行・extsvc1/prbstr クラッシュが残る。要 acvct/SAC 整合の検証。
+3. **ユーザスタックを TA_USTACK で DOM1 に登録**（SIL out.cfg のユーザスタック指定を見直し。
+   `probe_mem_write` の `within_ustack` が `p_tinib->ustk/ustksz` を参照するため、TINIB の
+   ustk/ustksz が DOM1 RW 領域を指すこと）。これで SIL CP24 が E_MACV→E_OACV になる見込み。
+4. 上記後、SIL CP24（get_tim→E_OACV）/CP25（sil_dly_nse→Prefetch Abort）/CP26＝完走を確認。
+
+### この一群は**単一の根本原因（rundom 未設定＝M2 アクセス制御未有効）に集約**される
+SIL CP24+ ・ hrp3/test の extsvc1・prbstr・calsvc・mprot・tprot は**すべて同じ M2 機構**。
+rundom 設定が「効く」ことは実機検証済み（E_OK→E_MACV）。残りは cdmid 整合 + ユーザスタック
+登録 + 各テストの acvct/SAC 整合の**まとまった M2 有効化作業**（部分有効化は退行を招くため一括で）。
