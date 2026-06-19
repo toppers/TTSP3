@@ -19,7 +19,32 @@ cd obj_ekra8m2/sil_test && arm-none-eabi-objcopy -O ihex hrp hrp.hex
 #   ※ RA_SERIAL=/dev/ttyACM0 を渡して ttsp_target.sh の simulation() を使うか手動で flash
 ```
 
-## 到達点（2026-06-20）
+## ★大幅更新（2026-06-20 後半）: SIL が CP1〜22 まで実機 PASS
+
+完全ビルド不能だった SIL を，以下の一連の修正で **実機 CP1〜22 まで通過**させた（hrp3/test 回帰ゼロ）。
+残るは USER DOMAIN(DOM1) abort テスト CP24/25 と完了(CP26)のみ。
+
+**コミット済み修正（asp3=asp3_tz_work, ttsp3=本リポ）**:
+1. asp3 FSP パス SRCDIR化（SRCDIR外ビルド可能化）。
+2. ttsp3 EXCNO_DABORT/PABORT マップ＋abort ハンドラ M-profile 移植（ビルド成立）。
+3. asp3 **FAULTMASK クリア**（core_initialize）＝inirtn からの svc LOCKUP 解消（起動成功）。
+4. asp3 **SIL_LOC_INT→BASEPRI**＝SIL_LOC_INT 中の svc エスカレート解消。
+5. asp3 **sil_dly_nse で WDT リフレッシュ**＝ビジー待ち(ttsp_wait_check_point/wait_raise_int)の WDT 解消。
+6. ttsp3 wait_raise_int を非タスク文脈(sns_ctx)でスキップ＋CYC 周期マクロ化(ek_ra8m2=3s)
+   ＝ALARM/CYCLIC 文脈のライブロック解消（CP5-12 通過）。
+7. asp3 **STEP2: タスク文脈 CPU 例外ハンドラのスレッドモード実行**＋nPRIV 昇格/復元，
+   ttsp3 ttsp_cpuexc_hook の PC オフセット修正＝EXCEPTION フェーズ CP13-22 通過。
+
+**残課題: USER DOMAIN abort (CP24/25)**:
+sil_user_task(ユーザドメイン)の sil_reb_mem(不正アドレス)→MemManage の処理で，core_exc_entry の
+`stmfd r0!,{r1,lr}`(PC=0x…f6e)が **ユーザスタック(ustk=PSP)への書込みで再フォルト→HardFault**
+(Excno=3, 停止 XPSR IPSR=4)。HW 例外フレーム(32B)は ustk に積めるが直下の +8B でフォルト。
+ustk=4KB と十分なはずで，MPU 境界 or PSP 位置の要因を実機 PSP/ustk 実測で要特定。
+**対応**: ユーザドメイン CPU 例外を **sstk へ退避して処理**する(svc Part3 と同型。sil_user_task は
+sstk 割当済)。STEP2 の nPRIV 昇格は対応済(前提)。これは hrp3/test の mprot(ユーザドメイン MemManage)
+にも共通の本丸。
+
+## 旧・到達点（2026-06-20 前半）
 
 ### ✅ SIL テストがビルド可能になった（従来は完全にビルド不能）
 3点の移植で解決（コミット済み）:
