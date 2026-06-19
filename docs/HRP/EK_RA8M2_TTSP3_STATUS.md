@@ -252,3 +252,37 @@ R4=R5=2(索引), BASEPRI=0x10。nm は 0x0200b460 を `_kernel_clr_int` と示�
 SIL CP24+ ・ hrp3/test の extsvc1・prbstr・calsvc・mprot・tprot は**すべて同じ M2 機構**。
 rundom 設定が「効く」ことは実機検証済み（E_OK→E_MACV）。残りは cdmid 整合 + ユーザスタック
 登録 + 各テストの acvct/SAC 整合の**まとまった M2 有効化作業**（部分有効化は退行を招くため一括で）。
+
+---
+
+## 【2026-06-20 ★達成★】TTSP3 SIL 実機 All check points passed（M2 アクセス制御＋ユーザ例外復帰 完成）
+
+EK-RA8M2 実機で **TTSP3 SIL が "All check points passed" を出力**（CP1〜27 完走）。
+INIRTN/TASK/ALARM/CYCLIC/EXCEPTION/USER DOMAIN(DOM1)/TERRTN 全フェーズ通過。
+USER DOMAIN の異常系も期待どおり：
+- `get_tim` → **E_OACV**（サービスコールのドメインアクセス保護）
+- `sil_reb_mem(0xd0000000)` → **DABORT caught & recovered**（不正アドレス＝メモリアクセス違反）
+- `sil_dly_nse()` → **PABORT caught & recovered**（カーネル専用テキスト＝特権コードフェッチ違反）
+
+### 必要だったカーネル修正（asp3_tz_work 側・4点）
+1. **ディスパッチ2経路で `rundom = p_runtsk->p_dominib->domptn`**（core_support.S: pendsv_handler /
+   dispatcher_0=svc#1）。porting.txt:595 の必須手順。これで M2 ドメインアクセス制御が有効化され，
+   `VIOLATE_ACPTN`/`probe_mem_*` が実ドメインで判定するようになる（get_tim→E_OACV の前提）。
+2. **拡張サービスコール実行中の rundom 退避/復元**（core_kernel_impl.c svc_dispatch）。拡張サービス
+   本体は内部で syslog 等カーネルサービスを呼ぶため，実行中だけ rundom=TACP_KERNEL に退避し，復帰後に
+   呼出しドメインへ戻す。これが無いと calsvc 退行・拡張サービスがアクセス拒否される。cdmid は当面 TDOM_KERNEL。
+3. **within_ustack の実装**（chip_kernel_impl.c）。USE_TSKINICTXB 時 arch が要求する関数が M1 では
+   「常に false」スタブだった。TSKINICTXB の ustk/ustksz で within_memobj 判定する実装に置換。これが無いと
+   `CHECK_MACV_WRITE`（get_tim の第1引数 &abntim 等）がユーザスタック上でも E_MACV になる。
+4. **svc 経路を呼出し元 nPRIV で分岐（2 トランポリン化）**（core_support.S svc_handler_service /
+   svc_call_trampoline + 新規 svc_call_trampoline_priv）。従来は p_runtsk の所属ドメインで分岐していたが，
+   **CPU 例外スレッドハンドラはユーザドメインタスクの TCB を持つが特権(nPRIV=0)で実行**されるため，そこからの
+   拡張サービスコール（check_point）が「ユーザ経路」と誤判定され，復帰時に nPRIV=1 でカーネルハンドラ番地を
+   フェッチ→IACCVIOL→無限ループ（CP24/25 が 100 回超リピート）していた。発行時の CONTROL.nPRIV で
+   分岐し，特権呼出し元は特権のまま bx 復帰（スタック切替なし）にすることで CP24/25/26 の例外復帰が成立。
+
+### 意義
+SIL は「ユーザドメインからの保護操作が正しく拒否・捕捉・復帰される」ことを確認するテストであり，
+合格は **M2 メモリ保護／ドメインアクセス制御／ユーザ⇄カーネル特権遷移／CPU 例外のユーザ文脈復帰**が
+実機で機能していることの実証。これは hrp3/test の extsvc1・prbstr・calsvc 等と同じ M2 機構であり，
+本修正群は hrp3/test 側にも波及する（calsvc 退行解消を確認済。extsvc1/prbstr は別途フル回帰で確認）。
