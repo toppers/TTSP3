@@ -72,6 +72,21 @@ out.c 内 `[a]` 出力前）で停止。例外メッセージ無し。
 SIL_LOC_INT サブテスト）は M-profile では原理的に成立しない**（A-profile は別機構で成立）。
 TASK 文脈[a-k]はロック解除後に待つので成立（CP2 通過実績）。
 
+#### ★訂正診断（2026-06-20・step/halt+stack-walk で確定）
+当初の「wait_raise_int/loc_cpu スピン」は **addr2line による誤帰属**だった。MSP のネスト
+フレーム（EXC_RETURN 0xFFFFFFF1/0xFFFFFFF3 が複数＝多重ネスト）を addr2line で解決した
+実際のコールチェーン:
+`svc_call_trampoline`(タスクの svc) → **`r_gpt_ccmp_common_isr`**(GPT タイマ割込み・ネスト発火)
+→ `target_hrt_handler` → `_kernel_signal_time`(時間イベント処理) → 時間イベントハンドラが
+SIL `all_test` を実行 → `tHRPSVCBody_sSysLog_mask` / `tHRPSVCCaller_sSerialPort_eEntry_read`
+(svc＋**低速 115200 シリアル出力**) → ロック/`clr_int` 系コードでスピン。
+→ すなわち ALARM/CYCLIC 失敗は **多重ネスト割込み／再入問題**: GPT タイマ（および 100ms 周期の
+CYC）が，シリアル律速で長時間かかる時間イベントハンドラ（all_test）の実行**中**にネスト発火し，
+再入・スピンに陥る。単純な割込み優先度/マスクの問題ではない（CPUロック説は訂正）。
+→ 切り分け継続には JLink `Step`（単一ステップ・secure でも可）で clr_int 系ループの r0/ISPR を
+観測するか，時間イベントハンドラから重い all_test（特に大量シリアル出力）を呼ぶ TTSP 設計を
+本ターゲット向けに見直す（再入を避ける）必要。
+
 **次の対応案**:
 1. ALARM/CYCLIC（ハンドラ）文脈および CPU ロック中の wait_raise_int サブテストを，本ターゲット用に
    out.c で M-profile ガード（#ifdef __TARGET_PROFILE_M）して skip するか、TTSP の exclude 機構へ。
