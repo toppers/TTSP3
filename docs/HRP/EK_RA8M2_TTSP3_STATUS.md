@@ -97,7 +97,26 @@ disasm 上のループ(0x200b4a0–0x200b4de): ICPR クリア→ロック→ISPR
 r0≠15 なら `subs r0,#16` して再試行。ISPR は halt 時 0 のため出口条件と矛盾＝addr2line の関数帰属
 (`_kernel_clr_int`)が不正確で別の inline 関数の可能性も含め，BKPT トレースでの再確認が必要。
 
-**次の対応案**:
+#### ★最終診断（2026-06-20・全レジスタ確認で確定）
+スピン時の全レジスタ: R2=**0x40322000（GPT タイマ周辺機器領域）**, R6/R7=0x0200D338/334(rodata表),
+R4=R5=2(索引), BASEPRI=0x10。nm は 0x0200b460 を `_kernel_clr_int` と示すが，書込み先が GPT で
+あり call chain も `r_gpt_ccmp_common_isr`→`target_hrt_handler`→`_kernel_signal_time` のため，
+スピンは **HRT/GPT の時間イベント処理経路**にある（NVIC 割込みクリアではない）。
+`target_hrt_set_event`(target_timer.c:124) は過去時刻を正しく処理（:136-138 で即時要求）するため
+単純な「過去時刻プログラミング」バグではない。
+→ **真因＝イベント駆動 HRT のキャッチアップ・ライブロック**: SIL テストは **ALARM ハンドラと
+100ms 周期 CYC ハンドラの両方**で重い `all_test`（大量の 115200 シリアル出力）を実行する。1 ハンドラの
+実行が周期(100ms)を超えるため，時間イベントが処理速度より速く積み上がり，`signal_time`/HRT が
+即時再要求を繰り返して追いつけず，CPU ロック下でライブロック → WDT リセット。
+→ **ターゲット負荷限界**（イベント駆動 HRT＋低速シリアル＋重いハンドラ）であり，単純なカーネルバグ
+ではない。
+
+**対応案（更新）**:
+- 本ターゲット向けに SIL テストの CYC 周期を延長（100ms→十分大）か，ALARM/CYCLIC 文脈の all_test の
+  シリアル出力を削減（負荷を周期内に収める）。test/config 側の調整＝TTSP の target 適合化。
+- もしくはイベント駆動 HRT が過負荷時に古い時間イベントをまとめて処理/間引く設計にする（カーネル側・大）。
+
+**旧・対応案**:
 1. ALARM/CYCLIC（ハンドラ）文脈および CPU ロック中の wait_raise_int サブテストを，本ターゲット用に
    out.c で M-profile ガード（#ifdef __TARGET_PROFILE_M）して skip するか、TTSP の exclude 機構へ。
    sys_manage SOM 除外（simt 専用）と同じ「ターゲット非対応テストの除外」方針。
