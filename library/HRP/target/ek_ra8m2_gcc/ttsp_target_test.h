@@ -232,7 +232,9 @@
 /*
  * アライン指定宣言マクロ
  */
-#define TTSP_DEFINE_VAR_SECTION(type, var, sec)	type var __attribute__((section(sec)));
+/* ARMv8-M(PMSAv8) の保護対象スタック領域は MPU リージョン境界＝32 バイト整列が必要
+ * （ユーザタスクスタック ttg_ustack 等。非整列だと cfg が E_PAR: stack area not aligned to 32 bytes）． */
+#define TTSP_DEFINE_VAR_SECTION(type, var, sec)	type var __attribute__((section(sec), aligned(32)));
 
 /*
  * 標準RAMリージョン名（EK-RA8M2: target_mem.cfg の ATT_REG("RAM",...)）
