@@ -221,7 +221,13 @@ void
 ttsp_cpuexc_hook(EXCNO excno, void *p_excinf)
 {
 	if (excno == TTSP_EXCNO_A) {
-		/* udf #0 は 2 バイトの Thumb 命令．次命令へ復帰させる． */
-		((T_EXCINF *) p_excinf)->pc += 2U;
+		/* udf #0 は 2 バイトの Thumb 命令．次命令へ復帰させる．
+		 *
+		 *  注意: ARM-M の例外フレーム(p_excinf)は [0]=basepri/primask [1]=EXC_RETURN の
+		 *  2 ワード前置きで，PC は P_EXCINF_OFFSET_PC(=8) ワード目にある（arm_m.h・カーネルの
+		 *  sense 関数や core_exc_entry/STEP2 復帰もこのオフセットを使用）。一方 T_EXCINF 構造体は
+		 *  nest_count/intpri/rundom の 3 ワード前置きのため ->pc は 9 ワード目（=XPSR の位置）に
+		 *  なり 1 ワードずれる。そこで構造体メンバではなくオフセットで PC を進める。 */
+		((uint32_t *) p_excinf)[P_EXCINF_OFFSET_PC] += 2U;
 	}
 }
