@@ -214,6 +214,16 @@
 #define TTSP_LOOP_COUNT        500000
 
 /*
+ *  SIL テスト周期ハンドラ(cychdr)の周期[µs]（EK-RA8M2 適合化）
+ *
+ *  既定 100ms では，cychdr の all_test 実行（低速 115200 シリアル出力等で数百 ms）が周期を超え，
+ *  イベント駆動 HRT のキャッチアップ・ライブロックに陥る（実機 halt で確認）。ハンドラ実行時間より
+ *  十分大きい 3 秒に設定し，1 周期内に cychdr が完了するようにして回避する（sil_test/HRP/out.cfg
+ *  が本マクロを参照）。
+ */
+#define TTSP_SIL_CYC_TIME      3000000
+
+/*
  *  fch_hrtで取得するカウント値のシステム時間に対する係数
  *  (target_hrt_get_current は us 単位の HRTCNT を返すため 1)
  */

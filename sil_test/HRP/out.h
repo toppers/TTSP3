@@ -55,6 +55,16 @@
 #include "ttsp_target_test.h"
 
 /*
+ *  周期ハンドラ(cychdr)の周期[µs]の既定値（out.cfg の CRE_CYC が参照）．
+ *  ターゲット依存ヘッダ(ttsp_target_test.h)で上書きされていなければ 100ms とする．
+ *  低速シリアル等で cychdr の all_test が周期を超えるターゲット（EK-RA8M2 等）は，
+ *  ttsp_target_test.h で十分大きい値に上書きしてキャッチアップ・ライブロックを避ける．
+ */
+#ifndef TTSP_SIL_CYC_TIME
+#define TTSP_SIL_CYC_TIME 100000
+#endif
+
+/*
  *  割込みが発生しなかったと判断する時間
  *  (sil_dly_nse()の引数で使用)
  */
