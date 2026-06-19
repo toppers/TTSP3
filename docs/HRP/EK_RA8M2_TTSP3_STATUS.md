@@ -87,6 +87,16 @@ CYC）が，シリアル律速で長時間かかる時間イベントハンド�
 観測するか，時間イベントハンドラから重い all_test（特に大量シリアル出力）を呼ぶ TTSP 設計を
 本ターゲット向けに見直す（再入を避ける）必要。
 
+#### step/状態レジスタ精査（2026-06-20・追補）
+スピン時の全状態: PC=0x0200B4BE（clear/lock 領域の `mrs BASEPRI`）, **BASEPRI=0x10（CPUロック中）**,
+FAULTMASK=0, PRIMASK=0, CONTROL=0(特権/MSP)。**割込み pending/active 皆無**（ISPR0/1=0, IABR0/1=0）。
+→ ハード割込みストームではなく，**CPUロック下のソフトウェア・ライブロック**（clear/lock 系コードの
+ループが抜けない）。JLink `Step` はこの箇所で毎サイクル同一 PC を返し命令単位トレース不可のため，
+確定には**ループ出口アドレスへの BKPT 手動パッチ**(w2 <addr> 0xBE00)での観測が必要。
+disasm 上のループ(0x200b4a0–0x200b4de): ICPR クリア→ロック→ISPR 再読込→`tst`→ビット残存かつ
+r0≠15 なら `subs r0,#16` して再試行。ISPR は halt 時 0 のため出口条件と矛盾＝addr2line の関数帰属
+(`_kernel_clr_int`)が不正確で別の inline 関数の可能性も含め，BKPT トレースでの再確認が必要。
+
 **次の対応案**:
 1. ALARM/CYCLIC（ハンドラ）文脈および CPU ロック中の wait_raise_int サブテストを，本ターゲット用に
    out.c で M-profile ガード（#ifdef __TARGET_PROFILE_M）して skip するか、TTSP の exclude 機構へ。
