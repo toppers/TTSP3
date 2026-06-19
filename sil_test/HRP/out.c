@@ -288,26 +288,40 @@ void sil_user_task(intptr_t exinf) {
 #define TTSP_MMFSR_IACCVIOL 0x01U		/* 命令アクセス違反 */
 #define TTSP_MMFSR_DACCVIOL 0x02U		/* データアクセス違反 */
 
+/*
+ *  ARM-M 例外フレーム(p_excinf)のワードオフセット（arm_m.h と一致）:
+ *  [0]=basepri/primask [1]=EXC_RETURN [2..7]=R0,R1,R2,R3,R12,LR [8]=PC [9]=xPSR．
+ *  T_EXCINF 構造体メンバ(->pc 等)は前置きワード数が異なり 1 ワードずれるため，オフセットで操作する．
+ */
+#define TTSP_EXCINF_LR  7U
+#define TTSP_EXCINF_PC  8U
+
 void sil_dabort_handler(void *p_excinf) {
 	volatile uint32_t *p_cfsr = (volatile uint32_t *) TTSP_CFSR_ADDR;
+	uint32_t *p_frame = (uint32_t *) p_excinf;
 	uint32_t cfsr = *p_cfsr;
+	uint_t cp;
 
+	/*
+	 *  CFSR 参照・write-1-clear と p_excinf の PC 書換え（いずれも特権操作 or フレーム書込み）は
+	 *  ttsp_check_point より前に済ませる。check_point は svc を発行し，ユーザドメイン文脈では
+	 *  サービス復帰時に nPRIV=1（非特権）へ戻すため，その後に CFSR 等の特権操作を行うとフォルトする。
+	 */
 	if ((cfsr & TTSP_MMFSR_IACCVIOL) != 0U) {
-		/* 命令アクセス違反（PABORT 相当）: CP25・呼出し直後(stacked LR)へ復帰 */
-		ttsp_check_point(25);
-		((T_EXCINF *) p_excinf)->pc = ((T_EXCINF *) p_excinf)->lr;
+		/* 命令アクセス違反（PABORT 相当）: 呼出し直後（stacked LR）へ復帰 */
+		p_frame[TTSP_EXCINF_PC] = p_frame[TTSP_EXCINF_LR];
 		*p_cfsr = TTSP_MMFSR_IACCVIOL;		/* write-1-clear */
+		cp = 25U;
 	}
 	else {
-		/* データアクセス違反（DABORT 相当）: CP24・faulting load をスキップ */
-		uint32_t pc;
-		uint16_t insn;
-		ttsp_check_point(24);
-		pc = ((T_EXCINF *) p_excinf)->pc;
-		insn = *(volatile uint16_t *) pc;	/* Thumb: 上位5bitが11101/11110/11111 なら32bit */
-		((T_EXCINF *) p_excinf)->pc = pc + (((insn & 0xF800U) >= 0xE800U) ? 4U : 2U);
+		/* データアクセス違反（DABORT 相当）: faulting load(2/4B Thumb)をスキップ */
+		uint32_t pc = p_frame[TTSP_EXCINF_PC];
+		uint16_t insn = *(volatile uint16_t *) pc;	/* 上位5bitが11101/11110/11111 なら32bit */
+		p_frame[TTSP_EXCINF_PC] = pc + (((insn & 0xF800U) >= 0xE800U) ? 4U : 2U);
 		*p_cfsr = TTSP_MMFSR_DACCVIOL;		/* write-1-clear */
+		cp = 24U;
 	}
+	ttsp_check_point(cp);	/* 特権操作・フレーム書換えの後に svc を発行 */
 }
 
 void sil_pabort_handler(void *p_excinf) {
