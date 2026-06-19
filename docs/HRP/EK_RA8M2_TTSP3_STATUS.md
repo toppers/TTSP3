@@ -35,7 +35,20 @@ cd obj_ekra8m2/sil_test && arm-none-eabi-objcopy -O ihex hrp hrp.hex
 7. asp3 **STEP2: タスク文脈 CPU 例外ハンドラのスレッドモード実行**＋nPRIV 昇格/復元，
    ttsp3 ttsp_cpuexc_hook の PC オフセット修正＝EXCEPTION フェーズ CP13-22 通過。
 
-**残課題: USER DOMAIN abort (CP24/25)**:
+**残課題 USER DOMAIN abort の決定的根因（実機 halt+CFSR で確定）**:
+- CFSR=0x00010092 → MMFSR=0x92 = MMARVALID|**MSTKERR**|**DACCVIOL**，MMFAR=**0x22000FD8**
+  （= p_excinf，DOM1 の ustk 内。ttg_ustack=0x22000000, ustk=...0x22001000）。
+- すなわち **CPU 例外処理（core_exc_entry/STEP2）が特権でユーザタスクの ustk へアクセスして
+  MPU 違反**。`.ttg_stack_section` は `ATT_SEC(...,{TA_NOWRITE|TA_NOREAD,...})` で，DOM1 の
+  ustk は DOM1 にのみ許可され，カーネル/特権文脈からはアクセス不可（MSTKERR=例外スタッキングの
+  MPU 違反，DACCVIOL=stmfd の書込み違反）。
+- **確定した修正**: ユーザドメイン CPU 例外は **sstk(.system_stack, 特権アクセス可) へ退避して処理**
+  する（svc Part3 と同型。sil_user_task は sstk 割当済，STEP2 の nPRIV 昇格も対応済＝前提充足）。
+  core_exc_entry のタスクパスで「ユーザドメインなら HW フレームを ustk→sstk へコピーし PSP=sstk で
+  処理，復帰時に PC 等を ustk フレームへ反映して PSP=ustk へ戻す」を実装する。hrp3/test の mprot
+  （ユーザドメイン MemManage）も同じ修正で前進する見込み。
+
+**（旧記述）残課題: USER DOMAIN abort (CP24/25)**:
 sil_user_task(ユーザドメイン)の sil_reb_mem(不正アドレス)→MemManage の処理で，core_exc_entry の
 `stmfd r0!,{r1,lr}`(PC=0x…f6e)が **ユーザスタック(ustk=PSP)への書込みで再フォルト→HardFault**
 (Excno=3, 停止 XPSR IPSR=4)。HW 例外フレーム(32B)は ustk に積めるが直下の +8B でフォルト。
