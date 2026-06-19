@@ -271,6 +271,53 @@ void sil_user_task(intptr_t exinf) {
 	ext_tsk();
 }
 
+#ifdef __TARGET_PROFILE_M
+/*
+ * 【M-profile (Cortex-M85/ARMv8-M) 版・2026-06-20】
+ *
+ *  A-profile はデータアボート(DABORT)とプリフェッチアボート(PABORT)が別例外だが，
+ *  M-profile では不正データアクセス・不正命令フェッチとも MemManage(#4, EXCNO_MPU)
+ *  に集約され，CFSR の MMFSR ビットで区別する（DACCVIOL=データ, IACCVIOL=命令）．
+ *  したがって DEF_EXC(EXCNO_DABORT=MemManage) の単一ハンドラで両者を CFSR で demux し，
+ *  CP24（データ）/ CP25（命令）を記録する．EXCNO_PABORT(=BusFault) は登録のみで発火しない．
+ *
+ *   ・データアクセス違反: faulting load 命令(2 or 4 バイトの Thumb)をスキップして復帰．
+ *   ・命令アクセス違反  : 呼出し直後（例外フレームの stacked LR=リンクレジスタ）へ復帰．
+ */
+#define TTSP_CFSR_ADDR     0xE000ED28U	/* Configurable Fault Status Register */
+#define TTSP_MMFSR_IACCVIOL 0x01U		/* 命令アクセス違反 */
+#define TTSP_MMFSR_DACCVIOL 0x02U		/* データアクセス違反 */
+
+void sil_dabort_handler(void *p_excinf) {
+	volatile uint32_t *p_cfsr = (volatile uint32_t *) TTSP_CFSR_ADDR;
+	uint32_t cfsr = *p_cfsr;
+
+	if ((cfsr & TTSP_MMFSR_IACCVIOL) != 0U) {
+		/* 命令アクセス違反（PABORT 相当）: CP25・呼出し直後(stacked LR)へ復帰 */
+		ttsp_check_point(25);
+		((T_EXCINF *) p_excinf)->pc = ((T_EXCINF *) p_excinf)->lr;
+		*p_cfsr = TTSP_MMFSR_IACCVIOL;		/* write-1-clear */
+	}
+	else {
+		/* データアクセス違反（DABORT 相当）: CP24・faulting load をスキップ */
+		uint32_t pc;
+		uint16_t insn;
+		ttsp_check_point(24);
+		pc = ((T_EXCINF *) p_excinf)->pc;
+		insn = *(volatile uint16_t *) pc;	/* Thumb: 上位5bitが11101/11110/11111 なら32bit */
+		((T_EXCINF *) p_excinf)->pc = pc + (((insn & 0xF800U) >= 0xE800U) ? 4U : 2U);
+		*p_cfsr = TTSP_MMFSR_DACCVIOL;		/* write-1-clear */
+	}
+}
+
+void sil_pabort_handler(void *p_excinf) {
+	/* M-profile では命令アクセス違反も MemManage(#4) で sil_dabort_handler が捕捉するため，
+	 * 本ハンドラ(EXCNO_PABORT=BusFault #5)は発火しない（DEF_EXC 登録のみ）． */
+	(void) p_excinf;
+}
+
+#else /* A-profile (Cortex-A/R) 従来版 */
+
 /* ユーザモードの lr（バンクレジスタ）を取得する（PABORT 復帰用）． */
 static uint32_t sil_get_lr_usr(void) {
 	uint32_t lr;
@@ -298,6 +345,8 @@ void sil_pabort_handler(void *p_excinf) {
 	ttsp_check_point(25);
 	((T_EXCINF *) p_excinf)->pc = sil_get_lr_usr();
 }
+
+#endif /* __TARGET_PROFILE_M */
 
 /*
  * 【TTSP3向け改変 2026-06-14】texhdr（タスク例外処理ルーチン）は第3世代カーネルに

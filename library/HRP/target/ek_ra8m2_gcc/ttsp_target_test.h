@@ -184,6 +184,24 @@
 #define TTSP_EXCNO_B  EXCNO_SVCALL	/* 本番号でCPU例外を発生させるテストケースはない(SVCall) */
 
 /*
+ *  A-profile の EXCNO_DABORT / EXCNO_PABORT の M-profile への対応付け
+ *
+ *  SIL テスト(sil_test/HRP/out.cfg)は，ユーザドメインの不正メモリアクセス（データ
+ *  アボート）を捕捉するため DEF_EXC(EXCNO_DABORT, sil_dabort_handler) /
+ *  DEF_EXC(EXCNO_PABORT, sil_pabort_handler) を登録する．M-profile にこれらの例外は
+ *  無いため，対応する例外番号へ割り当てる：
+ *   ・データアクセス違反（MPU 保護違反）= MemManage(#4, EXCNO_MPU) → EXCNO_DABORT
+ *   ・命令／その他アクセス系 = BusFault(#5, EXCNO_BUS) → EXCNO_PABORT
+ *  DEF_EXC が同一例外番号で衝突しないよう，両者には異なる番号を割り当てる．
+ */
+#ifndef EXCNO_DABORT
+#define EXCNO_DABORT  EXCNO_MPU		/* データアクセス違反 → MemManage(#4) */
+#endif
+#ifndef EXCNO_PABORT
+#define EXCNO_PABORT  EXCNO_BUS		/* 命令／その他アクセス違反 → BusFault(#5) */
+#endif
+
+/*
  *  CPU例外ハンドラ番号(異常値)
  */
 #define TTSP_INVALID_EXCNO  100		/* TMAX_EXCNO=14 を超える値 */
