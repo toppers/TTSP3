@@ -98,9 +98,52 @@ void
 ttsp_check_point(uint_t count)
 {
 	bool_t	errorflag = false;
+#ifndef TTSP_SILLOC_NO_SVC
 	ER		rercd;
+#endif
 	SIL_PRE_LOC;
 
+#ifdef TTSP_SILLOC_NO_SVC
+	/*
+	 *  [改変 2026-06-20 / M-profile（ARMv8-M / mps2_an505 等）対応]
+	 *
+	 *  M-profile では SIL_LOC_INT()（全割込みロック＝BASEPRI を TMIN_INTPRI へ）が
+	 *  SVCall 例外もマスクするため，ロック状態で拡張サービスコール（HRP3 の syslog は
+	 *  svc 経由）を発行すると SVCall がマスクされて HardFault に昇格する．そこで，
+	 *  状態検査の原子性が必要な部分（カウンタ加算・自己診断 check_bit_func）のみを
+	 *  ロック下で行い，結果の syslog 出力はロック解除後に発行する（検査の意味は不変）．
+	 *  （TTSP3 ライセンス条件(2)に基づく改変明記．本分岐は M-profile ターゲットの
+	 *    ttsp_target_test.h が TTSP_SILLOC_NO_SVC を定義したときのみ有効．）
+	 */
+	{
+		bool_t	seq_ok;
+		bool_t	bit_ng = false;
+		ER		bit_rercd = E_OK;
+
+		SIL_LOC_INT();
+		seq_ok = (++check_count == count);
+		if (check_bit_func != NULL) {
+			bit_rercd = (*check_bit_func)();
+			if (bit_rercd < 0) {
+				bit_ng = true;
+			}
+		}
+		SIL_UNL_INT();
+
+		if (seq_ok) {
+			syslog_1(LOG_NOTICE, "Check point %d passed.", count);
+		}
+		else {
+			syslog_1(LOG_ERROR, "## Unexpected check point %d.", count);
+			errorflag = true;
+		}
+		if (bit_ng) {
+			syslog_2(LOG_ERROR, "## Internal inconsistency detected (%s, %d).",
+					 itron_strerror(bit_rercd), SERCD(bit_rercd));
+			errorflag = true;
+		}
+	}
+#else /* TTSP_SILLOC_NO_SVC */
 	/*
 	 *  割込みロック状態に
 	 */
@@ -133,6 +176,7 @@ ttsp_check_point(uint_t count)
 	 *  割込みロック状態を解除
 	 */
 	SIL_UNL_INT();
+#endif /* TTSP_SILLOC_NO_SVC */
 
 	if (errorflag) {
 		cp_state = false;
