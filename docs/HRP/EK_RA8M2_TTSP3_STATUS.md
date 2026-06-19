@@ -42,11 +42,19 @@ cd obj_ekra8m2/sil_test && arm-none-eabi-objcopy -O ihex hrp hrp.hex
 → TASK EXCEPTION skip → **CP3,CP4** → `=== test start from ALARM ===` → **CP5** → sil_mem/sns_ker。
 hrp3/test 回帰なし（task1/sem1/mutex1/dtq1/flg1/calsvc PASS）。
 
-### ❌ 残: ALARM 文脈 all_test() でサイレントリセット（次の課題）
-ALARM ハンドラ(almhdr→all_test)の sns_ker 直後でリセット（例外メッセージ無し＝WDT/タイミング
-or 非タスク文脈の所）。候補: (a) cyclic(CYC 100ms周期)が長い almhdr 実行中に nested 発火し
-all_test 再入, (b) 非タスク(ハンドラ)文脈の SIL_LOC_INT サブテストの busy 区間で WDT リセット。
-要: almhdr/all_test の非タスク文脈実行のタイミング・再入の調査。
+### ❌ 残: ALARM(CP5) 以降の all_test() で能動スピン／リセット（次の課題）
+ALARM ハンドラ(almhdr→all_test)の sns_ker 直後（`test_of_SIL_LOC_INT()`→`wait_raise_int()`,
+out.c 内 `[a]` 出力前）で停止。例外メッセージ無し。
+- JLink halt（複数回）で **PC=0x0200B4BE（loc_cpu 相当: `mrs BASEPRI; msr BASEPRI_MAX #16`）,
+  IPSR=0（タスク文脈）, PSP 設定済, CycleCnt 増加＝能動的スピン**。
+- `wait_raise_int()`(out.c) はテスト割込み(TTSP_INTNO_A, 優先度 -15=最高)の発火を待つが，CPUロック
+  /高優先度ハンドラ文脈では発火せず，`sil_dly_nse`(busy, svc 無→WDT 非リフレッシュ)ループに陥る。
+  TASK 文脈では [a-k] 完走(CP2)するので，**特定文脈（ALARM/CYCLIC ハンドラ or CPUロック中）での
+  割込み待ちが成立しない**ことが原因と推定。
+- 候補対応: (a) ハンドラ/CPUロック文脈で成立しない割込み待ちサブテストを exclude_tests 相当で
+  除外（sys_manage SOM 除外と同様）, (b) ネスト割込み（time-event-handler 文脈からの割込み
+  プリエンプト＆resume）の挙動を実機検証, (c) wait_raise_int の busy 区間で WDT リフレッシュ。
+- 参考: タイマ割込み優先度 INTPRI_TIMER=TMAX_INTPRI-1=-2（低）, TTSP_INTNO_A=-15（高）。
 
 ### （旧記録）起動 LOCKUP の根本原因 — 解決済
 - 症状: フラッシュ・起動後、シリアルに "12" のみ出力しバナー(tBannerMain)前で停止。
