@@ -162,3 +162,19 @@ per-case 失敗を文脈・bundle 単位で分析(根拠: api_test yaml の do�
 - 残失敗(FAIL-test 515/FAIL-cpu 389/LOCKUP 8 ≈912)の大半は構造的(svc-from-handler/locked の HardFault
   エスカレーション=SVCall prio=0, timer gain依存, cpuexc)で Cortex-M33 アーキ固有・回収不能。
 - 確定: per-case PASS は probe_mem 対称化で 37%→43%。残りは ARM-M 構造的天井。
+
+---
+
+## ★B拡張(extsvc cdmid/svclevel, asp3_tz_work 21b7575)後の per-case 再測定(2026-06-20)
+
+| run | 修正 | PASS | 効果 |
+|---|---|---|---|
+| run2 | probe前 | 587 (37%) | baseline |
+| run3 | probe_mem(A+a+C+B-rundom, 4b74ced) | 689 (43%) | +102(実体ある回収) |
+| run4 | B拡張(cdmid/svclevel, 21b7575) | 688 (43%) | ±0(correctnessのみ, -1はrunノイズ) |
+
+**結論**: api per-case 回収の本命は probe_mem(+102)。**B拡張(cdmid アクセス制御)は per-case PASS を増やさない**
+(±0)。理由: extsvc アクセス制御を exercise する api ケースは大半が handler 文脈(構造的に svc-under-handler で
+HardFault)で、cdmid を直しても実行到達しない。B は「アクセス制御が正しく効く」correctness(arm_gcc対称・セキュリティ
+的に正)・extsvc1 を CP27 まで前進・無回帰だが、構造的ブロックされたテスト数は動かさない。
+api per-case 最終: PASS 688-689/1602(43%)。残りの大半は ARM-M 構造的天井(svc-under-handler/lock, timer, cpuexc)。
