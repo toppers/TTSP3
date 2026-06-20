@@ -119,3 +119,25 @@ DIV=1602 で全1602ケースをビルド(simulationドライバ不在のため�
 ### 残課題(構造的 vs 真バグの切り分け)
 FAIL-cpu 409 / FAIL-test 585 の厳密な内訳(ARM-M 文脈構造的=回収不能 / 真の M-profile dual-stack バグ=修正可)
 には variant(文脈)別の追加分析が必要。task 文脈中心の ~37% は PASS で確定。
+
+---
+
+## ★切り分け確定：994失敗 = 構造的≈968 / 真バグ候補≈46（2026-06-20）
+
+per-case 失敗を文脈・bundle 単位で分析(根拠: api_test yaml の do実行主体・CPU_STATE, /tmp/mps2_api_run2.txt):
+
+- **構造的(回収不能)≈968**: 主因=**svc-from-handler/locked の HardFault エスカレーション**
+  (SVCall 優先度=0 core_kernel_impl.c:266 ゆえ、アラーム/周期通知ハンドラ・CPU例外ハンドラ・loc_cpu
+  (BASEPRI lock)文脈からの cal_svc が SVCall を取れず HardFault化。全FAIL-cpu構造ケースが同一署名
+  Excno=3/CFSR=0/PC=svc直後)。＋timer(gain_tick)依存(alarm/cyclic/time)＋cpuexc。ARM-Mアーキ固有・
+  TTSP3が非タスク文脈からの拡張サービスコールを多用する設計との相性。回収には全 cal_svc をカーネル
+  直接呼出しへ書換える必要があり非現実的。
+- **真バグ候補≈46**: 最有力=**probe_mem 欠如による E_MACV BusFault**。
+  ユーザドメイン _H-b テストが不正ユーザポインタを渡し E_MACV を期待するが、カーネルが結果格納先の
+  ユーザポインタをアクセス権検証せず書込み→Excno=5 BusFault/CFSR=0x8200(BFARVALID+PRECISERR)。
+  PC=カーネルサービス内ストア(_kernel_ref_mem の str r2,[r4]@0x10009d0a, _kernel_get_mpf_block の
+  str r3,[r1]@0x1000846a 等)。Cortex-A/R は MPU 捕捉で E_MACV 回収するが M-profile ポートに probe 機構なし。
+  代表: ref_mem/get_mpf/pget_mpf/tget_mpf/ref_mtx/ref_sem/ref_pdq/snd_mbf の _H-b。
+  → **probe_mem_read/write 相当(PMSAv8 でドメイン MPU リージョン権限照合)を実装すれば、
+     api_test E_MACV系 ~18-20件(FAIL-cpu)＋FAIL-test のメモリアクセス系＋hrp3/test prbstr を単一修正で回収見込み**。
+  残りの真バグ候補(NOFIN/LOCKUP 5件: ATT_INI/DEF_EXC/wait系)は個別調査要。
