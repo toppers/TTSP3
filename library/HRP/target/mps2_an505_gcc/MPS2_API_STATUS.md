@@ -89,3 +89,33 @@ NOFIN は巨大バンドル内の1ケース timing hang で残りが止まるた
 - **真の per-case 天井 = 8リージョン MPU**(user-domain ケースの多数が6〜8領域要求)＋ cpuexc-svc-under-lock。
   Cortex-M33 HW 構造的・回収不能。字義の「全件 PASS」は構造的に不可。
 - 正確な per-case PASS 数は DIV=1602 overnight run でのみ確定可能(本セッションでは時間制約で未実施)。
+
+---
+
+## ★確定：per-case 全件 QEMU 実行結果（2026-06-20, DIV=1602 build + 直接ELF実行）
+
+DIV=1602 で全1602ケースをビルド(simulationドライバ不在のため自前ランナー /home/honda/run_api_elfs2.sh で
+各 obj_hrp_mps2_api/api_test/auto_code_N/hrp を QEMU 直接実行)し per-case 分類:
+
+| 分類 | 件数 | 割合 |
+|---|---|---|
+| PASS ("All check points passed") | 587 | 37% |
+| FAIL-test (## アサーション失敗) | 585 | 37% |
+| FAIL-cpu (Excno/fault) | 409 | 26% |
+| NOFIN (timeout) | 12 | |
+| LOCKUP (cpuexc) | 8 | |
+| BUILD-FAIL (8リージョンMPU) | 1 | 0.06% |
+
+### 確定した事実
+- **8リージョン MPU は per-case の天井でない**(BUILD-FAIL 1件のみ)。DIV=40 バンドル run の「支配的天井」は
+  バンドリング産物だった。**ほぼ全ケースがビルド可能**。
+- **per-case PASS は ~37%(587/1602)**。失敗は timer/alarm に偏らず dataqueue/semaphore/task_manage/eventflag
+  等の中核 API 全体に分散。同一 API グループ内で variant(_d_/_e_/_f_=呼出し文脈)別に PASS/FAIL が分かれる。
+- パターン: **ARM-M 構造的制約(割込みロック下・非タスク文脈からの svc が SVCall マスクで HardFault 化、
+  timer gain_tick 非対応)に該当する文脈 variant が FAIL-cpu/LOCKUP/FAIL-test に落ち、task 文脈 variant が PASS**。
+- クラッシュ修正(idle×2/nested-svc MUNSTKERR)は大規模(auto_code_13=607CP)で crash-free 実証済だが、
+  per-case では上記文脈構造的制約が支配的。
+
+### 残課題(構造的 vs 真バグの切り分け)
+FAIL-cpu 409 / FAIL-test 585 の厳密な内訳(ARM-M 文脈構造的=回収不能 / 真の M-profile dual-stack バグ=修正可)
+には variant(文脈)別の追加分析が必要。task 文脈中心の ~37% は PASS で確定。
