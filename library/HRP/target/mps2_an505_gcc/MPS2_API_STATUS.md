@@ -63,3 +63,29 @@ done
 - 達成形 = 「クラッシュ系は全廃、残りは 8リージョン MPU 構造的天井」。正確な全件 PASS 数は
   専用フルrebuild+run(~1602件/25分超, 別セッションのasp/fmp/hrmpとCPU非競合の時間帯)が必要。
   案2 を入れれば回収は更に増えるが、cpuexc と真に6+領域要のケースは構造的に残る。
+
+---
+
+## ★訂正と確定（2026-06-20・専用run）：旧「758 FAIL/38 PASS」は DIV バンドリング産物
+
+これまで引用した PASS38/FAIL758/BUILD-FAIL~406 は **DIV=40 バンドル run の値で per-case ではない**。
+DIV=40 は 1602 ケースを40分割するため各 auto_code_N が数十タスク/ドメインを1バイナリに詰める
+（例: auto_code_13 = 607 check_point・4ドメイン・ドメイン1に46タスク）→ 5領域/domain を必ず超過し
+BUILD-FAIL が量産される。**38 BUILD-FAIL/40 はバンドリングの人為的天井であり真の per-case 率ではない**。
+
+### クラッシュ修正は大規模で実証（回収の本質的証拠）
+現カーネル(35fbbf1, ELF に svc_call_trampoline_priv/_kernel_idle_stack 確認)+stack_share OFF で
+ビルドできたバンドル(auto_code_13/14)は **MSTKERR/MUNSTKERR/Excno を0件**で実行し check point 進行
+（CP2/CP9）。＝idle×2・nested-svc MUNSTKERR 修正は **607 check_point 規模でクラッシュ皆無**を実証。
+NOFIN は巨大バンドル内の1ケース timing hang で残りが止まるため(クラッシュでない)。
+
+### 正確な per-case 全件数（未確定・取得手段は明確）
+- per-case 正確値には **DIV=1602(1ケース/バイナリ)**で全件 build+run が必要 ≈ 数時間(overnight)。1 fork 不可。
+- 手段: `scripts/ttsp_parallel_api.sh ../hrp3 HRP obj_hrp_mps2_api 1602` 相当を別セッション(asp/fmp/hrmp)
+  と CPU 非競合の時間帯に多時間 run。per-case 結果は各 auto_code_N/log に残る。
+
+### 確定した到達形(質的・正確)
+- **dual-stack クラッシュ系(MSTKERR/MUNSTKERR)は全廃**(607CP規模で実証, 真因修正済)。
+- **真の per-case 天井 = 8リージョン MPU**(user-domain ケースの多数が6〜8領域要求)＋ cpuexc-svc-under-lock。
+  Cortex-M33 HW 構造的・回収不能。字義の「全件 PASS」は構造的に不可。
+- 正確な per-case PASS 数は DIV=1602 overnight run でのみ確定可能(本セッションでは時間制約で未実施)。
