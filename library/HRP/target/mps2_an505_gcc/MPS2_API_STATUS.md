@@ -36,3 +36,30 @@ for elf in obj_hrp_mps2_api/api_test/auto_code_*/hrp; do
   grep -q 'All check points passed' cap.txt && echo PASS || echo FAIL
 done
 ```
+
+---
+
+## 実回収の独立検証（2026-06-20・MUNSTKERR修正後）
+
+現カーネル(asp3_tz_work mps2-an505-m4-wip 35fbbf1: svc_call_trampoline_priv=MUNSTKERR修正
++ _kernel_idle_stack=idle修正) + stack_share OFF(0ff2177) で実 api を QEMU 実測:
+
+- **クラッシュ系(MSTKERR/MUNSTKERR)は解消＝回収 YES**: 実 api(auto_code_13, user-domain)が
+  Excno を一切出さず CP1→CP2 進行(修正前は Excno=4 全滅)。default cross-domain 無回帰。
+- **支配的天井 = 8リージョン MPU(想定より大)**: user-domain サンプル6件中5件が BUILD-FAIL
+  `too many MPU regions (6/7/8) for protection domain 1 (max 5)`。多くの user-domain api は
+  1ドメインに6〜8領域を要求し Cortex-M33(固定3+切替5=max5)で原理的にビルド不可。
+
+### 案1(stack_share OFF)の天井と案2の優位（測定で確定）
+- 案1 は per-task ustack を生むため、多タスクドメインが5領域超→**MUNSTKERR-FAIL を BUILD-FAIL に
+  置換しただけ**のケースが多い(クラッシュは直るが region 予算を消費)。
+- **案2(共有 ustack を per-domain 1 RW 領域化, mps2 trb 改修)の方が回収は多い**: 共有領域を1 region
+  に保ちつつ RW 化すれば MSTKERR 解消＋region 予算節約＝≤5領域に収まる user-domain ケースが増える。
+  ただしドメイン内スタック保護は緩む・trb 改修要。
+
+### TTSP3 api 全件の到達形(確定)
+- dual-stack クラッシュ(MSTKERR/MUNSTKERR)は全廃(真因修正済・検証済)。
+- 字義の「全件 PASS」は **8リージョン MPU(user-domain api の多数)＋cpuexc-svc-under-lock** で構造的に不可。
+- 達成形 = 「クラッシュ系は全廃、残りは 8リージョン MPU 構造的天井」。正確な全件 PASS 数は
+  専用フルrebuild+run(~1602件/25分超, 別セッションのasp/fmp/hrmpとCPU非競合の時間帯)が必要。
+  案2 を入れれば回収は更に増えるが、cpuexc と真に6+領域要のケースは構造的に残る。
