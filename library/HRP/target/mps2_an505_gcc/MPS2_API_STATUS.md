@@ -141,3 +141,24 @@ per-case 失敗を文脈・bundle 単位で分析(根拠: api_test yaml の do�
   → **probe_mem_read/write 相当(PMSAv8 でドメイン MPU リージョン権限照合)を実装すれば、
      api_test E_MACV系 ~18-20件(FAIL-cpu)＋FAIL-test のメモリアクセス系＋hrp3/test prbstr を単一修正で回収見込み**。
   残りの真バグ候補(NOFIN/LOCKUP 5件: ATT_INI/DEF_EXC/wait系)は個別調査要。
+
+---
+
+## ★probe_mem修正(A+a+C+B, asp3_tz_work 4b74ced)後の per-case 全件再測定(2026-06-20)
+
+現カーネル(rundom全文脈+within_ustack)で全1602件を再ビルド+QEMU実行:
+
+| 分類 | 修正前(run2) | 修正後(run3) | 増減 |
+|---|---|---|---|
+| PASS | 587 (37%) | **689 (43%)** | **+102** |
+| FAIL-test | 585 | 515 | -70 |
+| FAIL-cpu | 409 | 389 | -20 |
+| LOCKUP | 8 | 8 | 0 |
+| BUILD | 1 | 1 | 0 |
+
+- **+102 PASS 回収**(E_MACV系 + ユーザタスクがスタックポインタをサービスに渡す一般パターン)。
+  HRP _H の E_MACV/memory 系 51件が PASS 化、加えて probe を通る一般 user-domain ケースも回収。
+  見積り ~18-20 を大きく超過(rundom/within_ustack は E_MACV 専用でなく user-pointer probe 全般を直すため)。
+- 残失敗(FAIL-test 515/FAIL-cpu 389/LOCKUP 8 ≈912)の大半は構造的(svc-from-handler/locked の HardFault
+  エスカレーション=SVCall prio=0, timer gain依存, cpuexc)で Cortex-M33 アーキ固有・回収不能。
+- 確定: per-case PASS は probe_mem 対称化で 37%→43%。残りは ARM-M 構造的天井。
