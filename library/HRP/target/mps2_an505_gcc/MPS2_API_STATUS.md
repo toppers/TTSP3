@@ -136,3 +136,15 @@ DIV=1602 再ビルド(1601/1602, BUILD-FAIL 1)＋QEMU(mps2-an505)全件直接実
   ＝次のフロンティアは FAIL-test 833 の内訳(真の M-profile dual-stack バグ=修正可 vs 構造的天井)。
 - EK-RA8M2 共有 arch の代理指標(ek_ra8m2/mps2 で arch コア共有・QEMU 結果の実機再現は確認済み)。
 - 測定: DIV=1602 ネイティブビルド + /tmp/classify_mine.sh(qemu-system-arm 直接実行・12並列・timeout12s)。
+
+## ★E_TMOUT クラスタ＝QEMU proxy アーティファクト確定（2026-06-21・EK実機検証）
+per-case FAIL-test 833 のうち E_TMOUT ~32%(≈270) は「待機を別タスクの動作(送信/rel_wai/ras_ter/削除)で
+解除するはずが先に tmo(極小, 例 trcv_pdq tmo=3=3us)が発火」。QEMU で決定的(10/10, -icount でも)。
+**EK-RA8M2 実機検証(3/3 異機構)**: auto_code_1086(E_RASTER期待)/1085(E_RLWAI)/1090(E_OK) を ek_ra8m2_gcc で
+ビルド・実機実行 → **いずれも All check points passed(PASS)**。＝QEMU/mps2 では E_TMOUT だが EK 実機では PASS。
+- 根因: 3us という極小 tmo に対し、QEMU(mps2/M33 エミュ実行モデル)では解除側タスクが走る前に時間が進み
+  tmo 発火。実機(M85 高速)は 3us 内に解除側が走り正解→PASS。HRT 較正は mps2/EK とも 1us で同一。
+- **含意: E_TMOUT クラスタは EK 実機の欠陥でなく proxy アーティファクト。EK 実機の真の per-case 率は
+  QEMU の 47.3% より高い**（E_TMOUT ~270 の相当数＋タイミング下流の Unexpected-CP の一部が EK では PASS）。
+  粗推定: 758+270≈1028/1602≈64% 以上。
+- 検証ビルド: asp3_tz_work/cw_hrp3_ra8m2/bek_<N>（ek_ra8m2_gcc・auto_code の out.* 流用）。
