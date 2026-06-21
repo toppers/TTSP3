@@ -120,6 +120,67 @@ DIV=1602 で全1602ケースをビルド(simulationドライバ不在のため�
 FAIL-cpu 409 / FAIL-test 585 の厳密な内訳(ARM-M 文脈構造的=回収不能 / 真の M-profile dual-stack バグ=修正可)
 には variant(文脈)別の追加分析が必要。task 文脈中心の ~37% は PASS で確定。
 
+---
+
+## ★切り分け確定：994失敗 = 構造的≈968 / 真バグ候補≈46（2026-06-20）
+
+per-case 失敗を文脈・bundle 単位で分析(根拠: api_test yaml の do実行主体・CPU_STATE, /tmp/mps2_api_run2.txt):
+
+- **構造的(回収不能)≈968**: 主因=**svc-from-handler/locked の HardFault エスカレーション**
+  (SVCall 優先度=0 core_kernel_impl.c:266 ゆえ、アラーム/周期通知ハンドラ・CPU例外ハンドラ・loc_cpu
+  (BASEPRI lock)文脈からの cal_svc が SVCall を取れず HardFault化。全FAIL-cpu構造ケースが同一署名
+  Excno=3/CFSR=0/PC=svc直後)。＋timer(gain_tick)依存(alarm/cyclic/time)＋cpuexc。ARM-Mアーキ固有・
+  TTSP3が非タスク文脈からの拡張サービスコールを多用する設計との相性。回収には全 cal_svc をカーネル
+  直接呼出しへ書換える必要があり非現実的。
+- **真バグ候補≈46**: 最有力=**probe_mem 欠如による E_MACV BusFault**。
+  ユーザドメイン _H-b テストが不正ユーザポインタを渡し E_MACV を期待するが、カーネルが結果格納先の
+  ユーザポインタをアクセス権検証せず書込み→Excno=5 BusFault/CFSR=0x8200(BFARVALID+PRECISERR)。
+  PC=カーネルサービス内ストア(_kernel_ref_mem の str r2,[r4]@0x10009d0a, _kernel_get_mpf_block の
+  str r3,[r1]@0x1000846a 等)。Cortex-A/R は MPU 捕捉で E_MACV 回収するが M-profile ポートに probe 機構なし。
+  代表: ref_mem/get_mpf/pget_mpf/tget_mpf/ref_mtx/ref_sem/ref_pdq/snd_mbf の _H-b。
+  → **probe_mem_read/write 相当(PMSAv8 でドメイン MPU リージョン権限照合)を実装すれば、
+     api_test E_MACV系 ~18-20件(FAIL-cpu)＋FAIL-test のメモリアクセス系＋hrp3/test prbstr を単一修正で回収見込み**。
+  残りの真バグ候補(NOFIN/LOCKUP 5件: ATT_INI/DEF_EXC/wait系)は個別調査要。
+
+---
+
+## ★probe_mem修正(A+a+C+B, asp3_tz_work 4b74ced)後の per-case 全件再測定(2026-06-20)
+
+現カーネル(rundom全文脈+within_ustack)で全1602件を再ビルド+QEMU実行:
+
+| 分類 | 修正前(run2) | 修正後(run3) | 増減 |
+|---|---|---|---|
+| PASS | 587 (37%) | **689 (43%)** | **+102** |
+| FAIL-test | 585 | 515 | -70 |
+| FAIL-cpu | 409 | 389 | -20 |
+| LOCKUP | 8 | 8 | 0 |
+| BUILD | 1 | 1 | 0 |
+
+- **+102 PASS 回収**(E_MACV系 + ユーザタスクがスタックポインタをサービスに渡す一般パターン)。
+  HRP _H の E_MACV/memory 系 51件が PASS 化、加えて probe を通る一般 user-domain ケースも回収。
+  見積り ~18-20 を大きく超過(rundom/within_ustack は E_MACV 専用でなく user-pointer probe 全般を直すため)。
+- 残失敗(FAIL-test 515/FAIL-cpu 389/LOCKUP 8 ≈912)の大半は構造的(svc-from-handler/locked の HardFault
+  エスカレーション=SVCall prio=0, timer gain依存, cpuexc)で Cortex-M33 アーキ固有・回収不能。
+- 確定: per-case PASS は probe_mem 対称化で 37%→43%。残りは ARM-M 構造的天井。
+
+---
+
+## ★B拡張(extsvc cdmid/svclevel, asp3_tz_work 21b7575)後の per-case 再測定(2026-06-20)
+
+| run | 修正 | PASS | 効果 |
+|---|---|---|---|
+| run2 | probe前 | 587 (37%) | baseline |
+| run3 | probe_mem(A+a+C+B-rundom, 4b74ced) | 689 (43%) | +102(実体ある回収) |
+| run4 | B拡張(cdmid/svclevel, 21b7575) | 688 (43%) | ±0(correctnessのみ, -1はrunノイズ) |
+
+**結論**: api per-case 回収の本命は probe_mem(+102)。**B拡張(cdmid アクセス制御)は per-case PASS を増やさない**
+(±0)。理由: extsvc アクセス制御を exercise する api ケースは大半が handler 文脈(構造的に svc-under-handler で
+HardFault)で、cdmid を直しても実行到達しない。B は「アクセス制御が正しく効く」correctness(arm_gcc対称・セキュリティ
+的に正)・extsvc1 を CP27 まで前進・無回帰だが、構造的ブロックされたテスト数は動かさない。
+api per-case 最終: PASS 688-689/1602(43%)。残りの大半は ARM-M 構造的天井(svc-under-handler/lock, timer, cpuexc)。
+
+---
+
 ## ★再測定：per-case 全件 QEMU 実行（2026-06-21, 現行 arch＝thread-MSP 注入後）
 asp3_tz_work の cpuexc/extsvc/sysman thread-MSP 注入（36021c8/05d201e/521f03f）後の共有 arch で
 DIV=1602 再ビルド(1601/1602, BUILD-FAIL 1)＋QEMU(mps2-an505)全件直接実行・per-case 分類:
