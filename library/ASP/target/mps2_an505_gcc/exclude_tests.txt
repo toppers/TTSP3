@@ -1,0 +1,46 @@
+# library/HRP/target/mps2_an505_gcc/exclude_tests.txt
+#
+# MPS2-AN505（Cortex-M33 / ARMv8-M / QEMU）が原理的に非対応／本移植段階で未対応の機能を
+# 使うテストを，TTSP の API テスト生成・ビルド・実行から除外するリスト。
+#
+# 形式: 1行1パターン。MANIFEST_AUTO_CODE の各 yaml パスに対する「部分一致（固定文字列）」。
+#       先頭 # のコメント行・空行は無視される。
+# 適用: scripts/ttsp_parallel_api.sh が `grep -vF -f` で除外する
+#       （他ターゲット＝zybo_z7_gcc 等には影響しない。yaml 本体は削除しない）。
+#
+# ============================================================================
+# --- SOM（システム動作モード／時間区画スケジューリング）テスト ---
+# zybo_z7_gcc と同じ理由。DEF_SCY（システム周期）はプログラム全域に効き，停止
+# モードではユーザドメインの time event（alarm/cyclic 等）が発火しない。SOM テスト
+# を alarm/cyclic 等と同一バイナリにマージすると後者がハングするため通常 bb から除外。
+# ============================================================================
+sys_manage/chg_som
+sys_manage/get_som
+#
+# --- simt 専用（ttsp_simt_advance）テスト：実機（非シミュレータ）では未対応 ---
+sys_manage/twd_som
+#
+# ============================================================================
+# --- M-profile（NVIC + BASEPRI 割込みロック）固有の除外 ---
+#
+# 【SIL_LOC_INT() 中の svc 発行が HardFault になるケース】
+# 本ターゲットの全割込みロック（SIL_LOC_INT＝TOPPERS_disint）は BASEPRI を
+# TMIN_INTPRI 相当へ引き上げて実装される。M-profile では SVCall 例外の優先度も
+# この BASEPRI でマスクされるため，全割込みロック状態（または同等の高い IPM）で
+# 拡張サービスコール（svc 命令）を発行すると SVCall がマスクされて昇格し HardFault
+# になる（A-profile は svc が CPSR.I と独立に動くため発行可能だった）。
+# → SIL_LOC_INT/CPUロック/高IPM 状態から「拡張サービスコール経由の API」を発行する
+#    事前条件のサブケースは本ターゲットでは原理的に成立しない。該当する svc 系
+#    api_test は実機実行でハングする可能性があるため，検出され次第ここへ追記する
+#    （拡張サービスコールを定義しない大半の api_test は影響を受けない）。
+#
+# 【タスク例外処理（ena_tex/ras_tex/DEF_TEX）】
+# 第3世代カーネル（HRP3 3.4.2）はタスク例外処理機能を持たないため，A-profile/M-profile
+# を問わず該当テストは生成されない（プロファイル共通の前提。本ファイルでの個別除外は不要）。
+#
+# 【データアボート/プリフェッチアボート（EXCNO_DABORT/EXCNO_PABORT）】
+# これらは A-profile 固有の CPU 例外番号で，M-profile には存在しない（メモリ保護違反は
+# MemManage=EXCNO_MPU(4) として通知される）。api_test/HRP の保護違反系は DEF_EXC の
+# 例外番号にターゲット非依存の TTSP_EXCNO_* を用いるため通常は影響しないが，もし
+# EXCNO_DABORT/EXCNO_PABORT を直接参照するテストがあればここへ追記する。
+# ============================================================================
