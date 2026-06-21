@@ -78,6 +78,18 @@
  */
 #define TTSP_SILLOC_NO_SVC
 
+/*
+ *  [改変] 2026-06-22: api_test の TTG 生成 out.h は先頭(out.h:5)で
+ *  ttsp_target_test.h を include し直す．out.c:2 や kernel 経由で out.h が先に
+ *  処理されると，out.h:8 の COUNT_STK_T(TTSP_TASK_STACK_SIZE) が定義前(下の
+ *  #include "out.h" は循環＋ガードで no-op)に評価され 'undeclared' になる．
+ *  そこで out.h を引く前に TTSP_TASK_STACK_SIZE を定義する(後段の再定義は同値で無害)．
+ *  sil_test は手書き out.h で本マクロを使わないため従来も顕在化しなかった．
+ */
+#ifndef TTSP_TASK_STACK_SIZE
+#define TTSP_TASK_STACK_SIZE	4096
+#endif
+
 #include "out.h"
 #include "arm_m.h"		/* EXCNO_USAGE/EXCNO_SVCALL(ASP3 arm_m) */
 

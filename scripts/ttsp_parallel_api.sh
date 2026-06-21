@@ -38,6 +38,11 @@ TTSP_MAKE_OPT="${TTSP_MAKE_OPT:-}"
 # configure.sh とターゲット設定の読込み（ttb.sh と同じ手順）
 # 注意: configure.sh は DIV_NUM= 等を空で定義するため，引数の反映は source の後で行う
 source ./configure.sh
+# [改変] 2026-06-22: フェーズ1の `bash ttb.sh`(子プロセス)は configure.sh で
+#   TARGET_NAME="${TTSP_TARGET_NAME:-zybo_z7_gcc}" を再解決する．TTSP_TARGET_NAME を
+#   export しないと子は既定の zybo に化け，per-case Makefile が TARGET=zybo_z7_gcc で
+#   生成されて import("target.cdl") が zybo を引き全件 MAKE FAIL する．ここで明示 export。
+export TTSP_TARGET_NAME="$TARGET_NAME"
 OS_PATH="$ARG_OS_PATH"; PROFILE_NAME="$ARG_PROFILE"; OBJECT_DIR="$ARG_OBJ"
 source ./library/$PROFILE_NAME/target/$TARGET_NAME/ttsp_target.sh
 
