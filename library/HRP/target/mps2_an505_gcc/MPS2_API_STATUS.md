@@ -119,3 +119,20 @@ DIV=1602 で全1602ケースをビルド(simulationドライバ不在のため�
 ### 残課題(構造的 vs 真バグの切り分け)
 FAIL-cpu 409 / FAIL-test 585 の厳密な内訳(ARM-M 文脈構造的=回収不能 / 真の M-profile dual-stack バグ=修正可)
 には variant(文脈)別の追加分析が必要。task 文脈中心の ~37% は PASS で確定。
+
+## ★再測定：per-case 全件 QEMU 実行（2026-06-21, 現行 arch＝thread-MSP 注入後）
+asp3_tz_work の cpuexc/extsvc/sysman thread-MSP 注入（36021c8/05d201e/521f03f）後の共有 arch で
+DIV=1602 再ビルド(1601/1602, BUILD-FAIL 1)＋QEMU(mps2-an505)全件直接実行・per-case 分類:
+| 分類 | 旧(587, 06-20) | 現行 arch | 差分 |
+|---|---|---|---|
+| PASS | 587 (37%) | **758 (47.3%)** | +171 (+10.3pt) |
+| FAIL-cpu | 409 | **8** | -401 |
+| LOCKUP | 8 | **2** | -6 |
+| FAIL-test | 585 | 833 | +248 |
+| BUILD-FAIL | 1 | 1 | 0 |
+- **thread-MSP 注入が「ロック下/非タスク文脈 svc → HardFault」クラス(旧 FAIL-cpu 409+LOCKUP 8)をほぼ一掃**
+  (→8/2)。hrp3/test の cpuexc1-10/extsvc1/sysman2 PASS 化が per-case でも広域に波及。
+- 従来クラッシュ(FAIL-cpu)ケースの多くが「完走するがアサーション失敗」(FAIL-test 585→833)へ軟化。
+  ＝次のフロンティアは FAIL-test 833 の内訳(真の M-profile dual-stack バグ=修正可 vs 構造的天井)。
+- EK-RA8M2 共有 arch の代理指標(ek_ra8m2/mps2 で arch コア共有・QEMU 結果の実機再現は確認済み)。
+- 測定: DIV=1602 ネイティブビルド + /tmp/classify_mine.sh(qemu-system-arm 直接実行・12並列・timeout12s)。
