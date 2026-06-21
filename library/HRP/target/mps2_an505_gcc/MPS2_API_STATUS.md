@@ -148,3 +148,20 @@ per-case FAIL-test 833 のうち E_TMOUT ~32%(≈270) は「待機を別タス�
   QEMU の 47.3% より高い**（E_TMOUT ~270 の相当数＋タイミング下流の Unexpected-CP の一部が EK では PASS）。
   粗推定: 758+270≈1028/1602≈64% 以上。
 - 検証ビルド: asp3_tz_work/cw_hrp3_ra8m2/bek_<N>（ek_ra8m2_gcc・auto_code の out.* 流用）。
+
+## Unexpected-CP クラスタの EK 実機検証（2026-06-21）：大半が実バグ（E_TMOUT と異なる）
+QEMU で "Unexpected check point" FAIL の代表6件を ek_ra8m2_gcc でビルド・EK 実機実行:
+| auto_code | カテゴリ | QEMU | EK 実機 |
+|---|---|---|---|
+| 1154 | pridataq/trcv_pdq | Unexpected CP0 | **PASS** (proxy) |
+| 1031 | pridataq/psnd_pdq | Unexpected CP25 | wait_check_point(5) timeout = FAIL |
+| 1214 | sample/messagebuf | Unexpected CP7 | wait_check_point(7) timeout = FAIL |
+| 103 | dataqueue/fsnd_dtq | Unexpected CP0 | wait_check_point(12) timeout = FAIL |
+| 102 | task_sync/wup_tsk | Unexpected CP0 | Unexpected check point 0 = FAIL |
+| 101 | task_sync/sus_tsk | Unexpected CP5 | wait_check_point(5) timeout = FAIL |
+- **6件中 EK PASS は 1件のみ**＝Unexpected-CP は **E_TMOUT と異なり大半が EK 実機でも実 FAIL**。
+- EK での支配的失敗モード＝**`ttsp_wait_check_point(N) caused a timeout`**（協調する別タスクが期待 CP に到達しない＝
+  タスク間協調/ディスパッチの実問題。タイミング非依存）。
+- 含意: E_TMOUT(~270)は EK で回収されるが、**Unexpected-CP(~500)は大半が EK でも残る真の課題**。
+  EK 真 per-case 率の上振れは E_TMOUT 分が主で、Unexpected-CP の回収は限定的(本サンプル 1/6)。
+- 次の実数改善は Unexpected-CP の wait_check_point timeout 群＝タスク間協調の根因調査が対象(per-API・要深掘り)。
