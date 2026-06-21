@@ -40,6 +40,10 @@
  *  $Id: out.h 2 2012-05-09 02:23:52Z nces-shigihara $
  */
 
+/* 【ASP版】二重インクルード防止ガード(HRP版に倣う) */
+#ifndef TTSP_SIL_OUT_H
+#define TTSP_SIL_OUT_H
+
 #include "ttsp_target_test.h"
 
 /*
@@ -95,3 +99,4 @@ extern void inthdr(void);
 #ifdef TTSP_INTNO_C
 extern void isr(intptr_t exinf);
 #endif /* TTSP_INTNO_C */
+#endif /* TTSP_SIL_OUT_H */

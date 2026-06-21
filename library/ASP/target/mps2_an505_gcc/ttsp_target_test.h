@@ -79,6 +79,7 @@
 #define TTSP_SILLOC_NO_SVC
 
 #include "out.h"
+#include "arm_m.h"		/* EXCNO_USAGE/EXCNO_SVCALL(ASP3 arm_m) */
 
 /*
  *  ターゲットシステムのハードウェア資源の定義
@@ -313,10 +314,9 @@ extern void ttsp_cpuexc_hook(EXCNO excno, void *p_excinf);
  *  （ref_tsk 検査で p_tinib->tskinictxb を参照するため）．
  */
 #include "kernel/task.h"
-extern size_t ttsp_target_get_sstksz(const TINIB *p_tinib);
-extern size_t ttsp_target_get_ustksz(const TINIB *p_tinib);
-extern void  *ttsp_target_get_sstk(const TINIB *p_tinib);
-extern void  *ttsp_target_get_ustk(const TINIB *p_tinib);
+/* ASP3 は保護なし＝タスク単一スタック。TSKINICTXB.stk_top/stk_bottom から取得 */
+extern size_t ttsp_target_get_stksz(const TINIB *p_tinib);
+extern void  *ttsp_target_get_stk(const TINIB *p_tinib);
 #endif /* USE_TSKINICTXB */
 
 extern TTSP_DEFINE_VAR_SECTION(STK_T, nontask_stack[COUNT_STK_T(TTSP_NON_TASK_STACK_SIZE)], ".system_stack");

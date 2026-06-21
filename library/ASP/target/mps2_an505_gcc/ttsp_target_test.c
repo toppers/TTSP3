@@ -101,28 +101,16 @@ TTSP_DEFINE_VAR_SECTION(STK_T, ttg_ustack[TTG_DOMAIN_NUM][TTG_STACK_NUM][COUNT_S
 #ifdef USE_TSKINICTXB
 
 size_t
-ttsp_target_get_sstksz(const TINIB *p_tinib)
+ttsp_target_get_stksz(const TINIB *p_tinib)
 {
 	return ((size_t)((char *) p_tinib->tskinictxb.stk_top
 					 - (char *) p_tinib->tskinictxb.stk_bottom));
 }
 
-size_t
-ttsp_target_get_ustksz(const TINIB *p_tinib)
-{
-	return (p_tinib->tskinictxb.ustksz);
-}
-
 void *
-ttsp_target_get_sstk(const TINIB *p_tinib)
+ttsp_target_get_stk(const TINIB *p_tinib)
 {
 	return ((void *) p_tinib->tskinictxb.stk_bottom);
-}
-
-void *
-ttsp_target_get_ustk(const TINIB *p_tinib)
-{
-	return (p_tinib->tskinictxb.ustk);
 }
 
 #endif /* USE_TSKINICTXB */
