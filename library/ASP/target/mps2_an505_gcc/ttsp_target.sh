@@ -67,9 +67,12 @@ CONFIG_OPT="-o -Wno-unused-but-set-variable -o -DOMIT_CHECK_USTACK_OVERLAP"
 #  arm_m_gcc/mps2_an505（chip_kernel_impl）＋target（target_kernel_impl/target_timer）．
 #  ※ HRP プロファイルでは common.sh が make 時に KERNEL_COBJS を上書きせず，
 #    カーネルの Makefile.core/Makefile.chip/Makefile.target が自動付加する．
-#    本変数は参考情報（USE_KERNEL_LIB=true 時のみ実効）．
+#  ※ core_support.o はアセンブリ（core_support.S）で Makefile.core が KERNEL_ASMOBJS へ
+#    追加する（KERNEL_COBJS 上書きの影響を受けない別変数）。COBJS に列挙すると
+#    `.o:%.c` 規則と衝突し「No rule to make target core_support.c」になるため列挙しない
+#    （ek_ra8m2_gcc の ASP glue と同一の扱い）。
 #
-KERNEL_COBJS_TARGET="objs/core_kernel_impl.o objs/core_support.o objs/target_kernel_impl.o objs/target_timer.o"
+KERNEL_COBJS_TARGET="objs/core_kernel_impl.o objs/target_kernel_impl.o objs/target_timer.o"
 
 #
 # アプリケーションに追加するターゲット依存のオブジェクト

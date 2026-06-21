@@ -596,6 +596,33 @@ void test_of_SIL_LOC_INT(void) {
 void wait_raise_int(void) {
 	ulong_t timeout = 0;
 
+#ifdef __TARGET_PROFILE_M
+	/*
+	 * 【M-profile (Cortex-M85/ARMv8-M) 構造的制約・2026-06-21】
+	 *
+	 *  M-profile では CPU ロックを BASEPRI=IIPM_LOCK(優先度フィールド1) で実現するため，
+	 *  CPU ロック中はカーネル管理割込み（フィールド1〜15）が全てマスクされる（フィールド0 は
+	 *  フォルト/SVCall 専用で通常割込みは置けない）。テスト割込み TTSP_INTNO_A は
+	 *  TTSP_GE_TIMER_INTPRI=TMIN_INTPRI=フィールド1（ロックレベルと同一）であり，CPU ロック中は
+	 *  発火できない。時間イベントハンドラ（ALARM/CYCLIC）は signal_time により CPU ロック下で
+	 *  実行されるため，その文脈からの「割込みを上げて発火を待つ」テストは原理的に成立せず，
+	 *  wait_raise_int が sil_dly_nse ループでスピンし WDT リセットに至る。
+	 *  そこで CPU ロック中は，上げた割込み要求をクリアして待たずに戻る（当該サブテストは
+	 *  本ターゲットでは対象外＝sys_manage SOM 除外と同様の target 適合化）。タスク文脈
+	 *  （非ロック）では従来どおり割込み発火を待つためカバレッジは維持される。
+	 *  HRP profile（sil_test/HRP/out.c）と同一の適合化（EK-RA8M2 で All check points passed 実績）。
+	 *
+	 *  判別は sns_ctx()（非タスク文脈）で行う：時間イベントハンドラ(ALARM/CYCLIC)・初期化
+	 *  ルーチン(INIRTN)は非タスク文脈で，かつ signal_time 等が BASEPRI を直接 field1 へ上げる
+	 *  ため（lock_flag を立てない経路があり sns_loc() では判別できない），sns_ctx() を用いる。
+	 */
+	if (sns_ctx()) {
+		ttsp_clear_int_req(TTSP_INTNO_A);
+		int_flag = false;
+		return;
+	}
+#endif /* __TARGET_PROFILE_M */
+
 	/* 割込みが発生するのを待つ */
 	while (int_flag == false) {
 		timeout++;
