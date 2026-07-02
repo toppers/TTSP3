@@ -31,6 +31,31 @@
 > **基本方針**（`DIVERGENCE_MAP.md`）：**主ターゲットは zybo_z7_gcc（QEMU）**。FMP linux_gcc は副次・
 > 実装不安定扱い。HRMP3/HRP3 対応は後回し。「zybo で緑なら POSIX 固有の残は深追いしない」。
 
+### 1b. M-profile ターゲット（Cortex-M33/M85・2026-06-20〜22 追加）
+
+> 被テストカーネルは**別ワークスペース** `~/TOPPERS/ASP3_TZ/asp3_tz_work/`
+> （ASP=`asp3_3.7`、HRP=`hrp3_3.4.2`＋overlay `cw_hrp3_ra8m2`）。API は 20分割でなく
+> **per-case（1ケース=1 ELF）全件実行**。SIL は `sil_test/`（第3世代対応済・`docs/SIL_TEST.md`）。
+> ek_ra8m2 は実機（J-Link・⛔本ワークスペース単独では測定不可）、mps2_an505 は QEMU `mps2-an505`（パッチ不要）。
+
+| Profile | Target | SIL | API（per-case 全件） | check_library | 最終確認 | 出典 |
+|---|---|---|---|---|---|---|
+| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ⚠ **1255/1813 PASS（69.2%）**・BUILD-FAIL 0（注10） | ❓ | 2026-06-22 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
+| HRP | mps2_an505_gcc（M33/QEMU） | ⚠ CP1-8（06-20時点） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-06-21 | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）** | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
+
+- **注10（ASP mps2 FAIL 558 の性格）**：測定アーティファクトが 76.7%（Unexpected-CP 383＝バンドル/
+  スケジューリング方法論・E_TMOUT 45＝QEMU 遅延で、EK 実機では PASS 実証）＋状態値系 122。
+  カーネル（asp3_3.7）は無改変。HRP 比で保護由来の失敗（MSTKERR 758・8リージョンMPU BUILD-FAIL 406）が消失。
+- **注11（HRP mps2 FAIL の性格）**：構造的 ≈968（**8リージョン MPU 制約**＝BUILD-FAIL ≈406・
+  ユーザドメイン例外スタッキング MSTKERR 系）／真バグ候補 ≈46。**E_TMOUT クラスタは QEMU proxy
+  アーティファクト**（EK 実機 3/3 PASS で確定）。Unexpected-CP は EK 実機検証で大半が実バグ。
+- **HRP ek_ra8m2 SIL 合格（CP1-27）の意義**：M2 メモリ保護／ドメインアクセス制御／ユーザ⇄カーネル
+  特権遷移／CPU 例外のユーザ文脈復帰が**実機で機能**していることの実証。必要だったカーネル修正4点
+  （rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc の nPRIV 分岐）は asp3_tz_work 側
+  （詳細：`docs/HRP/EK_RA8M2_TTSP3_STATUS.md`）。
+
 ---
 
 ## 2. カバレッジ（分岐 C1, gcov・参考）

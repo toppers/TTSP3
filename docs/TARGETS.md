@@ -3,7 +3,7 @@
 > **目的**：各 profile×target の**実行系・能力・非対応/注意点**を1表に front-load し、
 > 「ビルド/実行して初めて気づく」コスト（例：FMP linux_gcc は exception check が組めない、
 > `FUNC_TIME=false` で timer 対象外）を無くす。**出典は各 `library/<PROF>/target/<tgt>/ttsp_target.sh`**
-> （`USE_QEMU`/`FUNC_TIME`/`FUNC_INTERRUPT`/`FUNC_EXCEPTION`/`IRC_ARCH`/`PROCESSOR_NUM`）。最終確認 2026-06-13。
+> （`USE_QEMU`/`FUNC_TIME`/`FUNC_INTERRUPT`/`FUNC_EXCEPTION`/`IRC_ARCH`/`PROCESSOR_NUM`）。最終確認 2026-07-02（M-profile 4行追加）。
 
 ---
 
@@ -17,6 +17,10 @@
 | ASP | **zybo_z7_gcc**（主） | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ✅/✅/✅ | 単一プロセッサ。a9gtimer パッチ（同上）。`scripts/ci_run.sh` |
 | ASP | lpc55s69evk_gcc | 実機（M33） | 1 | true | local | 実CPU例外 | 実機 | **Cortex-M33**。asp3_core 後段 M33 ターゲットの雛形（`AGENTS.md` §6） |
 | ASP | nucleo_f401re_gcc | 実機（M4） | 1 | true | local | 実CPU例外 | 実機 | Cortex-M4 |
+| ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ❓（SIL/API per-case 実績） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/ASP3_TZ/asp3_tz_work/asp3_3.7`。per-case 1255/1813 PASS・SIL All passed（`MPS2_API_STATUS.md`） |
+| ASP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | **Cortex-M85**。SIL 実機 All passed（非タスク文脈 wait_raise_int はスキップ・`d529a51`） |
+| HRP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ **int のみ**（exc/timer＝M-profile 制約・`exclude_tests.txt`） | Cortex-M33＋MPU（**8リージョン＝1ドメイン最大5**が構造的上限）。per-case 758/1602 PASS（`MPS2_API_STATUS.md`）。`ttsp_check_point` に M-profile 分岐（`TTSP_SILLOC_NO_SVC`） |
+| HRP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | Cortex-M85＋MPU。**SIL 実機 All passed（CP1-27）**＝M2 保護機構の実機実証。台帳 `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 | HRMP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` `-smp 2` | 2 | true | combination | 実CPU例外 | ❓ | 保護＋マルチコア。a9gtimer。後回し方針 |
 | HRP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ❓ | 保護・単一コア。syssvc が TECS化（`docs/HRP/COVERAGE_STATUS.md`）。API並列ドライバ未対応 |
 | HRP | zcu102_r5_gcc | QEMU（Cortex-R5） | 1 | true | local | 実CPU例外 | ❓ | 2026-06-12 追加（`fef2f9e`）。`ttsp_target.sh` が `parallel_simulation()` でQEMU実行 |
@@ -67,7 +71,8 @@ bash scripts/coverage_gcov_fmp.sh bb     # bb=BBのみ / all=+WB / smoke=check_l
 1 ターゲット＝`library/<PROF>/target/<tgt>/` の4ファイル（`AGENTS.md` §6）：
 `ttsp_target_test.c`（7関数）/`ttsp_target_test.h`（スタック・不正アドレス・割込み/例外番号等）/
 `ttsp_target.sh`（**本表の出典**：`USE_QEMU`/`FUNC_*`/`IRC_ARCH`/`KERNEL_COBJS_TARGET`）/`ttsp_target.cfg`。
-M33 新規は `lpc55s69evk_gcc` を雛形にする。
+M33 新規は **`mps2_an505_gcc` を雛形にする**（QEMU 実行可・SIL/API 実績あり。`lpc55s69evk_gcc` は
+実機前提の旧雛形）。M85 実機は `ek_ra8m2_gcc` を参照。
 
 ---
 

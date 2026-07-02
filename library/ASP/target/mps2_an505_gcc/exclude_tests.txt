@@ -1,4 +1,5 @@
-# library/HRP/target/mps2_an505_gcc/exclude_tests.txt
+# library/ASP/target/mps2_an505_gcc/exclude_tests.txt
+#（HRP 版から複製．SOM 系パターンは ASP3 に無い API のため ASP では実質不発・無害）
 #
 # MPS2-AN505（Cortex-M33 / ARMv8-M / QEMU）が原理的に非対応／本移植段階で未対応の機能を
 # 使うテストを，TTSP の API テスト生成・ビルド・実行から除外するリスト。
