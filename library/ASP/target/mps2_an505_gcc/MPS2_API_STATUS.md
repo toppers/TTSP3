@@ -78,3 +78,50 @@ for d in obj_asp_mps2_api/api_test/auto_code_*; do
   grep -q 'All check points passed' "$d/execute.log" && echo "$d PASS" || echo "$d FAIL"
 done
 ```
+
+---
+
+## ★A2 切り分け＋タイマ停止モードで PASS 1807/1813=99.7%（2026-07-02 確定）
+
+### 再測定ベースライン（カーネル無改変・asp3_tz_work main `1d2ba24` の asp3_3.7）
+PASS **1293**/1813（71.3%）。旧 1255 との差はタイミング揺れ（UNEXPECTED_CP↔PASS の入替わり）。
+状態値系（UNEXPECTED_VALUE 119＋SVC_ERROR 10＋OTHER 8）＝**137**。
+
+### 切り分け（状態値系 137）
+- **全 137 件が tick 制御（`ttsp_target_stop_tick`/`gain_tick`）を使う `_ten` 系**（out.c grep で確認）
+- 再々実行で 124 決定的 FAIL／13 フレーキー（時刻が止まらずレース化と整合）
+- **zybo（A-profile・FUNC_TIME 動作環境）per-case では 137/137 全件 PASS**
+  → アーキ非依存（スイート/仕様差）0 件・真のカーネルバグ 0 件・**全件 mps2 の tick 制御不全**
+
+### 根因（target_timer.c／SysTick HRT）
+`stop_tick`＝`target_hrt_terminate` は SysTick を止めるが、`gain_tick`＝`hrt_raise_event_body` と
+signal_time 経由の `hrt_set_event_body` が **`hrt_program`（HRT_CTRL_RUN 書込み）で SysTick を再起動**
+してしまい、凍結が解除されて実時間が流れ込む（timer check の `(system1+1)==system2` 不成立と同根）。
+
+### 修正＝テスト用時刻停止モード（カーネルポート側・パッチ）
+`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`：`hrt_stopped` を追加し、
+停止中は offset=0・program は再起動せず・raise_event は `hrt_base += 1us`＋手動ペンディング・
+initialize は時刻継続で再開。**check_library timer が All check points passed** に。
+
+### 修正後 per-case 全件（1813）
+| 区分 | 素 | パッチ後 |
+|---|---|---|
+| **PASS** | 1293 | **1807（99.7%）** |
+| UNEXPECTED_CP | 334 | **0** |
+| E_TMOUT | 49 | **0** |
+| 状態値系 | 137 | **6** |
+| 回帰（PASS→FAIL） | — | **0** |
+
+**重要な訂正**：旧解釈「Unexpected-CP＝バンドル方法論アーティファクト（アーキ非依存）・E_TMOUT＝QEMU
+遅延アーティファクト」は、少なくとも本ターゲットの per-case では**どちらも tick 制御不全の間接症状**
+だった（tick が止まらない→協調タスクの待ち合わせ・タイムアウトが実時間依存化）。パッチで全量解消。
+
+### 残 FAIL 6（すべて tick と無関係のターゲット特性）
+| ケース | 症状 | 分類 |
+|---|---|---|
+| clr_int_b / dis_int_b / ena_int_b / ras_int_b | 不正 intno に E_OK | NVIC の有効番号範囲がテスト前提と不一致（FMP linux_gcc 既知残と同型）。glue の不正 intno 定義見直しで回収可能性あり |
+| prb_int_b | E_OBJ 期待に 0 | 同上 |
+| CRE_TSK_h_1 | スタックアドレス不一致 | USE_TSKINICTXB（stk 非保持）系（STATUS §3 の既知ファミリ） |
+
+**実 conformance ＝ 1807/1813（99.7%）**（残 6 はターゲット特性でありカーネル不適合ではない）。
+再現データ：/tmp/a2_results.tsv（素）・/tmp/a2fix_results.tsv（パッチ後）・/tmp/a2_zybo_compare.tsv（zybo 比較）。

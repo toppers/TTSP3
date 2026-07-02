@@ -334,6 +334,10 @@ cat /dev/ttyACM0
 - **QEMU パッチ不要**：`mps2-an505` は zybo 系（`xilinx-zynq-a9`）で必要な a9gtimer パッチが不要。素の `qemu-system-arm` でよい。
 - **HRP mps2 の check_library は int のみ**：M-profile 制約（BASEPRI によるロック中の svc が HardFault になる・gain_tick 非対応等）により、exc・timer は `exclude_tests.txt` で除外されており実行されない。int のみが対象。
 - **`( ... && grep ... && ... )` サブシェル連鎖に注意**：`grep` がラッパになっている環境では `&&` チェーン内の `grep` 以降が消える（§6 落とし穴参照）。上記コマンド例のように `command grep` を使うか、チェーンを分離する。
+- **FUNC_TIME（tick 制御）依存テストは要タイマ停止モードパッチ**：素の asp3_3.7 では
+  stop_tick の凍結が raise_event/set_event の SysTick 再起動で解除され、`_ten` 系 api_test
+  （約500件）と timer check が落ちる。`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`
+  をカーネル（`asp3_3.7/`）に適用してから測定する（適用で per-case 1807/1813・回帰 0）。
 - **asp3_tz_work の checkout ブランチに注意**：測定ベースラインは **main**（`1d2ba24`）。checkout が
   TZ 開発ブランチ `asp3-tz` のままだと asp3_3.7 に開発中変更（tz_gateway/ns_demo 等）が入り、
   ビルドは通っても **QEMU でブート後に無出力**になる（例外も発生しない）。checkout を動かさずに

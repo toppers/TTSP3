@@ -1,0 +1,104 @@
+# asp3_3.7 (asp3_tz_work) mps2_an505_gcc: target_timer に TTSP3 テスト用時刻停止モードを追加
+#
+# 目的: TTSP3 の FUNC_TIME（ttsp_target_stop_tick/gain_tick/start_tick）を
+#   QEMU mps2-an505 上で成立させる。従来は gain_tick（raise_event）や
+#   signal_time 経由の set_event が hrt_program で SysTick を再起動して
+#   しまい（HRT_CTRL_RUN 書込み）、stop_tick の凍結が解除されて実時間が
+#   流れ込んでいた。
+# 内容: hrt_stopped（停止モード）を追加。停止中は offset=0・program は
+#   SysTick を再起動せず・raise_event は hrt_base += 1us ＋手動ペンディング・
+#   initialize は時刻継続で再開。
+# 効果（2026-07-02 実測・QEMU mps2-an505 / TTSP3 ASP per-case 1813）:
+#   check_library timer: FAIL → All check points passed
+#   api_test: PASS 1293 → 1807/1813（+514。UNEXPECTED_CP 334→0・E_TMOUT 49→0・
+#   状態値系 137→6）。回帰 0。残 6 は tick と無関係（interrupt 異常系 5・
+#   CRE_TSK stk 検査 1＝ターゲット特性）。
+# 適用先: ~/TOPPERS/asp3_tz_work（main）の asp3_3.7/。
+#   cd asp3_3.7 && patch -p1 < このファイル
+--- a/target/mps2_an505_gcc/target_timer.c	2026-07-02 18:42:16.275571107 +0900
++++ b/target/mps2_an505_gcc/target_timer.c	2026-07-02 18:42:16.303453114 +0900
+@@ -64,6 +64,17 @@
+ static volatile uint8_t  hrt_fresh;
+ 
+ /*
++ *  テスト用時刻停止モード（TTSP3 の ttsp_target_stop_tick/gain_tick 対応）
++ *
++ *  1 のとき高分解能タイマは「凍結」：SysTick を止め，経過を 0 として扱い，
++ *  set_event/raise_event による hrt_program でも SysTick を再起動しない．
++ *  raise_event は hrt_base を 1us 進めて SysTick 例外を手動ペンディングし，
++ *  signal_time により満了イベントを処理させる（時刻は +1us のまま凍結継続）．
++ *  target_hrt_initialize が呼ばれたら解除（hrt_base は継続＝時刻は巻き戻らない）．
++ */
++static volatile uint8_t  hrt_stopped;
++
++/*
+  *  SysTick の制御レジスタ設定値（プロセッサクロック，割込み許可，動作）
+  */
+ #define HRT_CTRL_RUN    (SYSTIC_ENABLE | SYSTIC_CLKSOURCE | SYSTIC_TICINT)
+@@ -83,6 +94,10 @@
+     uint32_t cur;
+     uint32_t off;
+ 
++    if (hrt_stopped != 0U) {
++        return 0U;              /* 時刻停止中は経過なし */
++    }
++
+     /* 割込み保留中（区間終端に到達済）なら 1 区間分が経過している */
+     if ((sil_rew_mem((void *) NVIC_ICSR) & NVIC_PENDSTSET) != 0U) {
+         return reload;
+@@ -126,7 +141,10 @@
+     sil_wrw_mem((void *) NVIC_ICSR, NVIC_PENDSTCLR);
+     /* COUNTFLAG をクリアするために一度読む */
+     (void) sil_rew_mem((void *) SYSTIC_CONTROL_STATUS);
+-    sil_wrw_mem((void *) SYSTIC_CONTROL_STATUS, HRT_CTRL_RUN);
++    if (hrt_stopped == 0U) {
++        sil_wrw_mem((void *) SYSTIC_CONTROL_STATUS, HRT_CTRL_RUN);
++    }
++    /* 停止モード中は区間を記録するだけで SysTick は再起動しない */
+ }
+ 
+ /*
+@@ -135,6 +153,12 @@
+ void
+ target_hrt_initialize(intptr_t exinf)
+ {
++    if (hrt_stopped != 0U) {
++        /* テスト用停止からの再開：時刻（hrt_base）は継続し巻き戻さない */
++        hrt_stopped = 0U;
++        hrt_program(HRT_MAX_TICKS);
++        return;
++    }
+     hrt_base = 0U;
+     hrt_last = 0U;
+     /* 最初の set_event までは最大区間で空回しする */
+@@ -147,8 +171,12 @@
+ void
+ target_hrt_terminate(intptr_t exinf)
+ {
++    /* ここまでの経過を基準時刻へ畳み込んでから凍結する */
++    hrt_base += hrt_offset_ticks() / HRT_CLOCKS_PER_US;
+     sil_wrw_mem((void *) SYSTIC_CONTROL_STATUS, 0U);
+     sil_wrw_mem((void *) NVIC_ICSR, NVIC_PENDSTCLR);
++    hrt_stopped = 1U;
++    hrt_fresh = 1U;
+ }
+ 
+ /*
+@@ -198,6 +226,17 @@
+ void
+ hrt_raise_event_body(void)
+ {
++    if (hrt_stopped != 0U) {
++        /*
++         *  時刻停止中の gain：時刻を 1us だけ進め，SysTick 例外を手動で
++         *  ペンディングして signal_time に満了イベントを処理させる．
++         *  （停止中は hrt_offset_ticks()==0 のため「区間終端到達」と
++         *    混同されない．hrt_program は停止ガードにより再起動しない．）
++         */
++        hrt_base += 1U;
++        sil_wrw_mem((void *) NVIC_ICSR, NVIC_PENDSTSET);
++        return;
++    }
+     hrt_base += hrt_offset_ticks() / HRT_CLOCKS_PER_US;
+     hrt_program(HRT_MIN_TICKS);
+ }

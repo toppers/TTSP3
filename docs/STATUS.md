@@ -40,14 +40,23 @@
 
 | Profile | Target | SIL | API（per-case 全件） | check_library | 最終確認 | 出典 |
 |---|---|---|---|---|---|---|
-| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ⚠ **1255/1813 PASS（69.2%）**・BUILD-FAIL 0（注10） | ⚠ int=✅ CP1-12／timer=✗／exc=ビルド不可（注13） | 2026-07-02（check）/06-22（API） | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ✅ **1807/1813 PASS（99.7%）**＝タイマ停止モードパッチ適用時（素は 1293/1813・注10） | ⚠ int=✅ CP1-12／timer=✅（要パッチ・注13）／exc=ビルド不可（注13） | 2026-07-02 実測 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
 | HRP | mps2_an505_gcc（M33/QEMU） | ✅ **All passed（CP1-27・QEMU）**（2026-07-02 実測・注12） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-07-02（SIL）/06-21（API） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）**※out.c 改修後は要実機再測（注12） | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 
-- **注10（ASP mps2 FAIL 558 の性格）**：測定アーティファクトが 76.7%（Unexpected-CP 383＝バンドル/
-  スケジューリング方法論・E_TMOUT 45＝QEMU 遅延で、EK 実機では PASS 実証）＋状態値系 122。
-  カーネル（asp3_3.7）は無改変。HRP 比で保護由来の失敗（MSTKERR 758・8リージョンMPU BUILD-FAIL 406）が消失。
+- **注10（ASP mps2・2026-07-02 A2 切り分けで確定）**：素のカーネルでの FAIL（520）は
+  **ほぼ全量が mps2 依存部/ポートの tick 制御（FUNC_TIME）不全の間接症状**だった。
+  状態値系 137 は全件 `_ten`（tick 制御使用）系で、**zybo per-case では 137/137 PASS**
+  （真のカーネルバグ 0・仕様差起因 0）。根因＝target_timer.c（SysTick HRT）の
+  raise_event/set_event が停止中でも SysTick を再起動して凍結が解除されること。
+  **テスト用時刻停止モードのパッチ**（`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`）
+  で **PASS 1293→1807/1813（99.7%）・UNEXPECTED_CP 334→0・E_TMOUT 49→0・回帰 0**。
+  残 6＝interrupt 異常系 5（不正 intno が NVIC では有効→E_OK。FMP linux_gcc 既知残と同型）＋
+  CRE_TSK stk 検査 1（USE_TSKINICTXB）＝ターゲット特性。**実 conformance ＝ 99.7%**。
+  旧解釈（Unexpected-CP＝バンドル方法論・E_TMOUT＝QEMU 遅延アーティファクト）は本ターゲットでは
+  tick 不全の症状だったと訂正（台帳 `MPS2_API_STATUS.md` 末尾参照）。
+  カーネル（asp3_3.7）は素では無改変・パッチは asp3_tz_work 側への適用待ち。
 - **注11（HRP mps2 FAIL の性格）**：構造的 ≈968（**8リージョン MPU 制約**＝BUILD-FAIL ≈406・
   ユーザドメイン例外スタッキング MSTKERR 系）／真バグ候補 ≈46。**E_TMOUT クラスタは QEMU proxy
   アーティファクト**（EK 実機 3/3 PASS で確定）。Unexpected-CP は EK 実機検証で大半が実バグ。
@@ -62,8 +71,9 @@
   out.c 変更後の再確認が未実施**（CP 順序は不変のため合格見込みだが要実機再測）。
   再現手順は `docs/RUNBOOK.md` §7b（カーネルは相対パス・絶対パス不可）。
 - **注13（ASP mps2 check_library・2026-07-02 実測）**：int は **CP1-12 All passed**（QEMU）。
-  timer は **FAIL**（`(system1+1)==system2` 不成立＝`stop/gain_tick` が QEMU で時刻停止を実現できない。
-  HRP mps2 が timer check を M-profile 制約とした事象の ASP 版）。exception は**ビルド不可**
+  timer は素のカーネルでは **FAIL**（`stop/gain_tick` の凍結が raise_event/set_event の
+  SysTick 再起動で解除される）→ **タイマ停止モードパッチ適用で All check points passed**
+  （`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`・注10）。exception は**ビルド不可**
   （共有 out.cfg が要求する `TTSP_EXCNO_C`＝フェイタル系例外が未定義。FMP linux_gcc 注A と同型。
   HRP は MPU 違反（MemManage）で実現済みだが、**保護なしの ASP** では未マップ番地の BusFault 等
   別機構の検証が必要）。
