@@ -15,6 +15,8 @@
 #   CRE_TSK stk 検査 1＝ターゲット特性）。
 # 適用先: ~/TOPPERS/asp3_tz_work（main）の asp3_3.7/。
 #   cd asp3_3.7 && patch -p1 < このファイル
+# ★2026-07-02: asp3_tz_work main へ適用済み（commit 80f9b7a）。main 取得なら適用不要。
+#   本ファイルは記録用（どの変更が入ったかの正本）として残す。
 --- a/target/mps2_an505_gcc/target_timer.c	2026-07-02 18:42:16.275571107 +0900
 +++ b/target/mps2_an505_gcc/target_timer.c	2026-07-02 18:42:16.303453114 +0900
 @@ -64,6 +64,17 @@

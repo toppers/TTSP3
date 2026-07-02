@@ -56,7 +56,7 @@
   CRE_TSK stk 検査 1（USE_TSKINICTXB）＝ターゲット特性。**実 conformance ＝ 99.7%**。
   旧解釈（Unexpected-CP＝バンドル方法論・E_TMOUT＝QEMU 遅延アーティファクト）は本ターゲットでは
   tick 不全の症状だったと訂正（台帳 `MPS2_API_STATUS.md` 末尾参照）。
-  カーネル（asp3_3.7）は素では無改変・パッチは asp3_tz_work 側への適用待ち。
+  パッチは **asp3_tz_work main へ適用済み**（`80f9b7a`・2026-07-02。main を取得すれば patch 不要）。
 - **注11（HRP mps2 FAIL の性格）**：構造的 ≈968（**8リージョン MPU 制約**＝BUILD-FAIL ≈406・
   ユーザドメイン例外スタッキング MSTKERR 系）／真バグ候補 ≈46。**E_TMOUT クラスタは QEMU proxy
   アーティファクト**（EK 実機 3/3 PASS で確定）。Unexpected-CP は EK 実機検証で大半が実バグ。
