@@ -75,6 +75,20 @@ CONFIG_OPT="-o -Wno-unused-but-set-variable -o -DOMIT_CHECK_USTACK_OVERLAP"
 KERNEL_COBJS_TARGET="objs/core_kernel_impl.o objs/target_kernel_impl.o objs/target_timer.o"
 
 #
+#  core_trustzone.o：TZ 開発版カーネル（asp3_tz_work の asp3-tz ブランチ）では
+#  target_kernel_impl.c が core_sau_configure()（core_trustzone.c）を参照するため、
+#  カーネル側にソースが存在する場合のみ追加する（欠くと check_library の link が
+#  undefined reference to `core_sau_configure' で失敗）。main ベースラインの
+#  asp3_3.7 には core_trustzone.c が無いので追加しない（固定追加すると
+#  「No rule to make target 'core_trustzone.c'」で逆に失敗する）。
+#  KERNEL_COBJS を上書きしない SIL/api_test 流は Makefile.core の自動付加で足りる。
+#
+if [ -f "${OS_PATH}arch/arm_m_gcc/common/core_trustzone.c" ] || \
+   [ -f "${OS_PATH}/arch/arm_m_gcc/common/core_trustzone.c" ]; then
+	KERNEL_COBJS_TARGET="${KERNEL_COBJS_TARGET} objs/core_trustzone.o"
+fi
+
+#
 # アプリケーションに追加するターゲット依存のオブジェクト
 #
 APPL_COBJS_TARGET="objs/ttsp_target_test.o"

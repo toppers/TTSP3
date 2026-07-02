@@ -17,7 +17,7 @@
 | ASP | **zybo_z7_gcc**（主） | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ✅/✅/✅ | 単一プロセッサ。a9gtimer パッチ（同上）。`scripts/ci_run.sh` |
 | ASP | lpc55s69evk_gcc | 実機（M33） | 1 | true | local | 実CPU例外 | 実機 | **Cortex-M33**。asp3_core 後段 M33 ターゲットの雛形（`AGENTS.md` §6） |
 | ASP | nucleo_f401re_gcc | 実機（M4） | 1 | true | local | 実CPU例外 | 実機 | Cortex-M4 |
-| ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ❓（SIL/API per-case 実績） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/asp3_tz_work/asp3_3.7`。per-case 1255/1813 PASS・SIL All passed（`MPS2_API_STATUS.md`） |
+| ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ ✗exc/✅int/✗timer（注B） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/asp3_tz_work/asp3_3.7`（**main ベースライン**・注B）。per-case 1255/1813 PASS・SIL All passed（`MPS2_API_STATUS.md`） |
 | ASP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | **Cortex-M85**。SIL 実機 All passed（非タスク文脈 wait_raise_int はスキップ・`d529a51`） |
 | HRP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ **int のみ**（exc/timer＝M-profile 制約・`exclude_tests.txt`） | Cortex-M33＋MPU（**8リージョン＝1ドメイン最大5**が構造的上限）。per-case 758/1602 PASS（`MPS2_API_STATUS.md`）。`ttsp_check_point` に M-profile 分岐（`TTSP_SILLOC_NO_SVC`） |
 | HRP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | Cortex-M85＋MPU。**SIL 実機 All passed（CP1-27）**＝M2 保護機構の実機実証。台帳 `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
@@ -58,6 +58,12 @@ bash scripts/coverage_gcov_fmp.sh bb     # bb=BBのみ / all=+WB / smoke=check_l
 
 ## 注
 
+- **注B（ASP mps2 check_library・2026-07-02 実測）**：int=✅ CP1-12 All passed（QEMU）。
+  timer=✗（stop/gain_tick が QEMU で時刻停止不可＝assertion 失敗）。exc=✗ ビルド不可
+  （`TTSP_EXCNO_C` 未定義＝注A と同型。M33 フェイタル例外の実現が課題）。
+  被テストカーネルは asp3_tz_work の **main ベースライン**を使うこと（checkout が
+  TZ 開発ブランチ `asp3-tz` だと asp3_3.7 に開発中変更が入り**無出力ブート**になる）。
+  詳細は `docs/STATUS.md` §1b 注13。
 - **注A（FMP linux_gcc の exception check）**：共有テスト
   `library/FMP/check_library/exception/out.cfg` が `DEF_EXC(TTSP_EXCNO_C, …)` を含むが、
   linux_gcc の `ttsp_target_test.h` は `TTSP_EXCNO_A`/`B`/PE2系のみで `TTSP_EXCNO_C` 未定義

@@ -40,10 +40,10 @@
 
 | Profile | Target | SIL | API（per-case 全件） | check_library | 最終確認 | 出典 |
 |---|---|---|---|---|---|---|
-| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ⚠ **1255/1813 PASS（69.2%）**・BUILD-FAIL 0（注10） | ❓ | 2026-06-22 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ⚠ **1255/1813 PASS（69.2%）**・BUILD-FAIL 0（注10） | ⚠ int=✅ CP1-12／timer=✗／exc=ビルド不可（注13） | 2026-07-02（check）/06-22（API） | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
-| HRP | mps2_an505_gcc（M33/QEMU） | ⚠ **CP1-23＋E_OACV**（2026-07-02 実測・注12） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-07-02（SIL）/06-21（API） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
-| HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）** | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
+| HRP | mps2_an505_gcc（M33/QEMU） | ✅ **All passed（CP1-27・QEMU）**（2026-07-02 実測・注12） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-07-02（SIL）/06-21（API） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）**※out.c 改修後は要実機再測（注12） | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 
 - **注10（ASP mps2 FAIL 558 の性格）**：測定アーティファクトが 76.7%（Unexpected-CP 383＝バンドル/
   スケジューリング方法論・E_TMOUT 45＝QEMU 遅延で、EK 実機では PASS 実証）＋状態値系 122。
@@ -51,11 +51,27 @@
 - **注11（HRP mps2 FAIL の性格）**：構造的 ≈968（**8リージョン MPU 制約**＝BUILD-FAIL ≈406・
   ユーザドメイン例外スタッキング MSTKERR 系）／真バグ候補 ≈46。**E_TMOUT クラスタは QEMU proxy
   アーティファクト**（EK 実機 3/3 PASS で確定）。Unexpected-CP は EK 実機検証で大半が実バグ。
-- **注12（HRP mps2 SIL・2026-07-02 本ワークスペースから実測）**：EK で入った M2 修正の波及で
-  CP1-8（06-20）→ **CP1-23＋USER DOMAIN `get_tim → E_OACV : OK`** まで前進。残＝続く
-  `sil_reb_mem(0xd0000000)` の DABORT 回収で**ハング**（QEMU `mps2-an505` は不正アドレス読出しが
-  フォールトしない＝実機 EK-RA8M2 との挙動差。実機では合格済み）。再現手順は `docs/RUNBOOK.md` §7b
-  （カーネルは相対パス `../../../asp3_tz_work/hrp3_3.4.2/`・絶対パス不可）。
+- **注12（HRP mps2 SIL・2026-07-02 完走）**：EK で入った M2 修正の波及＋`sil_test/HRP/out.c` の
+  修正で CP1-8（06-20）→ **CP1-27 All passed（QEMU）**。当初の DABORT 後ハングの根因は
+  「QEMU がフォールトしない」ではなく（**DACCVIOL/IACCVIOL とも QEMU 11 で正しく発生する**）、
+  **CPU 例外ハンドラ（cpuexc_thread_trampoline＝Thread+MSP+特権文脈）から `ttsp_check_point`
+  （svc 経由 syslog）を発行するとカーネル時刻管理状態が壊れてライブロック**すること。
+  対処＝ハンドラは PC 補正と CFSR クリアのみ行いフラグ（`sil_dabort_cp_result`）を立て、
+  **CP24/25 の発行はタスク文脈（sil_user_task）に統一**（A-profile ハンドラも同方式に統一。
+  zybo HRP SIL の回帰なし＝`ci_run_sil.sh HRP` PASS を確認済み）。**ek_ra8m2 実機は共有
+  out.c 変更後の再確認が未実施**（CP 順序は不変のため合格見込みだが要実機再測）。
+  再現手順は `docs/RUNBOOK.md` §7b（カーネルは相対パス・絶対パス不可）。
+- **注13（ASP mps2 check_library・2026-07-02 実測）**：int は **CP1-12 All passed**（QEMU）。
+  timer は **FAIL**（`(system1+1)==system2` 不成立＝`stop/gain_tick` が QEMU で時刻停止を実現できない。
+  HRP mps2 が timer check を M-profile 制約とした事象の ASP 版）。exception は**ビルド不可**
+  （共有 out.cfg が要求する `TTSP_EXCNO_C`＝フェイタル系例外が未定義。FMP linux_gcc 注A と同型。
+  HRP は MPU 違反（MemManage）で実現済みだが、**保護なしの ASP** では未マップ番地の BusFault 等
+  別機構の検証が必要）。
+  **測定上の重要な注意**：被テストカーネルは asp3_tz_work の **main（`1d2ba24`）ベースライン**を使う。
+  checkout が TZ 開発ブランチ `asp3-tz` のままだと asp3_3.7 に開発中変更（tz_gateway 等）が入り
+  **ブートしても無出力**になる（`git archive main asp3_3.7 | tar -x` で展開して使う）。
+  また ASP の check フローは KERNEL_COBJS を上書きするため、TZ 開発版カーネルでは
+  `core_trustzone.o` を要追加（`ttsp_target.sh` が存在チェックで自動追加するよう対応済み）。
 - **HRP ek_ra8m2 SIL 合格（CP1-27）の意義**：M2 メモリ保護／ドメインアクセス制御／ユーザ⇄カーネル
   特権遷移／CPU 例外のユーザ文脈復帰が**実機で機能**していることの実証。必要だったカーネル修正4点
   （rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc の nPRIV 分岐）は asp3_tz_work 側

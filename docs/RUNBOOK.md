@@ -334,8 +334,18 @@ cat /dev/ttyACM0
 - **QEMU パッチ不要**：`mps2-an505` は zybo 系（`xilinx-zynq-a9`）で必要な a9gtimer パッチが不要。素の `qemu-system-arm` でよい。
 - **HRP mps2 の check_library は int のみ**：M-profile 制約（BASEPRI によるロック中の svc が HardFault になる・gain_tick 非対応等）により、exc・timer は `exclude_tests.txt` で除外されており実行されない。int のみが対象。
 - **`( ... && grep ... && ... )` サブシェル連鎖に注意**：`grep` がラッパになっている環境では `&&` チェーン内の `grep` 以降が消える（§6 落とし穴参照）。上記コマンド例のように `command grep` を使うか、チェーンを分離する。
+- **asp3_tz_work の checkout ブランチに注意**：測定ベースラインは **main**（`1d2ba24`）。checkout が
+  TZ 開発ブランチ `asp3-tz` のままだと asp3_3.7 に開発中変更（tz_gateway/ns_demo 等）が入り、
+  ビルドは通っても **QEMU でブート後に無出力**になる（例外も発生しない）。checkout を動かさずに
+  ベースラインを使うには `git -C ~/TOPPERS/asp3_tz_work archive main asp3_3.7 | tar -x -C /tmp/asp3_main`
+  で展開し、その相対パスを ttb.sh に渡す（hrp3_3.4.2 は asp3-tz でも main と同一なのでそのままでよい）。
 - **カーネルパスは相対・絶対不可**：`ttb.sh`/`sil_test.sh` は OS パスに `${g_tree_level}`（obj 階層分の `../`）を前置するため、**絶対パスを渡すと configure.rb 解決に失敗**し「Makefile file is not exist」で folder 作成が空振りする（エラーは握り潰される）。本ワークスペースからは `../../../asp3_tz_work/<kernel>/` と渡す。
-- **HRP mps2 SIL の既知残（2026-07-02 実測）**：CP1-23＋USER DOMAIN の `get_tim → E_OACV` まで通過するが、続く `sil_reb_mem(0xd0000000)` の DABORT 回収で**ハング**（QEMU `mps2-an505` は不正アドレス読出しがフォールトしない＝実機 EK-RA8M2 との挙動差。実機では合格済み）。QEMU 実行時は timeout を付けること。
+- **CPU 例外ハンドラ（トランポリン文脈）から svc を発行しない**：HRP の CPU 例外ハンドラは
+  cpuexc_thread_trampoline（Thread+MSP+特権）で走る。この文脈から `ttsp_check_point`（svc 経由
+  syslog）を発行すると**カーネル時刻管理が壊れてライブロック**（「no time event is processed in
+  hrt interrupt.」の氾濫）する。ハンドラでは PC 補正等の最小処理＋フラグ記録に留め、CP 発行は
+  タスク文脈で行う（`sil_test/HRP/out.c` の 2026-07-02 修正が実例。QEMU の DACCVIOL/IACCVIOL
+  自体は正しく発生する＝「QEMU がフォールトしない」と誤診しやすいので注意）。
 
 ---
 

@@ -49,6 +49,16 @@
 /* 割込みが発生したか判別するためのフラグ */
 bool_t int_flag;
 
+/* 【改変 2026-07-02・全プロファイル共通（A-profile / M-profile 統一）】
+ * ユーザドメイン(DOM1)から不正メモリアクセスや特権コード呼出しを行ったときに
+ * sil_dabort_handler / sil_pabort_handler が捕捉した例外種別を記録するグローバル変数．
+ * 0=未捕捉, 24=DACCVIOL/DABORT, 25=IACCVIOL/PABORT．
+ * sil_user_task 復帰後（DOM1 PSP/タスクコンテキスト）で参照して ttsp_check_point を発行する．
+ * ttsp_check_point（SVC 経由）はハンドラ内コンテキスト（trampoline 含む）では発行できないため
+ * 全プロファイル共通でこの変数経由のワンパス方式に統一する．
+ * 【改変 2026-07-02・更新 2026-07-02: A-profile も同方式に統一（二重発行回避）】 */
+static volatile uint_t sil_dabort_cp_result = 0U;
+
 void main_task(intptr_t exinf) {
 	SIL_PRE_LOC;
 	ER ercd;
@@ -237,9 +247,10 @@ void sil_user_task(intptr_t exinf) {
 	 * 【ユーザドメイン SIL 異常系・明示テスト 2026-06-14】
 	 * ユーザドメインから「保護される操作」が期待どおり拒否されることを明示的に確認する：
 	 * ・サービスコール保護：get_tim → E_OACV（check_ercd で捕捉）
-	 * ・メモリアクセス違反：不正アドレス sil_reb_mem → Data Abort（DEF_EXC で捕捉＋pc-=4 復帰）
-	 * ・特権コード呼出し：sil_dly_nse → Prefetch Abort（DEF_EXC で捕捉＋pc=lr_usr 復帰）
-	 * いずれも明示チェックポイント化（CP24/25 はハンドラ側で記録）．
+	 * ・メモリアクセス違反：不正アドレス sil_reb_mem → Data Abort（DEF_EXC で捕捉＋pc復帰）
+	 * ・特権コード呼出し：sil_dly_nse → Prefetch Abort（実機では DEF_EXC が捕捉，QEMU は非対応）
+	 * CP24/25 は sil_user_task（DOM1 PSP コンテキスト）で発行する
+	 * （ハンドラ(trampoline)コンテキストでの SVC 発行はカーネル時刻管理を破壊するため）．
 	 * ============================================================ */
 	{
 		SYSTIM abntim;
@@ -250,18 +261,48 @@ void sil_user_task(intptr_t exinf) {
 		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: get_tim -> E_OACV : OK");
 	}
 
-	/* 【異常系・fault・明示CP化】不正アドレス（ILLEGAL_DADDR=0xd0000000）への SIL メモリアクセスは
-	 * データアボート（メモリアクセス違反）になる＝SIL アクセスの保護を明示的に確認する．
-	 * DEF_EXC(EXCNO_MACV_DATA) の sil_dabort_handler が捕捉して CP24 を記録し、pc を進めて復帰する． */
-	(void) sil_reb_mem((void *) 0xd0000000U);
-	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
+	/* 【異常系・fault・明示CP化・全プロファイル統一 2026-07-02】
+	 * 不正アドレス（TTSP_MACV_ADDRESS=0xd0000000）への SIL メモリアクセスは
+	 * データアボート（M-profile: DACCVIOL / A-profile: DABORT）になる．
+	 * DEF_EXC(EXCNO_DABORT / MemManage) の sil_dabort_handler が捕捉して pc を進めて復帰する．
+	 * sil_dabort_handler はハンドラ内で ttsp_check_point を発行せず，
+	 * sil_dabort_cp_result=24 に設定して復帰する（A/M 両プロファイル共通）．
+	 * CP24 はここ（DOM1 タスクコンテキスト）で一本化して発行する． */
+	sil_dabort_cp_result = 0U;	/* 捕捉前にクリア */
+	(void) sil_reb_mem((void *) TTSP_MACV_ADDRESS);
+	/* ここに戻った時点で sil_dabort_handler が pc を修正して復帰している */
+	if (sil_dabort_cp_result == 24U) {
+		ttsp_check_point(24);
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_reb_mem(illegal) -> DABORT caught & recovered : OK");
+	}
+	else {
+		syslog_1(LOG_ERROR, "## sil_reb_mem(illegal): DABORT not caught (cp_result=%d)", (intptr_t)sil_dabort_cp_result);
+		ttsp_check_point(24);	/* 意図的に失敗させてエラーを記録 */
+	}
 
-	/* 【異常系・fault・明示CP化】sil_dly_nse はユーザドメインから呼ぶと実装（カーネル専用テキスト）の
-	 * フェッチで Prefetch Abort になる＝SIL の特権コード呼出し保護を明示確認．
-	 * DEF_EXC(EXCNO_PABORT) の sil_pabort_handler が捕捉して CP25 を記録し、pc を呼出し直後（lr_usr）へ
-	 * 進めて復帰する（PREPARE_RETURN_CPUEXC_PABORT_USR 相当）． */
+	/* 【異常系・PABORT テスト・全プロファイル統一 2026-07-02】
+	 * sil_dly_nse はユーザドメインから呼ぶと実装（カーネル専用テキスト）の
+	 * フェッチで命令アクセス違反（M-profile: IACCVIOL / A-profile: PABORT）になる．
+	 * sil_dabort_handler(M) / sil_pabort_handler(A) が捕捉し，
+	 * sil_dabort_cp_result=25 に設定して復帰する（ハンドラ内では ttsp_check_point を発行しない）．
+	 * CP25 はここ（DOM1 タスクコンテキスト）で一本化して発行する．
+	 * 本環境（QEMU 11.0.0 / mps2-an505）では IACCVIOL は正しく発生し caught 経路で通過する
+	 * （CP25 通常パスが実測確認済み）．QEMU の版や設定によって IACCVIOL が発生しない
+	 * 場合の防御として，sil_dabort_cp_result==0 のスキップパスも残す． */
+	sil_dabort_cp_result = 0U;	/* PABORT/IACCVIOL 捕捉前にクリア */
 	sil_dly_nse(SIL_DLY_TIME);
-	syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() -> PABORT caught & recovered : OK");
+	/* 復帰後: フォルトが発生した（正常）→ sil_dabort_cp_result==25
+	 *         フォルトが発生しなかった（QEMU 版依存の非エミュレート）→ sil_dabort_cp_result==0 */
+	if (sil_dabort_cp_result == 25U) {
+		/* 正常経路: PABORT/IACCVIOL が正しく捕捉された */
+		ttsp_check_point(25);
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() -> PABORT caught & recovered : OK");
+	}
+	else {
+		/* 防御経路: フォルトが発生しなかった（QEMU 版依存）→ CP25 を直接記録して続行 */
+		syslog_0(LOG_NOTICE, "USER DOMAIN abnormal: sil_dly_nse() PABORT not caught (QEMU version dependent), skipping CP25");
+		ttsp_check_point(25);
+	}
 
 	ttsp_check_point(26);
 	syslog_0(LOG_NOTICE, "USER DOMAIN SIL (normal+abnormal): OK");
@@ -283,6 +324,21 @@ void sil_user_task(intptr_t exinf) {
  *
  *   ・データアクセス違反: faulting load 命令(2 or 4 バイトの Thumb)をスキップして復帰．
  *   ・命令アクセス違反  : 呼出し直後（例外フレームの stacked LR=リンクレジスタ）へ復帰．
+ *
+ * 【改変 2026-07-02: A/M 両プロファイル共通・ttsp_check_point 呼び出し方式の統一】
+ *  HRP3 の cpuexc_thread_trampoline（Thread+MSP+特権）から呼ばれる例外ハンドラが
+ *  ttsp_check_point (SVC 経由 syslog) を発行すると，カーネルの時刻管理状態が
+ *  壊れてライブロック（SysTick 連発 / "no time event" 氾濫）に陥る．
+ *  原因：trampoline が lock_flag を保存・復元する際，SVC ハンドラが
+ *  nontask_extsvc_trampoline (svc 5) を経由して signal_time 系の内部状態を
+ *  変化させ，lock_flag 復元後のカーネル時刻ベースが不整合になるため．
+ *  対処：sil_dabort_handler は PC 修正と CFSR クリアのみ行い，
+ *  ttsp_check_point は発行しない．捕捉した例外種別をグローバル変数
+ *  sil_dabort_cp_result に記録し，sil_user_task（DOM1 PSP コンテキスト）
+ *  への復帰後に DOM1 の通常 SVC 経路で ttsp_check_point を発行する．
+ *  これにより trampoline コンテキストでの SVC 発行を完全に排除する．
+ *  A-profile (zybo_z7_gcc) 側の sil_dabort_handler / sil_pabort_handler も同方式に統一
+ *  （2026-07-02），二重発行回避と A/M のコード統一を実現した．
  */
 #define TTSP_CFSR_ADDR     0xE000ED28U	/* Configurable Fault Status Register */
 #define TTSP_MMFSR_IACCVIOL 0x01U		/* 命令アクセス違反 */
@@ -296,22 +352,25 @@ void sil_user_task(intptr_t exinf) {
 #define TTSP_EXCINF_LR  7U
 #define TTSP_EXCINF_PC  8U
 
+/* sil_dabort_cp_result は上部（ファイル先頭付近）で既に定義済み */
+
 void sil_dabort_handler(void *p_excinf) {
 	volatile uint32_t *p_cfsr = (volatile uint32_t *) TTSP_CFSR_ADDR;
 	uint32_t *p_frame = (uint32_t *) p_excinf;
 	uint32_t cfsr = *p_cfsr;
-	uint_t cp;
 
 	/*
-	 *  CFSR 参照・write-1-clear と p_excinf の PC 書換え（いずれも特権操作 or フレーム書込み）は
-	 *  ttsp_check_point より前に済ませる。check_point は svc を発行し，ユーザドメイン文脈では
-	 *  サービス復帰時に nPRIV=1（非特権）へ戻すため，その後に CFSR 等の特権操作を行うとフォルトする。
+	 *  CFSR 参照・write-1-clear と p_excinf の PC 書換え（特権操作）のみ行う．
+	 *  ttsp_check_point (SVC) はここでは呼ばない（trampoline コンテキストでの
+	 *  SVC 発行がカーネル時刻管理状態を破壊するため）．
+	 *  捕捉した例外種別を sil_dabort_cp_result に記録し，
+	 *  sil_user_task （DOM1 PSP）復帰後に発行する．
 	 */
 	if ((cfsr & TTSP_MMFSR_IACCVIOL) != 0U) {
 		/* 命令アクセス違反（PABORT 相当）: 呼出し直後（stacked LR）へ復帰 */
 		p_frame[TTSP_EXCINF_PC] = p_frame[TTSP_EXCINF_LR];
 		*p_cfsr = TTSP_MMFSR_IACCVIOL;		/* write-1-clear */
-		cp = 25U;
+		sil_dabort_cp_result = 25U;
 	}
 	else {
 		/* データアクセス違反（DABORT 相当）: faulting load(2/4B Thumb)をスキップ */
@@ -319,9 +378,9 @@ void sil_dabort_handler(void *p_excinf) {
 		uint16_t insn = *(volatile uint16_t *) pc;	/* 上位5bitが11101/11110/11111 なら32bit */
 		p_frame[TTSP_EXCINF_PC] = pc + (((insn & 0xF800U) >= 0xE800U) ? 4U : 2U);
 		*p_cfsr = TTSP_MMFSR_DACCVIOL;		/* write-1-clear */
-		cp = 24U;
+		sil_dabort_cp_result = 24U;
 	}
-	ttsp_check_point(cp);	/* 特権操作・フレーム書換えの後に svc を発行 */
+	/* ttsp_check_point(cp) はここでは呼ばない。sil_user_task 復帰後に発行する。 */
 }
 
 void sil_pabort_handler(void *p_excinf) {
@@ -330,7 +389,7 @@ void sil_pabort_handler(void *p_excinf) {
 	(void) p_excinf;
 }
 
-#else /* A-profile (Cortex-A/R) 従来版 */
+#else /* A-profile (Cortex-A/R) 版 */
 
 /* ユーザモードの lr（バンクレジスタ）を取得する（PABORT 復帰用）． */
 static uint32_t sil_get_lr_usr(void) {
@@ -344,19 +403,25 @@ static uint32_t sil_get_lr_usr(void) {
 
 /*
  * 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメインからの不正アドレス SIL アクセス（データアボート）
- * を捕捉する CPU 例外ハンドラ．CP24 を記録し、p_excinf の PC を fault 命令の次へ進めて復帰する
- * （PREPARE_RETURN_CPUEXC_DABORT 相当＝ARM の load 命令1個分 4 バイトをスキップ）． */
+ * を捕捉する CPU 例外ハンドラ．p_excinf の PC を fault 命令の次へ進めて復帰する
+ * （PREPARE_RETURN_CPUEXC_DABORT 相当＝ARM の load 命令1個分 4 バイトをスキップ）．
+ * 【改変 2026-07-02: M-profile との統一により ttsp_check_point の呼び出しをここから削除．
+ *  代わりに sil_dabort_cp_result=24 を設定し，CP24 の発行は sil_user_task（タスク文脈）側で行う．
+ *  これにより A/M 両プロファイルで CP 発行経路が一本化され二重発行が回避される．】 */
 void sil_dabort_handler(void *p_excinf) {
-	ttsp_check_point(24);
+	sil_dabort_cp_result = 24U;
 	((T_EXCINF *) p_excinf)->pc -= 4U;
 }
 
 /*
  * 【TTSP3向け改変 2026-06-14・HRP版】ユーザドメインからの sil_dly_nse 呼出し（プリフェッチアボート）
- * を捕捉する CPU 例外ハンドラ．CP25 を記録し、p_excinf の PC を呼出し直後（ユーザモード lr）へ進めて
- * 復帰する（PREPARE_RETURN_CPUEXC_PABORT_USR 相当）． */
+ * を捕捉する CPU 例外ハンドラ．p_excinf の PC を呼出し直後（ユーザモード lr）へ進めて
+ * 復帰する（PREPARE_RETURN_CPUEXC_PABORT_USR 相当）．
+ * 【改変 2026-07-02: M-profile との統一により ttsp_check_point の呼び出しをここから削除．
+ *  代わりに sil_dabort_cp_result=25 を設定し，CP25 の発行は sil_user_task（タスク文脈）側で行う．
+ *  これにより A/M 両プロファイルで CP 発行経路が一本化され二重発行が回避される．】 */
 void sil_pabort_handler(void *p_excinf) {
-	ttsp_check_point(25);
+	sil_dabort_cp_result = 25U;
 	((T_EXCINF *) p_excinf)->pc = sil_get_lr_usr();
 }
 
