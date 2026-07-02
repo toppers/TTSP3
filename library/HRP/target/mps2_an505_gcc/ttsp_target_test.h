@@ -177,7 +177,10 @@
  *  割込み番号(異常値)
  */
 #define TTSP_INVALID_INTNO 0x1000U	/* ターゲットでサポートしていない割込み番号(TMAX_INTNO=147超) */
-#define TTSP_NOT_SET_INTNO  0x10U	/* 割込み属性が設定されていない割込み番号(INTNO16=SCI8 RXI枠) */
+#define TTSP_NOT_SET_INTNO  0x30U	/* 割込み属性が設定されていない割込み番号(IRQ32・未使用枠)
+									/* 【改変 2026-07-02】旧値 0x10 は本ターゲットでは TINTNO_SIO
+									   (UART)＝CFG_INT 済みのため異常系(*_int_b)が E_OK 化して
+									   不成立(ASP glue と同一)。15/16/40-45 を避けた値に変更 */
 
 /*
  *  割込みハンドラ番号(正常値)

@@ -457,7 +457,7 @@ ttsp_ref_tsk(ID tskid, T_TTSP_RTSK *pk_rtsk)
 	 *  標準形式への変換マクロ／変数を用意する
 	 */
 	pk_rtsk->sstksz = ttsp_target_get_sstksz(p_tcb->p_tinib);
-	pk_rtsk->sstksz = ttsp_target_get_ustksz(p_tcb->p_tinib);
+	pk_rtsk->ustksz = ttsp_target_get_ustksz(p_tcb->p_tinib);	/* 【改変 2026-07-02】sstksz への二重代入(ustksz 未設定)を修正 */
 #else /* USE_TSKINICTXB */
 	pk_rtsk->sstksz = p_tcb->p_tinib->sstksz;
 	pk_rtsk->ustksz = p_tcb->p_tinib->ustksz;

@@ -226,3 +226,41 @@ QEMU で "Unexpected check point" FAIL の代表6件を ek_ra8m2_gcc でビル�
 - 含意: E_TMOUT(~270)は EK で回収されるが、**Unexpected-CP(~500)は大半が EK でも残る真の課題**。
   EK 真 per-case 率の上振れは E_TMOUT 分が主で、Unexpected-CP の回収は限定的(本サンプル 1/6)。
 - 次の実数改善は Unexpected-CP の wait_check_point timeout 群＝タスク間協調の根因調査が対象(per-API・要深掘り)。
+
+---
+
+## ★タイマ停止モード横展開＋glue 修正で PASS 758→1539/1602（96.1%・2026-07-02 確定）
+
+ASP mps2 で確立した対処（タイマ停止モード＝tick 制御の QEMU 成立）を HRP へ横展開。
+
+**カーネル側**：hrp3_3.4.2 の target_timer.c（HRT 部は asp3 版と同一）へ同じ停止モードを適用
+（`docs/patches/hrp3-mps2_an505-target_timer-test-stop-mode.patch`。asp3_tz_work main `0deba8e`
+適用済み・asp3-tz へ `7725223` でマージ済み）。
+**TTSP3 側（カーネル無改変分）**：
+1. `TTSP_NOT_SET_INTNO` 0x10→0x30（ASP と同一のコピー痕＝SIO の CFG_INT 済み番号だった）
+2. `sstk` アクセサの stk_top/stk_bottom 取り違え修正（ASP と同一バグ）
+3. **共有 test lib の実バグ修正**：`library/HRP/test/ttsp_test_lib.c` の ref_tsk 検査で
+   `pk_rtsk->sstksz` に二重代入（`ustksz` 未設定）→ USE_TSKINICTXB ターゲット全般に影響していた
+
+### 結果（per-case 全 1602・厳密判定＝`All check points passed` マーカ必須）
+
+| 区分 | 旧（06-21） | 今回 |
+|---|---|---|
+| **PASS** | 758（47.3%） | **1539（96.1%）** |
+| BUILD-FAIL | ≈406 | **1**（ATT_PMA/DDR＝8リージョン MPU 非対応。exclude 候補） |
+| 実行 FAIL | ≈438 | **62** |
+
+**check_library timer も初の All passed**（従来「M-profile 構造的制約」→ 実は tick 制御不全）。
+SIL（CP1-27）・int check は緑維持。
+
+### 残 62 件の内訳（切り分け済み）
+| クラスタ | 件数 | 性格 |
+|---|---|---|
+| **E_OACV（`_H_ex`＝他ドメイン変種）** | 47 | 構造的（テスト側 ACL 前提差＝`sysstat2_acvct`。`docs/HRP/BB_UNREACHABLE.md` §1 の既知） |
+| ter_tsk_f 複合（Unexpected CP 0） | 8 | 要精査 |
+| **INIRTN/TERRTN 文脈ハング** | 4 | ATT_INI_c/ATT_TER_c/sns_ker_a/sns_ker_b。INIRTN の最初の OK 以降で停止（決定的）。※エージェント集計では PASS 誤分類されていた分＝親検算で確定 |
+| QEMU タイミング（sta_alm lefttim・act_tsk_d） | 2 | アーティファクト疑い |
+| cal_svc_H-c（MemManage） | 1 | MPU 系 |
+
+旧「BUILD-FAIL ≈406＝8リージョン MPU 制約（構造的・回収不能）」は**過大評価だった**
+（現行カーネル＋glue では 1 件に収束）。データ：/tmp/hrpfix_results.tsv。

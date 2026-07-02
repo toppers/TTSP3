@@ -19,7 +19,7 @@
 | ASP | nucleo_f401re_gcc | 実機（M4） | 1 | true | local | 実CPU例外 | 実機 | Cortex-M4 |
 | ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ ✗exc/✅int/✅timer（要タイマ停止モードパッチ・注B） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/asp3_tz_work/asp3_3.7`（**main ベースライン**・注B）。per-case **1813/1813 PASS（100%・要パッチ＋glue修正）**／素 1293。SIL All passed（`MPS2_API_STATUS.md`） |
 | ASP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | **Cortex-M85**。SIL 実機 All passed（非タスク文脈 wait_raise_int はスキップ・`d529a51`） |
-| HRP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ **int のみ**（exc/timer＝M-profile 制約・`exclude_tests.txt`） | Cortex-M33＋MPU（**8リージョン＝1ドメイン最大5**が構造的上限）。per-case 758/1602 PASS（`MPS2_API_STATUS.md`）。`ttsp_check_point` に M-profile 分岐（`TTSP_SILLOC_NO_SVC`） |
+| HRP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ ✗exc／✅int／✅timer（要タイマ停止モードパッチ） | Cortex-M33＋MPU（8リージョン＝1ドメイン最大5）。per-case **1539/1602 PASS（96.1%・要パッチ＋glue修正）**／旧 758（`MPS2_API_STATUS.md`）。`ttsp_check_point` に M-profile 分岐（`TTSP_SILLOC_NO_SVC`） |
 | HRP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | Cortex-M85＋MPU。**SIL 実機 All passed（CP1-27）**＝M2 保護機構の実機実証。台帳 `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 | HRMP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` `-smp 2` | 2 | true | combination | 実CPU例外 | ❓ | 保護＋マルチコア。a9gtimer。後回し方針 |
 | HRP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ❓ | 保護・単一コア。syssvc が TECS化（`docs/HRP/COVERAGE_STATUS.md`）。API並列ドライバ未対応 |
