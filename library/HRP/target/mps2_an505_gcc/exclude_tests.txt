@@ -44,3 +44,8 @@ sys_manage/twd_som
 # 例外番号にターゲット非依存の TTSP_EXCNO_* を用いるため通常は影響しないが，もし
 # EXCNO_DABORT/EXCNO_PABORT を直接参照するテストがあればここへ追記する。
 # ============================================================================
+#
+# --- ATT_PMA（物理メモリ領域）: MPU(PMSAv8) はアドレス変換を持たず原理的に非対応 ---
+# out.cfg 生成で「E_NOSPT: ATT_PMA is not supported on this target」となり BUILD-FAIL。
+# zcu102_r5_gcc と同根（docs/STATUS.md 注7）。【追加 2026-07-02】
+sample/hrp_parameter

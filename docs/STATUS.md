@@ -42,7 +42,7 @@
 |---|---|---|---|---|---|---|
 | ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ✅ **1813/1813 PASS（100%）**＝タイマ停止モードパッチ（80f9b7a 適用済）＋glue 修正 2 件（素カーネル・旧 glue は 1293/1813・注10） | ⚠ int=✅ CP1-12／timer=✅（要パッチ・注13）／exc=ビルド不可（注13） | 2026-07-02 実測 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
-| HRP | mps2_an505_gcc（M33/QEMU） | ✅ **All passed（CP1-27・QEMU）**（2026-07-02 実測・注12） | ⚠ **1539/1602 PASS（96.1%）**＝タイマ停止モードパッチ（0deba8e）＋glue/test lib 修正（旧 758/1602・注11） | ⚠ int ✅／**timer ✅（要パッチ・初緑）**／exc＝M-profile 制約で除外 | 2026-07-02 実測 | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| HRP | mps2_an505_gcc（M33/QEMU） | ✅ **All passed（CP1-27・QEMU）**（2026-07-02 実測・注12） | ⚠ **1544/1601 PASS（96.4%）**＝タイマ停止モード（0deba8e）＋r4 復元パッチ＋glue/test lib 修正＋ATT_PMA 除外（旧 758/1602・注11） | ⚠ int ✅／**timer ✅（要パッチ・初緑）**／exc＝M-profile 制約で除外 | 2026-07-02 実測 | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）**※out.c 改修後は要実機再測（注12） | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 
 - **注10（ASP mps2・2026-07-02 A2 切り分けで確定）**：素のカーネルでの FAIL（520）は
@@ -62,8 +62,12 @@
   **PASS 758→1539/1602（96.1%）・BUILD-FAIL ≈406→1**。旧解釈（8リージョン MPU 構造的 ≈406・
   MSTKERR 系・E_TMOUT アーティファクト）の大半は tick 制御不全等の間接症状で、現行カーネル＋
   glue では解消。残 62＝E_OACV 47（`_H_ex` ACL 前提差＝構造的・`docs/HRP/BB_UNREACHABLE.md` §1）
-  ＋ter_tsk_f 複合 8＋INIRTN/TERRTN 文脈ハング 4＋タイミング 2＋MPU 1。BUILD-FAIL 1＝ATT_PMA
-  （exclude 候補）。詳細は台帳 `MPS2_API_STATUS.md` 末尾。
+  ＋CP0 9（E_OACV 下流）＋MPU 1。**INIRTN/TERRTN ハング4＋lefttim 1 は
+  nontask_extsvc_trampoline の r4 破壊（カーネルポートバグ）と判明し
+  `docs/patches/hrp3-arm_m-nontask-extsvc-r4-restore.patch` で解消**（1544/1601＝96.4%）。
+  E_OACV/CP0 56 件は **zybo per-case でも同一失敗＝アーキ非依存のスイート課題**
+  （TTG の SAC_SYS/ACL 生成。zybo 20 分割はバンドル合成 cfg で偶然隠れる）。
+  ATT_PMA は exclude_tests.txt へ追加（zcu102 と同根）。詳細は台帳 `MPS2_API_STATUS.md` 末尾。
 - **注12（HRP mps2 SIL・2026-07-02 完走）**：EK で入った M2 修正の波及＋`sil_test/HRP/out.c` の
   修正で CP1-8（06-20）→ **CP1-27 All passed（QEMU）**。当初の DABORT 後ハングの根因は
   「QEMU がフォールトしない」ではなく（**DACCVIOL/IACCVIOL とも QEMU 11 で正しく発生する**）、

@@ -264,3 +264,39 @@ SIL（CP1-27）・int check は緑維持。
 
 旧「BUILD-FAIL ≈406＝8リージョン MPU 制約（構造的・回収不能）」は**過大評価だった**
 （現行カーネル＋glue では 1 件に収束）。データ：/tmp/hrpfix_results.tsv。
+
+---
+
+## ★残 62 件の追撃完了 — PASS 1544/1601（96.4%・2026-07-02 確定）
+
+### 切り分け（zybo per-case 比較＋個別デバッグ）
+| クラスタ | 件数 | 判定 |
+|---|---|---|
+| E_OACV（`_H_ex`）＋CP0（check_point(0)） | 56 | **アーキ非依存**（zybo per-case でも同一行・同一メッセージで FAIL）＝**スイート課題**（下記） |
+| INIRTN/TERRTN ハング | 4 | mps2 固有＝**カーネルポートバグ**（下記 r4 復元で解消） |
+| sta_alm_g_ai の lefttim 異常値 | 1 | 同上（r4 破壊の別症状と判明＝アラームハンドラ文脈の cal_svc） |
+| cal_svc_H-c（MPU/STKERR） | 1 | mps2 固有・未解決（M-profile MPU 系） |
+| ATT_PMA BUILD-FAIL | 1 | 構造的（MPU はアドレス変換なし）→ `exclude_tests.txt` に追加（zcu102 と同根） |
+
+### カーネルポートバグ：nontask_extsvc_trampoline の r4 破壊
+非タスク文脈（INIRTN/TERRTN/ハンドラ）からの拡張サービスコール復帰時、svc #5 の例外復帰が
+HW フレームしか復元せず、**呼出し元の r4（callee-saved）が blk ポインタのまま残る**。
+INIRTN では syslog_wri_log 戻り値チェックの比較レジスタが壊れ `TOPPERS_assert_abort`
+（e7fe 自己ループ）でハング、アラームハンドラ文脈では lefttim 比較値が壊れて誤 FAIL。
+修正＝`blk[16]`（par5＝発行元 r4）を svc #5 直前に復元する 1 命令
+（`docs/patches/hrp3-arm_m-nontask-extsvc-r4-restore.patch`）。
+SIL が無事だった理由＝syslog 等のカーネルサービス（fncd<=0）は非トランポリン経路で r4 不破壊。
+
+### スイート課題（E_OACV 47＋CP0 9＝56 件・後続作業）
+TTG 生成 cfg の `SAC_SYS`/sysstat2 ACL がユーザドメインからの `sus_tsk`/`ter_tsk`/`psnd_dtq` 等を
+許可せず E_OACV（CP0 はその下流）。**zybo でも per-case では同一失敗**＝mps2 固有でない。
+zybo の 20 分割が緑なのは、バンドル合成 cfg で ACL が偶然緩むため（per-case が穴を暴露）。
+対処は TESRY/TTG 側（DIVERGENCE_MAP の 2026-06-09 SAC_SYS 対応の per-case への波及確認・
+`_H_ex` yaml の横展開）＝ mps2 のブロッカーではない。
+
+### 到達点
+| 指標 | 値 |
+|---|---|
+| **per-case** | **1544/1601 PASS（96.4%）**・BUILD-FAIL 0・回帰 0 |
+| 残 57 | スイート課題 56（アーキ非依存）＋ MPU 系 1（cal_svc_H-c） |
+| 前提 | hrp3_3.4.2@main ＋ タイマ停止モード（0deba8e 適用済）＋ **r4 復元パッチ（asp3_tz_work へ適用待ち）** ＋ glue/test lib 修正 |

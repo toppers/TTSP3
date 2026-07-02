@@ -338,6 +338,8 @@ cat /dev/ttyACM0
   stop_tick の凍結が raise_event/set_event の SysTick 再起動で解除され、`_ten` 系 api_test
   （約500件）と timer check が落ちる。`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`
   をカーネル（`asp3_3.7/`）に適用してから測定する（適用で per-case 1807/1813・回帰 0）。
+  HRP は同 hrp3 版＋ **r4 復元パッチ**（`hrp3-arm_m-nontask-extsvc-r4-restore.patch`＝非タスク文脈
+  拡張 SVC の r4 破壊修正）も必要（適用で 1544/1601）。
 - **asp3_tz_work の checkout ブランチに注意**：測定ベースラインは **main**（`1d2ba24`）。checkout が
   TZ 開発ブランチ `asp3-tz` のままだと asp3_3.7 に開発中変更（tz_gateway/ns_demo 等）が入り、
   ビルドは通っても **QEMU でブート後に無出力**になる（例外も発生しない）。checkout を動かさずに

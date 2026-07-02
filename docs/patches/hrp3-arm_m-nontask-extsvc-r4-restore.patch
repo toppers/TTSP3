@@ -1,0 +1,40 @@
+# hrp3_3.4.2 (asp3_tz_work) arm_m: nontask_extsvc_trampoline の r4 破壊を修正
+#
+# 症状: INIRTN/TERRTN（非タスク文脈）から拡張サービスコール（cal_svc・fncd>0）を
+#   発行すると、復帰後に呼出し元の r4（callee-saved）が blk ポインタで上書きされた
+#   ままになる。svc #5 の例外復帰は HW フレーム（r0-r3,r12,lr,pc,xpsr）しか復元しない。
+#   TTSP3 api_test では INIRTN 内 cal_svc(TTSP_FN_CHECK_POINT) 後の
+#   syslog_wri_log 戻り値チェック（r4 と比較）が誤判定→ TOPPERS_assert_abort の
+#   e7fe 自己ループでハング（ATT_INI_c/ATT_TER_c/sns_ker_a/sns_ker_b の4件）。
+# 修正: svc #5 の直前に blk[16]（par5＝発行元が svc 発行時に r4 に置いていた値）を
+#   r4 へ復元する 1 命令を追加。
+# 検証（2026-07-02・QEMU mps2-an505）: 4件とも All check points passed 化・
+#   SIL(CP1-27) 維持。カーネルサービスコール経路（fncd<=0）は非該当のため不変。
+# 備考: SIL がハングしなかったのは syslog_wri_log（fncd<=0＝カーネルサービス）が
+#   svc_handler_nontask 直接実行経路で r4 を壊さないため。
+# 適用先: ~/TOPPERS/asp3_tz_work（main）の hrp3_3.4.2/。
+#   cd hrp3_3.4.2 && patch -p1 < このファイル
+--- a/arch/arm_m_gcc/common/core_support.S
++++ b/arch/arm_m_gcc/common/core_support.S
+@@ -742,7 +742,12 @@
+ 	ATHUMB(nontask_extsvc_trampoline)
+ ALABEL(nontask_extsvc_trampoline)
+ 	/* スレッドモード(MSP), 特権, r0=blk．svc_dispatch は r4-r11 を保存するので
+-	 * blk を r4 に置く（発行元の r4 は発行元が自スタックに退避済＝衝突しない）． */
++	 * blk を r4 に置く．
++	 * 【M6修正】svc #5 の例外復帰では r4 が HW により復元されないため，
++	 * svc_dispatch 後に blk[16](par5) を r4 へ戻す（発行元が svc 発行直前に
++	 * par5 として r4 に置いた値を復元する）．これを怠ると，発行元の r4 が
++	 * blk ポインタで上書きされ，svc 発行後の処理で誤った比較・判定が生じる
++	 * （INIRTN 内の syslog_wri_log 戻り値チェックで e7fe 無限ループに陥る）． */
+ 	mov    r4, r0				/* r4 = blk */
+ 	ldr    r1, [r4, #16]		/* par5 */
+ 	ldr    r2, [r4, #20]		/* fncd */
+@@ -754,6 +759,7 @@
+ 	bl     svc_dispatch			/* r0 = 拡張サービスコールの返り値 */
+ 	add    sp, sp, #8
+ 	mov    r1, r4				/* r1 = blk */
++	ldr    r4, [r1, #16]		/* 【M6】r4 を par5（発行元の r4）へ復元 */
+ 	svc    #5					/* 発行元文脈へ復帰（r0=返り値, r1=blk） */
+ 
+ /*
