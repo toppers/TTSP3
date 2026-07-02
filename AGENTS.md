@@ -74,7 +74,7 @@ TTSP3はMakefileベース。`configure.sh` で対象を設定し、`ttb.sh` の�
 # 2) メニュー実行
 ./ttb.sh
 #   1: API Tests
-#   2: SIL Tests        ※TTSP3では未サポート（user.txt (3.2)。sil_test/ は空）
+#   2: SIL Tests        ※第3世代対応済（sil_test/<PROF>/。docs/SIL_TEST.md・scripts/ci_run_sil.sh）
 #   c: Check the Functions for Target Dependent（例外/割込み/タイマ）
 #   k: Kernel Library   ※TTSP3では未サポート（user.txt (10)）
 ```
@@ -84,8 +84,8 @@ TTSP3はMakefileベース。`configure.sh` で対象を設定し、`ttb.sh` の�
 QEMU（`xilinx-zynq-a9`）でハードなし実行できる。結果は `execute.log` に出る。CIはこれを使う。
 
 ### 検証の鉄則
-- テスト実行は次の順：**ターゲット依存チェック → API**
-  （SILテスト・Kernel LibraryはTTSP3未サポートのため対象外。第1/2世代TTSPの機能でTTSP3 R3.1.0には含まれない）
+- テスト実行は次の順：**ターゲット依存チェック → API → SIL**
+  （SILは第3世代対応済＝`scripts/ci_run_sil.sh`（4プロファイル・zybo/QEMU）。実機 ek_ra8m2 でも HRP SIL 合格。Kernel LibraryのみTTSP3未サポートのまま＝第1/2世代TTSPの機能でR3.1.0には含まれない）
 - 「通るはず」で報告しない。`execute.log` の合否（`OK`／チェックポイント）を根拠にする
 
 ---

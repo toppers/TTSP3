@@ -56,6 +56,23 @@ TTSP3本体ベース：Release 3.1.0（統合仕様書 3.4.0 準拠）
 
 > 更新時：版を改訂 → `DIVERGENCE_MAP.md` A表で差分を洗う → 緑に戻す。
 
+## M-profile 系カーネル（第2ワークスペース管理・`~/TOPPERS/ttsp3`）
+
+以下のカーネルは本ワークスペース（`~/TOPPERS/TTSP3/work/`）の兄弟 SVN とは**別管理**で、
+第2ワークスペース（`~/TOPPERS/ttsp3`）の兄弟ディレクトリ `~/TOPPERS/ASP3_TZ/asp3_tz_work/` に置かれる。
+
+| カーネル | パス | 系列 | 改変状態 | 使用ターゲット |
+|---|---|---|---|---|
+| ASP3 3.7 系 | `ASP3_TZ/asp3_tz_work/asp3_3.7/` | ASP3 3.7 | **無改変**（mps2 per-case 測定はカーネル無改変で実施） | mps2_an505_gcc（ASP / QEMU）、ek_ra8m2_gcc（ASP / 実機・SIL） |
+| HRP3 3.4.2 系 + overlay `cw_hrp3_ra8m2` | `ASP3_TZ/asp3_tz_work/hrp3_3.4.2/` | HRP3 3.4.2 | **M-profile 向け修正あり**（rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc nPRIV 分岐等）。EK-RA8M2 の M2 メモリ保護有効化に対応 | mps2_an505_gcc（HRP / QEMU）、ek_ra8m2_gcc（HRP / 実機） |
+
+> 正確なリビジョン・パッチ詳細は各台帳を参照：
+> - `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md`（ASP mps2 per-case 全件結果）
+> - `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md`（HRP mps2 per-case 結果）
+> - `docs/HRP/EK_RA8M2_TTSP3_STATUS.md`（EK-RA8M2 実機 SIL/API 結果・hrp3_3.4.2 改変内容詳細）
+>
+> これらのカーネルは本リポジトリにコミットしない（禁則①）。版の詳細は各台帳参照。
+
 ## FMP3 改変パッチ（カバレッジ計測専用・通常ビルド非適用）
 
 通常ビルド・CI（`ci_run_fmp.sh`）は **無改変の `exshonda/fmp3@223ed7e`** で緑（PASS=182/0）。

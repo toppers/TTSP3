@@ -105,3 +105,51 @@ cat ttsp3/UPSTREAM_KERNEL.md   # 想定バージョンと一致するか
 2. `UPSTREAM_KERNEL.md` のバージョン/リビジョンを更新
 3. ビルド・テストを再実行し、差分による破綻を `DIVERGENCE_MAP.md` に記録
 4. テストを緑に戻す
+
+---
+
+## 第2ワークスペース（M-profile 系・`~/TOPPERS/ttsp3`）
+
+本リポジトリの git clone は**2つ**存在し、役割を分担している。
+
+| ワークスペース | パス | 担当 |
+|---|---|---|
+| 本ワークスペース（A-profile 系） | `~/TOPPERS/TTSP3/work/ttsp3` | zybo_z7_gcc（Cortex-A9 / QEMU）を正とする A-profile 系計測。兄弟に SVN カーネル（asp3/fmp3/hrp3/hrmp3） |
+| 第2ワークスペース（M-profile 系） | `~/TOPPERS/ttsp3` | mps2_an505_gcc（Cortex-M33 / QEMU）・ek_ra8m2_gcc（Cortex-M85 / 実機）の M-profile 系計測 |
+
+両者は同一 origin を共有する（`git remote -v` で確認可）。ブランチ・コミット履歴は共通であり、ターゲット依存部（`library/*/target/*`）の変更は一方でコミットすれば他方に反映される。
+
+### 第2ワークスペースのディレクトリ構成
+
+```
+~/TOPPERS/
+├── ttsp3/                          ← 第2ワークスペース（git clone。本リポジトリ）
+└── ASP3_TZ/
+    └── asp3_tz_work/               ← M-profile 系カーネル群（本ワークスペースの兄弟 SVN とは別管理）
+        ├── asp3_3.7/               ← ASP3 3.7 系（mps2_an505 per-case 測定では無改変で使用）
+        └── hrp3_3.4.2/             ← HRP3 3.4.2 系（EK-RA8M2 向け M-profile 修正を含む）
+            └── (overlay: cw_hrp3_ra8m2)  ← rundom 設定・拡張SVC rundom 退避/復元・within_ustack 等
+```
+
+`configure.sh` の `OS_PATH` は第2ワークスペースでは兄弟ではなく `../ASP3_TZ/asp3_tz_work/<kernel>/` を指す。
+ビルドコマンドの例（第2ワークスペースで実行）：
+
+```bash
+cd ~/TOPPERS/ttsp3
+export TTSP_TARGET_NAME=mps2_an505_gcc
+bash ttb.sh ../ASP3_TZ/asp3_tz_work/asp3_3.7 ASP obj_mps2_an505
+```
+
+### 各カーネルの状態とターゲット
+
+| カーネル | 改変状態 | 使用ターゲット | 結果台帳 |
+|---|---|---|---|
+| `asp3_3.7` | **無改変**（本ワークスペースの ASP3 3.7.2 と同系） | mps2_an505_gcc（ASP / QEMU）、ek_ra8m2_gcc（ASP / 実機・SIL） | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| `hrp3_3.4.2`（+overlay `cw_hrp3_ra8m2`） | **M-profile 向け修正あり**（rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc nPRIV 分岐等） | mps2_an505_gcc（HRP / QEMU）、ek_ra8m2_gcc（HRP / 実機） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md`、`docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
+
+### 計測環境
+
+- `mps2_an505_gcc`：QEMU `qemu-system-arm -M mps2-an505 -semihosting-config enable=on`（a9gtimer パッチ不要）
+- `ek_ra8m2_gcc`：実機（J-Link OB・VCOM /dev/ttyACM0・115200 bps）。**本ワークスペース単独では測定不可**（第2ワークスペース＋実機接続が必要）
+
+M-profile 系の測定結果概要は `docs/STATUS.md` §1b を参照。
