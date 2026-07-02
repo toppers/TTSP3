@@ -40,7 +40,7 @@
 
 | Profile | Target | SIL | API（per-case 全件） | check_library | 最終確認 | 出典 |
 |---|---|---|---|---|---|---|
-| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ✅ **1807/1813 PASS（99.7%）**＝タイマ停止モードパッチ適用時（素は 1293/1813・注10） | ⚠ int=✅ CP1-12／timer=✅（要パッチ・注13）／exc=ビルド不可（注13） | 2026-07-02 実測 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ✅ **1813/1813 PASS（100%）**＝タイマ停止モードパッチ（80f9b7a 適用済）＋glue 修正 2 件（素カーネル・旧 glue は 1293/1813・注10） | ⚠ int=✅ CP1-12／timer=✅（要パッチ・注13）／exc=ビルド不可（注13） | 2026-07-02 実測 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
 | HRP | mps2_an505_gcc（M33/QEMU） | ✅ **All passed（CP1-27・QEMU）**（2026-07-02 実測・注12） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-07-02（SIL）/06-21（API） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）**※out.c 改修後は要実機再測（注12） | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
@@ -52,8 +52,9 @@
   raise_event/set_event が停止中でも SysTick を再起動して凍結が解除されること。
   **テスト用時刻停止モードのパッチ**（`docs/patches/asp3-mps2_an505-target_timer-test-stop-mode.patch`）
   で **PASS 1293→1807/1813（99.7%）・UNEXPECTED_CP 334→0・E_TMOUT 49→0・回帰 0**。
-  残 6＝interrupt 異常系 5（不正 intno が NVIC では有効→E_OK。FMP linux_gcc 既知残と同型）＋
-  CRE_TSK stk 検査 1（USE_TSKINICTXB）＝ターゲット特性。**実 conformance ＝ 99.7%**。
+  残 6 も glue 修正 2 件で回収し **1813/1813（100%）**：interrupt 異常系 5＝`TTSP_NOT_SET_INTNO`
+  が SIO の CFG_INT 済み番号だった→未設定番号 0x30 へ／CRE_TSK stk 1＝stk_top/stk_bottom の
+  取り違え→修正（ek_ra8m2 ASP glue も同時修正）。**api_test per-case は完全グリーン・残課題なし**。
   旧解釈（Unexpected-CP＝バンドル方法論・E_TMOUT＝QEMU 遅延アーティファクト）は本ターゲットでは
   tick 不全の症状だったと訂正（台帳 `MPS2_API_STATUS.md` 末尾参照）。
   パッチは **asp3_tz_work main へ適用済み**（`80f9b7a`・2026-07-02。main を取得すれば patch 不要）。

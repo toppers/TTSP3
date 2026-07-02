@@ -190,7 +190,12 @@
  *  割込み番号(異常値)
  */
 #define TTSP_INVALID_INTNO 0x1000U	/* ターゲットでサポートしていない割込み番号(TMAX_INTNO=147超) */
-#define TTSP_NOT_SET_INTNO  0x10U	/* 割込み属性が設定されていない割込み番号(INTNO16=SCI8 RXI枠) */
+#define TTSP_NOT_SET_INTNO  0x30U	/* 割込み属性が設定されていない割込み番号(IRQ32・未使用枠)
+									/* 【改変 2026-07-02】旧値 0x10(INTNO16) は本ターゲットでは
+									   TINTNO_SIO(UART)＝CFG_INT 済みのため clr_int 等が E_OK と
+									   なり異常系テスト(*_int_b)が不成立だった(ek_ra8m2 の
+									   SCI8 枠のコピー痕)。テストが CFG_INT し得る番号
+									   (15=TIMER/16=SIO/40-45=TTSP_INTNO_A-F)を避けた値に変更 */
 
 /*
  *  割込みハンドラ番号(正常値)

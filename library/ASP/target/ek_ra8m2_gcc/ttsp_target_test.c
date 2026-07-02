@@ -95,23 +95,32 @@ TTSP_DEFINE_VAR_SECTION(STK_T, ttg_ustack[TTG_DOMAIN_NUM][TTG_STACK_NUM][COUNT_S
  *  ref_tsk 標準形式（先頭番地＋サイズ）を要求するため，TSKINICTXB から
  *  標準形式へ変換する以下のアクセサを提供する。
  *
- *  ・システムスタック先頭番地 = stk_bottom，サイズ = stk_top - stk_bottom
+ *  ・システムスタック先頭番地 = stk_top，サイズ = stk_bottom - stk_top
  *  ・ユーザスタック先頭番地 = ustk，サイズ = ustksz
  *  （A-profile ターゲット（zybo 等）は USE_TSKINICTXB 未定義のため本アクセサ不要。）
  */
 #ifdef USE_TSKINICTXB
 
+/*
+ *  【改変 2026-07-02】stk_top/stk_bottom の取り違えを修正。
+ *  arm_m カーネルの実使用（core_kernel_impl.h: activate_context が
+ *  初期 SP = tskinictxb.stk_bottom - 8）とコンフィギュレータ生成
+ *  （TSKINICTXB = { stk = 先頭番地, stk + stksz = 末尾番地 } の順）より，
+ *  stk_top＝スタック領域の先頭番地（低位）・stk_bottom＝末尾番地（高位）。
+ *  旧実装は逆に解釈しており，ref_tsk 検査で stk が末尾番地・stksz が負値
+ *  （巨大 size_t）になっていた（CRE_TSK_h_1 の stk 一致検査 FAIL の根因）。
+ */
 size_t
 ttsp_target_get_stksz(const TINIB *p_tinib)
 {
-	return ((size_t)((char *) p_tinib->tskinictxb.stk_top
-					 - (char *) p_tinib->tskinictxb.stk_bottom));
+	return ((size_t)((char *) p_tinib->tskinictxb.stk_bottom
+					 - (char *) p_tinib->tskinictxb.stk_top));
 }
 
 void *
 ttsp_target_get_stk(const TINIB *p_tinib)
 {
-	return ((void *) p_tinib->tskinictxb.stk_bottom);
+	return ((void *) p_tinib->tskinictxb.stk_top);
 }
 
 #endif /* USE_TSKINICTXB */

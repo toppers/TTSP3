@@ -125,3 +125,26 @@ initialize は時刻継続で再開。**check_library timer が All check points
 
 **実 conformance ＝ 1807/1813（99.7%）**（残 6 はターゲット特性でありカーネル不適合ではない）。
 再現データ：/tmp/a2_results.tsv（素）・/tmp/a2fix_results.tsv（パッチ後）・/tmp/a2_zybo_compare.tsv（zybo 比較）。
+
+---
+
+## ★残 6 件も回収 — per-case 全件 1813/1813 PASS（100%・2026-07-02 確定）
+
+タイマ停止モード後の残 6 件を glue 修正 2 件（カーネル無改変）で全回収。**回帰 0**（1807 全維持）。
+SIL・check_library int も緑のまま（glue 変更後に再確認済み）。
+
+1. **interrupt 異常系 5 件（clr/dis/ena/ras/prb_int_b）**：`TTSP_NOT_SET_INTNO=0x10` が本ターゲット
+   では **TINTNO_SIO（UART）＝CFG_INT 済み番号**で E_OBJ にならなかった（ek_ra8m2 の SCI8 枠の
+   コピー痕）。テストバイナリが CFG_INT し得る番号（15=TIMER/16=SIO/40-45=TTSP_INTNO_A-F）を
+   避けた **0x30（IRQ32）** に変更（`ttsp_target_test.h`）。
+2. **CRE_TSK_h_1（stk 検査）**：glue の `ttsp_target_get_stk/get_stksz` が TSKINICTXB の
+   `stk_top/stk_bottom` を**逆に解釈**（stk が末尾番地・stksz が負値化）。カーネル実使用
+   （activate_context: 初期 SP=`stk_bottom-8`）と生成 cfg（`{先頭, 先頭+size}`）より
+   top=先頭・bottom=末尾が正。フィールド入替えで修正（`ttsp_target_test.c`。
+   **ek_ra8m2 の ASP glue にも同一バグ→同時修正**）。
+
+| 到達点 | 値 |
+|---|---|
+| **per-case 全件** | **1813/1813 PASS（100%）** |
+| 前提 | asp3_3.7@main ＋ タイマ停止モードパッチ（asp3_tz_work `80f9b7a` 適用済み）＋本 glue 修正 |
+| 残課題 | なし（api_test per-case は完全グリーン） |
