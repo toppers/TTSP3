@@ -19,7 +19,7 @@ TTSP3は、TOPPERS第3世代カーネル（ASP3 / FMP3 / HRP3 / HRMP3）の **AP
 | ベース | TTSP3 Release 3.1.0（2020-03-23、統合仕様書 **3.4.0** 準拠） |
 | 管理 | **GitHub（git）のみ**。従来のSVNから移行し、以後SVNは使わない（`docs/MIGRATION.md`） |
 | 当面の目標 | git管理下で、標準ASP3 **3.7.2** + `zybo_z7_gcc` でテストを緑にする |
-| 次段階 | asp3_core（CMake版）対応：ターゲット依存部 mps2_an521 / pico(M33) / host 追加 |
+| 次段階 | asp3_core（CMake版）対応：ターゲット依存部 mps2_an521 / pico(M33) / host 追加。※M-profile の先行実績として **mps2_an505（M33/QEMU）・ek_ra8m2（M85/実機）は追加済**（`docs/STATUS.md` §1b・被テストカーネルは第2ワークスペース＝`docs/WORKSPACE.md`） |
 | 被テストカーネル | **ASP3 / FMP3 / HRP3 / HRMP3（いずれもSVN・別管理）**。本リポジトリには含めず兄弟ディレクトリに置く（§3） |
 | ライセンス | TTSP3ライセンス（NCES名大／FUJI SOFT 他）。改変時は改変明記が条件 |
 
@@ -117,8 +117,10 @@ TTSP3 R3.1.0 は統合仕様書 **3.4.0** 準拠、被テストの標準ASP3は 
 | `ttsp_target.sh` | `USE_QEMU`、`FUNC_TIME/INTERRUPT/EXCEPTION`、`KERNEL_COBJS_TARGET` 等 |
 | `ttsp_target.cfg` | テスト用ターゲットcfg |
 
-現状の参照：`zybo_z7_gcc`（A9）、`lpc55s69evk_gcc`（**Cortex-M33**）、`nucleo_f401re_gcc`（M4）。
-後段の asp3_core M33ターゲットは **`lpc55s69evk_gcc` を雛形**にする。
+現状の参照：`zybo_z7_gcc`（A9）、`mps2_an505_gcc`（**Cortex-M33/QEMU**・SIL/API実績あり）、
+`ek_ra8m2_gcc`（**Cortex-M85/実機**）、`lpc55s69evk_gcc`（M33/実機）、`nucleo_f401re_gcc`（M4）。
+後段の asp3_core M33ターゲットは **`mps2_an505_gcc` を雛形**にする（QEMU 実行可・SIL/API 実績あり。
+`lpc55s69evk_gcc` は実機前提の旧雛形）。能力マトリクスは `docs/TARGETS.md`。
 
 ---
 

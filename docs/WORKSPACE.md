@@ -108,36 +108,36 @@ cat ttsp3/UPSTREAM_KERNEL.md   # 想定バージョンと一致するか
 
 ---
 
-## 第2ワークスペース（M-profile 系・`~/TOPPERS/ttsp3`）
+## 第2ワークスペース（M-profile 系・`~/TOPPERS/asp3_tz_work/`）
 
-本リポジトリの git clone は**2つ**存在し、役割を分担している。
-
-| ワークスペース | パス | 担当 |
-|---|---|---|
-| 本ワークスペース（A-profile 系） | `~/TOPPERS/TTSP3/work/ttsp3` | zybo_z7_gcc（Cortex-A9 / QEMU）を正とする A-profile 系計測。兄弟に SVN カーネル（asp3/fmp3/hrp3/hrmp3） |
-| 第2ワークスペース（M-profile 系） | `~/TOPPERS/ttsp3` | mps2_an505_gcc（Cortex-M33 / QEMU）・ek_ra8m2_gcc（Cortex-M85 / 実機）の M-profile 系計測 |
-
-両者は同一 origin を共有する（`git remote -v` で確認可）。ブランチ・コミット履歴は共通であり、ターゲット依存部（`library/*/target/*`）の変更は一方でコミットすれば他方に反映される。
-
-### 第2ワークスペースのディレクトリ構成
+M-profile 系（mps2_an505/ek_ra8m2）の被テストカーネルは、兄弟 SVN とは別の
+**git リポジトリ `~/TOPPERS/asp3_tz_work/`**（`exshonda/asp3_tz_work`。EK-RA8M2 移植の
+作業リポジトリ・README/STATUS あり）の中に置かれている。
 
 ```
 ~/TOPPERS/
-├── ttsp3/                          ← 第2ワークスペース（git clone。本リポジトリ）
-└── ASP3_TZ/
-    └── asp3_tz_work/               ← M-profile 系カーネル群（本ワークスペースの兄弟 SVN とは別管理）
-        ├── asp3_3.7/               ← ASP3 3.7 系（mps2_an505 per-case 測定では無改変で使用）
-        └── hrp3_3.4.2/             ← HRP3 3.4.2 系（EK-RA8M2 向け M-profile 修正を含む）
-            └── (overlay: cw_hrp3_ra8m2)  ← rundom 設定・拡張SVC rundom 退避/復元・within_ustack 等
+├── TTSP3/work/ttsp3/               ← 本ワークスペース（A-profile 系＝zybo/QEMU。兄弟に SVN カーネル）
+└── asp3_tz_work/                   ← M-profile 系カーネル群（git repo・別管理）
+    ├── asp3_3.7/                   ← ASP3 3.7 系（mps2_an505 per-case 測定では無改変で使用）
+    ├── hrp3_3.4.2/                 ← HRP3 3.4.2 系（EK-RA8M2 向け M-profile 修正を含む。
+    │                                  overlay cw_hrp3_ra8m2 は 7369df9 で本体へ吸収済み）
+    └── ttsp3/                      ← ※TTSP3 クローンではない（asp3_tz_work 側のテスト設定置き場）
 ```
 
-`configure.sh` の `OS_PATH` は第2ワークスペースでは兄弟ではなく `../ASP3_TZ/asp3_tz_work/<kernel>/` を指す。
-ビルドコマンドの例（第2ワークスペースで実行）：
+### 測定当時の配置と現在の再現方法
+
+台帳（`MPS2_API_STATUS.md`・`docs/HRP/EK_RA8M2_TTSP3_STATUS.md`）の測定（2026-06-20〜22）は、
+当時存在した**第2の TTSP3 クローン `~/TOPPERS/ttsp3`**（兄弟に `ASP3_TZ/asp3_tz_work/`）から
+実行された。**このクローンは現存しない**（コミットはすべて origin/main に反映済み）。
+
+現在は**本ワークスペースから相対パスでカーネルを渡して再現できる**
+（2026-07-02 に HRP mps2 SIL で実証。**絶対パス不可**＝`sil_test.sh` 等が `${g_tree_level}` を
+前置するため。手順の詳細は `docs/RUNBOOK.md` §7b）：
 
 ```bash
-cd ~/TOPPERS/ttsp3
+cd ~/TOPPERS/TTSP3/work/ttsp3
 export TTSP_TARGET_NAME=mps2_an505_gcc
-bash ttb.sh ../ASP3_TZ/asp3_tz_work/asp3_3.7 ASP obj_mps2_an505
+printf '2\n1\nq\nq\n' | bash ttb.sh ../../../asp3_tz_work/asp3_3.7/ ASP obj_mps2_sil_asp
 ```
 
 ### 各カーネルの状態とターゲット
@@ -145,11 +145,11 @@ bash ttb.sh ../ASP3_TZ/asp3_tz_work/asp3_3.7 ASP obj_mps2_an505
 | カーネル | 改変状態 | 使用ターゲット | 結果台帳 |
 |---|---|---|---|
 | `asp3_3.7` | **無改変**（本ワークスペースの ASP3 3.7.2 と同系） | mps2_an505_gcc（ASP / QEMU）、ek_ra8m2_gcc（ASP / 実機・SIL） | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
-| `hrp3_3.4.2`（+overlay `cw_hrp3_ra8m2`） | **M-profile 向け修正あり**（rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc nPRIV 分岐等） | mps2_an505_gcc（HRP / QEMU）、ek_ra8m2_gcc（HRP / 実機） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md`、`docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
+| `hrp3_3.4.2`（旧 overlay `cw_hrp3_ra8m2` は本体へ吸収済み） | **M-profile 向け修正あり**（rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc nPRIV 分岐等） | mps2_an505_gcc（HRP / QEMU）、ek_ra8m2_gcc（HRP / 実機） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md`、`docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 
 ### 計測環境
 
 - `mps2_an505_gcc`：QEMU `qemu-system-arm -M mps2-an505 -semihosting-config enable=on`（a9gtimer パッチ不要）
-- `ek_ra8m2_gcc`：実機（J-Link OB・VCOM /dev/ttyACM0・115200 bps）。**本ワークスペース単独では測定不可**（第2ワークスペース＋実機接続が必要）
+- `ek_ra8m2_gcc`：実機（J-Link OB・VCOM /dev/ttyACM0・115200 bps）。**実機接続が必要**（QEMU 不可）
 
 M-profile 系の測定結果概要は `docs/STATUS.md` §1b を参照。

@@ -21,6 +21,7 @@
 | **check_library（ターゲット依存チェック）** | `exception`/`interrupt`/`timer` の3種。ターゲット依存部の動作確認（ttb.sh の `c` メニュー） |
 | **API テスト（オートコード）** | TESRY→TTG 自動生成の API 適合テスト。`auto_code` 群で実行 |
 | **auto_code N分割（DIV）** | API テスト群を N（既定20）に分割して並列ビルド・実行する単位。`auto_code_1..20` |
+| **per-case（1ケース=1 ELF）** | DIV=総ケース数で API テストを**1ケースごとに個別ビルド・実行**する方式。バンドル（20分割）起因のスケジューリング/CP アーティファクトを排除して真の合否を測る。M-profile（mps2_an505）の全件測定で使用（`docs/STATUS.md` §1b・各 `MPS2_API_STATUS.md`） |
 | **scratch code** | 手書きの少数テスト（ASP の CI 4段目）。`scratch_code/<name>` |
 | **cfg-error（コンフィグエラーテスト）** | 静的API/設定の異常系。期待エラーが出るかを検査（`ttsp_parallel_cfgerr.sh`） |
 | **SIL テスト / Kernel Library** | TTSP3 R3.1.0 では**未サポート**（`AGENTS.md` §4） |

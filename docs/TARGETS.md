@@ -17,7 +17,7 @@
 | ASP | **zybo_z7_gcc**（主） | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ✅/✅/✅ | 単一プロセッサ。a9gtimer パッチ（同上）。`scripts/ci_run.sh` |
 | ASP | lpc55s69evk_gcc | 実機（M33） | 1 | true | local | 実CPU例外 | 実機 | **Cortex-M33**。asp3_core 後段 M33 ターゲットの雛形（`AGENTS.md` §6） |
 | ASP | nucleo_f401re_gcc | 実機（M4） | 1 | true | local | 実CPU例外 | 実機 | Cortex-M4 |
-| ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ❓（SIL/API per-case 実績） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/ASP3_TZ/asp3_tz_work/asp3_3.7`。per-case 1255/1813 PASS・SIL All passed（`MPS2_API_STATUS.md`） |
+| ASP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ❓（SIL/API per-case 実績） | **Cortex-M33/ARMv8-M**。被テストカーネル＝`~/TOPPERS/asp3_tz_work/asp3_3.7`。per-case 1255/1813 PASS・SIL All passed（`MPS2_API_STATUS.md`） |
 | ASP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | **Cortex-M85**。SIL 実機 All passed（非タスク文脈 wait_raise_int はスキップ・`d529a51`） |
 | HRP | mps2_an505_gcc | QEMU `mps2-an505`（semihosting・**パッチ不要**） | 1 | true | NVIC | `udf #0`＝UsageFault | ⚠ **int のみ**（exc/timer＝M-profile 制約・`exclude_tests.txt`） | Cortex-M33＋MPU（**8リージョン＝1ドメイン最大5**が構造的上限）。per-case 758/1602 PASS（`MPS2_API_STATUS.md`）。`ttsp_check_point` に M-profile 分岐（`TTSP_SILLOC_NO_SVC`） |
 | HRP | ek_ra8m2_gcc | 実機（M85・J-Link/VCOM） | 1 | true | NVIC | `udf #0`＝UsageFault | ⛔ 実機 | Cortex-M85＋MPU。**SIL 実機 All passed（CP1-27）**＝M2 保護機構の実機実証。台帳 `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |

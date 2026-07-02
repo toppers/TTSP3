@@ -232,6 +232,113 @@ tail -3 "$dir/execute.log"
 
 ---
 
+## 7b. M-profile ターゲット（mps2_an505/QEMU・ek_ra8m2/実機）
+
+> **前提（カーネルの所在）**：M-profile 系の被テストカーネルは
+> **`~/TOPPERS/asp3_tz_work/`**（git repo `exshonda/asp3_tz_work`）内の `asp3_3.7/`・`hrp3_3.4.2/`。
+> 兄弟 SVN とは別管理。詳細は [`docs/WORKSPACE.md`](WORKSPACE.md)「第2ワークスペース」節・
+> [`UPSTREAM_KERNEL.md`](../UPSTREAM_KERNEL.md) 参照。
+> 確定結果（合否・per-case 分類）の正本は **[`docs/STATUS.md`](STATUS.md) §1b**（再計測しない）。
+> コマンドは**本ワークスペース（`~/TOPPERS/TTSP3/work/ttsp3`）から実行できる**（2026-07-02 に HRP SIL で実証）。
+> カーネルパスは**相対で** `../../../asp3_tz_work/<kernel>/` と渡す（**絶対パス不可**＝`sil_test.sh` 等が
+> `${g_tree_level}` を前置するため、絶対パスだと configure.rb が見つからず「Makefile file is not exist」で失敗する）。
+> ※台帳（`MPS2_API_STATUS.md`・`EK_RA8M2_TTSP3_STATUS.md`）中の `~/TOPPERS/ttsp3`＋`../ASP3_TZ/asp3_tz_work/` は
+> **測定当時（2026-06-20〜22）の旧配置**。現在このマシンに第2クローンは無く、上記の読み替えで再現する。
+
+### SIL ビルド＋QEMU 実行（mps2_an505・ASP または HRP）
+
+```bash
+cd ~/TOPPERS/TTSP3/work/ttsp3
+export PATH=~/tools/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:$PATH
+export TTSP_TARGET_NAME=mps2_an505_gcc
+
+# SIL ビルド（2=SIL テスト、1=continuous build、q=戻る×2）
+# ASP の場合
+printf '2\n1\nq\nq\n' | bash ttb.sh ../../../asp3_tz_work/asp3_3.7/ ASP obj_mps2_sil_asp
+# HRP の場合
+printf '2\n1\nq\nq\n' | bash ttb.sh ../../../asp3_tz_work/hrp3_3.4.2/ HRP obj_mps2_sil_hrp
+
+# QEMU 実行（semihosting exit・シリアルをファイルへ捕捉）
+# ASP: ELF 名は asp、HRP: hrp
+qemu-system-arm -M mps2-an505 -semihosting-config enable=on \
+    -kernel obj_mps2_sil_asp/sil_test/asp -nographic \
+    -serial file:obj_mps2_sil_asp/sil_test/execute.log >/dev/null 2>&1
+
+# 合否確認
+grep 'All check points passed' obj_mps2_sil_asp/sil_test/execute.log && echo PASS || echo FAIL
+```
+
+- ELF 名は ASP=`asp`、HRP=`hrp`（`ttsp_target.sh` の `APPLI_NAME` 参照）。
+- `ttsp_target.sh` の `simulation()` を使う場合は `cd <objdir>/sil_test && bash -c '. library/<PROF>/target/mps2_an505_gcc/ttsp_target.sh && simulation'`。
+
+### API per-case 全件ビルド＋実行（mps2_an505）
+
+1件＝1 ELF の per-case 全件計測は `scripts/ttsp_parallel_api.sh` を使う。
+**`TTSP_TARGET_NAME` は必ず export**（落とし穴参照）。
+
+```bash
+cd ~/TOPPERS/TTSP3/work/ttsp3
+export PATH=~/tools/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:$PATH
+
+# ASP（DIV=1813・per-case 全件ビルド）
+TTSP_TARGET_NAME=mps2_an505_gcc SKIP_RUN=1 PAR_GROUPS=12 MAKE_J=3 \
+  bash scripts/ttsp_parallel_api.sh ../../../asp3_tz_work/asp3_3.7/ ASP obj_asp_mps2_api 1813
+
+# HRP（DIV=1602・per-case 全件ビルド）
+TTSP_TARGET_NAME=mps2_an505_gcc SKIP_RUN=1 PAR_GROUPS=12 MAKE_J=3 \
+  bash scripts/ttsp_parallel_api.sh ../../../asp3_tz_work/hrp3_3.4.2/ HRP obj_hrp_mps2_api 1602
+
+# 個別 QEMU 実行・分類（ASP の例。HRP は asp → hrp に読み替え）
+for d in obj_asp_mps2_api/api_test/auto_code_*; do
+    timeout 30 qemu-system-arm -M mps2-an505 -semihosting-config enable=on \
+        -kernel "$d/asp" -nographic \
+        -serial "file:$d/execute.log" >/dev/null 2>&1
+    command grep -q 'All check points passed' "$d/execute.log" \
+        && echo "$d PASS" || echo "$d FAIL"
+done
+```
+
+- 結果の正本（確定分類・PASS/FAIL 内訳）：
+  - ASP: [`library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md`](../library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md)
+  - HRP: [`library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md`](../library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md)
+- `ttsp_parallel_api.sh` は `exclude_tests.txt` を**自動適用**（M-profile 制約による除外は `library/<PROF>/target/mps2_an505_gcc/exclude_tests.txt` が正本。手動で除く必要はない）。
+- 20分割でなく per-case 全件（ASP=DIV=1813、HRP=DIV=1602）で実行するのが M-profile 系の慣例。確定 PASS 数は `docs/STATUS.md §1b` を参照（再計測不要）。
+
+### ek_ra8m2 実機（HRP・Cortex-M85）
+
+実機接続（J-Link OB・VCOM `/dev/ttyACM0`・115200 8N1）が必要。**第2ワークスペース＋実機接続環境でのみ計測可能**。
+
+```bash
+cd ~/TOPPERS/TTSP3/work/ttsp3
+export PATH=~/tools/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:$PATH
+export TTSP_TARGET_NAME=ek_ra8m2_gcc
+
+# SIL ビルド
+printf '2\n1\nq\nq\n' | bash ttb.sh ../../../asp3_tz_work/hrp3_3.4.2/ HRP obj_ekra8m2
+
+# flash（J-Link CLI）
+arm-none-eabi-objcopy -O ihex obj_ekra8m2/sil_test/hrp obj_ekra8m2/sil_test/hrp.hex
+# JLinkExe -device R7KA8M2JF_CPU0 -if SWD -speed 4000 -autoconnect 1 -CommanderScript ...
+# または ttsp_target.sh の simulation()（RA_SERIAL=/dev/ttyACM0 を渡す）
+
+# シリアル受信（別ターミナルで）
+cat /dev/ttyACM0
+```
+
+- ビルド・フラッシュ・シリアル受信の詳細手順は [`docs/HRP/EK_RA8M2_TTSP3_STATUS.md`](HRP/EK_RA8M2_TTSP3_STATUS.md)「ビルド／実行コマンド」節を参照（本節では要点とポインタのみ）。
+- 現状（2026-06-20 確定）：SIL は **CP1〜27 全て実機 PASS**（"All check points passed"）。M2 メモリ保護・ドメインアクセス制御・CPU 例外ユーザ文脈復帰が実機で機能していることの実証（`STATUS.md §1b` 参照）。
+
+### ⚠ 落とし穴（M-profile 固有）
+
+- **`TTSP_TARGET_NAME` の export 忘れ**：`ttsp_parallel_api.sh` のフェーズ1が `bash ttb.sh` の子プロセスを起動し、その中の `configure.sh` が `TARGET_NAME="${TTSP_TARGET_NAME:-zybo_z7_gcc}"` で**再解決**する。export しないと既定の **zybo_z7_gcc に化け**、per-case Makefile が `TARGET=zybo_z7_gcc` で生成されて `import("target.cdl")` が zybo を引き、**全件 MAKE FAIL**（`sSIOPort signature not found` ＋ tecsgen `__typeof__` 破綻＝mps2 の `-std=gnu17` が効かない）になる。スクリプト内は commit `2ed98f6` で `export` 対応済みだが、手動で `TTSP_TARGET_NAME=mps2_an505_gcc bash scripts/...` と渡す場合は**先に `export TTSP_TARGET_NAME=mps2_an505_gcc`** とする（インライン代入では子プロセスに引き継がれない）。
+- **QEMU パッチ不要**：`mps2-an505` は zybo 系（`xilinx-zynq-a9`）で必要な a9gtimer パッチが不要。素の `qemu-system-arm` でよい。
+- **HRP mps2 の check_library は int のみ**：M-profile 制約（BASEPRI によるロック中の svc が HardFault になる・gain_tick 非対応等）により、exc・timer は `exclude_tests.txt` で除外されており実行されない。int のみが対象。
+- **`( ... && grep ... && ... )` サブシェル連鎖に注意**：`grep` がラッパになっている環境では `&&` チェーン内の `grep` 以降が消える（§6 落とし穴参照）。上記コマンド例のように `command grep` を使うか、チェーンを分離する。
+- **カーネルパスは相対・絶対不可**：`ttb.sh`/`sil_test.sh` は OS パスに `${g_tree_level}`（obj 階層分の `../`）を前置するため、**絶対パスを渡すと configure.rb 解決に失敗**し「Makefile file is not exist」で folder 作成が空振りする（エラーは握り潰される）。本ワークスペースからは `../../../asp3_tz_work/<kernel>/` と渡す。
+- **HRP mps2 SIL の既知残（2026-07-02 実測）**：CP1-23＋USER DOMAIN の `get_tim → E_OACV` まで通過するが、続く `sil_reb_mem(0xd0000000)` の DABORT 回収で**ハング**（QEMU `mps2-an505` は不正アドレス読出しがフォールトしない＝実機 EK-RA8M2 との挙動差。実機では合格済み）。QEMU 実行時は timeout を付けること。
+
+---
+
 ## 8. 関連ファイル索引
 
 | 目的 | ファイル |

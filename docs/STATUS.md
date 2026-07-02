@@ -17,7 +17,7 @@
 | FMP | **linux_gcc**（副・native） | ⚠ **13/20**（残7＝§3） | ✅ int／— exc（注1）／— timer（注2） | ⚠ POSIX OK=149/160（注3） | 2026-06-13 実測（API）/2026-06-08（cfg） | `TTSP_TARGET_NAME=linux_gcc bash scripts/ttsp_parallel_api.sh ../fmp3/ FMP obj_fmp_posix 20` |
 | FMP | imx8mm_evk_arm64_gcc | ⛔ 本環境測定不可 | — | — | — | `USE_QEMU=false`＝実機/別環境。arm64 |
 | ASP | **zybo_z7_gcc**（主） | ✅ 20/20 | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh` → `PASS=143 FAIL=0`（scratch 7 含む） |
-| ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。asp3_core 後段の雛形 |
+| ASP | lpc55s69evk_gcc（M33） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M33）。旧雛形（M33 の現雛形は mps2_an505_gcc＝§1b） |
 | ASP | nucleo_f401re_gcc（M4） | ⛔ 本環境測定不可 | — | — | — | 実機（Cortex-M4） |
 | HRP | zybo_z7_gcc | ✅ **20/20** | ✅ exc/int/timer | ✅ OK=113/0 | 2026-06-13 実測 | `bash scripts/ci_run.sh HRP` → `PASS=136 FAIL=0`（完全グリーン） |
 | HRP | zcu102_r5_gcc（R5） | ✅ **20/20**（注7：ATT_PMA 1件を能力差で除外済） | ✅ exc/int/timer | ❓ 未測定 | 2026-06-14 実測 | `TTSP_TARGET_NAME=zcu102_r5_gcc PAR_GROUPS=6 bash scripts/ttsp_parallel_api.sh ../hrp3/ HRP obj 20`（要 upstream QEMU11 aarch64・`parallel_simulation()`。`exclude_tests.txt` 自動適用） |
@@ -33,8 +33,8 @@
 
 ### 1b. M-profile ターゲット（Cortex-M33/M85・2026-06-20〜22 追加）
 
-> 被テストカーネルは**別ワークスペース** `~/TOPPERS/ASP3_TZ/asp3_tz_work/`
-> （ASP=`asp3_3.7`、HRP=`hrp3_3.4.2`＋overlay `cw_hrp3_ra8m2`）。API は 20分割でなく
+> 被テストカーネルは**別 git repo** `~/TOPPERS/asp3_tz_work/`（`exshonda/asp3_tz_work`。
+> ASP=`asp3_3.7`、HRP=`hrp3_3.4.2`。旧 overlay `cw_hrp3_ra8m2` は本体へ吸収済み）。API は 20分割でなく
 > **per-case（1ケース=1 ELF）全件実行**。SIL は `sil_test/`（第3世代対応済・`docs/SIL_TEST.md`）。
 > ek_ra8m2 は実機（J-Link・⛔本ワークスペース単独では測定不可）、mps2_an505 は QEMU `mps2-an505`（パッチ不要）。
 
@@ -42,7 +42,7 @@
 |---|---|---|---|---|---|---|
 | ASP | mps2_an505_gcc（M33/QEMU） | ✅ All passed | ⚠ **1255/1813 PASS（69.2%）**・BUILD-FAIL 0（注10） | ❓ | 2026-06-22 | `library/ASP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | ASP | ek_ra8m2_gcc（M85/実機） | ✅ All passed（実機） | ❓ | ❓ | 2026-06-21 | commit `58da75e`/`d529a51` |
-| HRP | mps2_an505_gcc（M33/QEMU） | ⚠ CP1-8（06-20時点） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-06-21 | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
+| HRP | mps2_an505_gcc（M33/QEMU） | ⚠ **CP1-23＋E_OACV**（2026-07-02 実測・注12） | ⚠ **758/1602 PASS（47.3%）**（注11） | ⚠ int ✅／exc・timer＝M-profile 制約で除外（`exclude_tests.txt`） | 2026-07-02（SIL）/06-21（API） | `library/HRP/target/mps2_an505_gcc/MPS2_API_STATUS.md` |
 | HRP | ek_ra8m2_gcc（M85/実機） | ✅ **All passed（CP1-27・実機）** | ❓（EK は API 抜き取り検証のみ） | ❓ | 2026-06-20 | `docs/HRP/EK_RA8M2_TTSP3_STATUS.md` |
 
 - **注10（ASP mps2 FAIL 558 の性格）**：測定アーティファクトが 76.7%（Unexpected-CP 383＝バンドル/
@@ -51,6 +51,11 @@
 - **注11（HRP mps2 FAIL の性格）**：構造的 ≈968（**8リージョン MPU 制約**＝BUILD-FAIL ≈406・
   ユーザドメイン例外スタッキング MSTKERR 系）／真バグ候補 ≈46。**E_TMOUT クラスタは QEMU proxy
   アーティファクト**（EK 実機 3/3 PASS で確定）。Unexpected-CP は EK 実機検証で大半が実バグ。
+- **注12（HRP mps2 SIL・2026-07-02 本ワークスペースから実測）**：EK で入った M2 修正の波及で
+  CP1-8（06-20）→ **CP1-23＋USER DOMAIN `get_tim → E_OACV : OK`** まで前進。残＝続く
+  `sil_reb_mem(0xd0000000)` の DABORT 回収で**ハング**（QEMU `mps2-an505` は不正アドレス読出しが
+  フォールトしない＝実機 EK-RA8M2 との挙動差。実機では合格済み）。再現手順は `docs/RUNBOOK.md` §7b
+  （カーネルは相対パス `../../../asp3_tz_work/hrp3_3.4.2/`・絶対パス不可）。
 - **HRP ek_ra8m2 SIL 合格（CP1-27）の意義**：M2 メモリ保護／ドメインアクセス制御／ユーザ⇄カーネル
   特権遷移／CPU 例外のユーザ文脈復帰が**実機で機能**していることの実証。必要だったカーネル修正4点
   （rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc の nPRIV 分岐）は asp3_tz_work 側
