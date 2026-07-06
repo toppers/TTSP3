@@ -24,6 +24,7 @@
 | HRMP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` `-smp 2` | 2 | true | combination | 実CPU例外 | ❓ | 保護＋マルチコア。a9gtimer。後回し方針 |
 | HRP | zybo_z7_gcc | QEMU `xilinx-zynq-a9` | 1 | true | local | 実CPU例外 | ❓ | 保護・単一コア。syssvc が TECS化（`docs/HRP/COVERAGE_STATUS.md`）。API並列ドライバ未対応 |
 | HRP | zcu102_r5_gcc | QEMU（Cortex-R5） | 1 | true | local | 実CPU例外 | ❓ | 2026-06-12 追加（`fef2f9e`）。`ttsp_target.sh` が `parallel_simulation()` でQEMU実行 |
+| FMP | esp32s3_devkitc_gcc | Espressifフォーク QEMU `esp32s3`（`scripts/run_qemu.sh`と同じ手順、`parallel_simulation()`対応） | 1（PROCESSOR_NUM=1のみ検証） | true（要HRT凍結機構、注1c） | local | `ill`＝IllegalInstruction（EXCCAUSE=0） | timer=✅／int=—／exc=— | 2026-07-07 追加。Xtensa LX7。int/excはハードウェア制約で`FUNC_INTERRUPT/EXCEPTION=false`（詳細`docs/STATUS.md`§1c）。APIテスト(TTG自動生成)はビルド可だが実行60/60失敗（アラーム関連、未解決）。IRAM/DRAM拡張・`-mtext-section-literals`必須 |
 
 > 実行系の別：**QEMU**＝`USE_QEMU=true`（zybo系/zynqmp）／**native**＝linux_gcc（`./fmp` 直接実行、~30秒）／
 > **実機/別**＝`USE_QEMU=false`（imx8mm）または実ボード（lpc55/nucleo）。

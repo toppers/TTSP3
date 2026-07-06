@@ -95,6 +95,41 @@
   （rundom 設定・拡張SVC rundom 退避/復元・within_ustack 実装・svc の nPRIV 分岐）は asp3_tz_work 側
   （詳細：`docs/HRP/EK_RA8M2_TTSP3_STATUS.md`）。
 
+### 1c. Xtensa ターゲット（esp32s3_devkitc_gcc・2026-07-07 追加）
+
+> 被テストカーネルは別 git repo `~/TOPPERS/esp32_s3`（ESP32-S3、Xtensa LX7、独自arch層
+> 新規実装）。実行系は Espressif フォーク QEMU（`esp32s3` マシン、`scripts/run_qemu.sh`と
+> 同じ elf2image→merge_bin→QEMU 起動手順。`ttsp_target.sh`が`simulation`/
+> `parallel_simulation`両方を定義）。PROCESSOR_NUM=1（シングルコア）で開始。
+
+| Profile | Target | check_library | API（TTG自動生成） | 最終確認 | 備考 |
+|---|---|---|---|---|---|
+| FMP | esp32s3_devkitc_gcc | timer=✅ All passed／int=—（注C）／exc=—（注D） | ⚠ ビルド可（60分割・IRAM/DRAM拡張＋`-mtext-section-literals`必須）だが**60/60実行失敗**（注E、未解決） | 2026-07-07 | シングルコアのみ検証。マルチコア（PROCESSOR_NUM=2）は未着手 |
+
+- **注C（interrupt 見送り＝FUNC_INTERRUPT=false）**：ESP32-S3 のソフトウェア割込みは
+  INT7（レベル1、SIOドライバ=対話コンソールが使用中）とINT29（レベル3）の2本のみ。
+  本ポートのLevel-1割込み専用ディスパッチ機構
+  （`xtos_exc_handler_table[EXCCAUSE_LEVEL1_INTERRUPT]`経由）はレベル1割込みしか
+  捕捉できず、Xtensaのレベル2/3割込みは専用の固定ベクタ（Level2/3InterruptVector）で
+  処理されるため（本ポートはVECBASE非変更方針でこの専用ベクタに未対応）、TTSP3用に
+  使える空きレベル1ソフト割込みが実質無い。Level2/3専用ベクタへの対応は将来課題。
+- **注D（exception 未対応＝FUNC_EXCEPTION=false）**：`TTSP_EXCNO_C`相当のフェイタル
+  （復帰不可）CPU例外機構が本ポートに無い（`polarfire_soc_kit_gcc`＝RISC-V版の
+  `FUNC_EXCEPTION=false`と同じ判断）。`TTSP_EXCNO_A`（ill＝EXCCAUSE=0、復帰可能）は
+  実装済みだがFUNC_EXCEPTION=falseによりTTGは使わない想定。
+- **注E（APIテスト60/60失敗・未解決）**：`ttsp_mp_wait_check_point`タイムアウトと
+  `ralm.almstat`不一致（期待TALM_STPに対し実値2）がアラーム/周期ハンドラ関連で多発。
+  timer check_library単体はPASSしHRTの基本精度自体は問題ないため、TTGが生成する
+  複雑なテストシーケンス（多数のAPIバリエーションを連結）特有の要因を疑っているが
+  2026-07-07時点で根本原因未特定。次回セッションの持ち越し課題（被テストカーネル側
+  `~/TOPPERS/esp32_s3/docs/status.md`にも詳細記録）。
+- **ターゲット固有の追加実装が必要だった点**（`ttsp_target.sh`のコメント参照）：
+  (1) HRT凍結機構（Xtensa CCOUNTがハード停止不可なため、被テストカーネル側に追加）、
+  (2) `parallel_simulation`関数（`scripts/ttsp_parallel_api.sh`はzybo向け
+  `qemu-system-arm`ハードコードのフォールバックを持つため、Xtensa QEMU実行には
+  ターゲット側で`parallel_simulation`を定義する必要がある）、
+  (3) `-mtext-section-literals`（TTG生成コードが巨大でl32rのリテラル到達範囲を超えるため）。
+
 ---
 
 ## 2. カバレッジ（分岐 C1, gcov・参考）
