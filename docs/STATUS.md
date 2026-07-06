@@ -104,7 +104,7 @@
 
 | Profile | Target | check_library | API（TTG自動生成） | 最終確認 | 備考 |
 |---|---|---|---|---|---|
-| FMP | esp32s3_devkitc_gcc | timer=✅ All passed／int=—（注C）／exc=—（注D） | ⚠ ビルド可（60分割・IRAM/DRAM拡張＋`-mtext-section-literals`必須）だが**60/60実行失敗**（注E、未解決） | 2026-07-07 | シングルコアのみ検証。マルチコア（PROCESSOR_NUM=2）は未着手 |
+| FMP | esp32s3_devkitc_gcc | timer=✅ All passed／int=—（注C）／exc=—（注D） | ⚠ ビルド可（60分割・IRAM/DRAM拡張＋`-mtext-section-literals`必須）、**53/60 PASS**（注E、残7件は次回持ち越し） | 2026-07-07 | シングルコアのみ検証。マルチコア（PROCESSOR_NUM=2）は未着手 |
 
 - **注C（interrupt 見送り＝FUNC_INTERRUPT=false）**：ESP32-S3 のソフトウェア割込みは
   INT7（レベル1、SIOドライバ=対話コンソールが使用中）とINT29（レベル3）の2本のみ。
@@ -117,12 +117,20 @@
   （復帰不可）CPU例外機構が本ポートに無い（`polarfire_soc_kit_gcc`＝RISC-V版の
   `FUNC_EXCEPTION=false`と同じ判断）。`TTSP_EXCNO_A`（ill＝EXCCAUSE=0、復帰可能）は
   実装済みだがFUNC_EXCEPTION=falseによりTTGは使わない想定。
-- **注E（APIテスト60/60失敗・未解決）**：`ttsp_mp_wait_check_point`タイムアウトと
-  `ralm.almstat`不一致（期待TALM_STPに対し実値2）がアラーム/周期ハンドラ関連で多発。
-  timer check_library単体はPASSしHRTの基本精度自体は問題ないため、TTGが生成する
-  複雑なテストシーケンス（多数のAPIバリエーションを連結）特有の要因を疑っているが
-  2026-07-07時点で根本原因未特定。次回セッションの持ち越し課題（被テストカーネル側
-  `~/TOPPERS/esp32_s3/docs/status.md`にも詳細記録）。
+- **注E（APIテスト0→53/60・根本原因特定/修正済み）**：当初`ttsp_mp_wait_check_point`
+  タイムアウトと`ralm.almstat`不一致がアラーム/周期ハンドラ関連で多発していたが、
+  以下の根本原因を特定・修正して53/60まで前進（被テストカーネル側
+  `~/TOPPERS/esp32_s3/docs/status.md`に詳細記録）：
+  (1) `gain_tick`がCCOUNTレジスタを巻き戻し、msta_alm等が設定した発火予定を破壊、
+  (2) 凍結値インクリメント順序が逆でcurrent_evttimが進まない、
+  (3) `HRTCNT_BOUND`の32bit演算オーバーフローでCCOMPARE0が過去の値になる、
+  (4) 割込みエントリ(`_kernel_l1int_entry`)のアライメント不安定によるパニック、
+  (5) 単一コア用ロック実装が状態追跡せず`ref_spn`が常に未ロックを報告、
+  (6) `check_intno_cfg`系が常にtrueを返す簡略実装でE_OBJ判定不能、
+  (7) `dispatch_and_migrate`未実装スタブ。
+  `gain_tick`自体もポーリング方式からワンショット完了通知フック方式に再設計した
+  （本ファイル、ttsp_target_test.c）。残り7件（`mrot_rdq`系5件は単一コア構成での
+  TTG生成テストの構造的制約、他2件は未調査）は次回セッションの持ち越し課題。
 - **ターゲット固有の追加実装が必要だった点**（`ttsp_target.sh`のコメント参照）：
   (1) HRT凍結機構（Xtensa CCOUNTがハード停止不可なため、被テストカーネル側に追加）、
   (2) `parallel_simulation`関数（`scripts/ttsp_parallel_api.sh`はzybo向け
